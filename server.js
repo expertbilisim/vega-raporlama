@@ -1,8 +1,8 @@
-const { execFile } = require("node:child_process");
+const { execFile, spawn } = require("node:child_process");
 const { randomBytes } = require("node:crypto");
-const { existsSync, readFileSync, writeFileSync, unlinkSync } = require("node:fs");
+const { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync, unlinkSync, rmSync } = require("node:fs");
 const { createServer } = require("node:http");
-const { tmpdir } = require("node:os");
+const { networkInterfaces, tmpdir } = require("node:os");
 const { dirname, join } = require("node:path");
 const { promisify } = require("node:util");
 
@@ -300,12 +300,7 @@ function sorguHatasi(error) {
 }
 
 function query(sql) {
-  if (!SQLCMD) {
-    return psCalistir(sql, "json").then((stdout) => parseJsonMetin(sorguMetni(stdout)), sorguHatasi);
-  }
-  return sqlCalistir(sql, ["-r", "1", "-y", "0"]).then(({ stdout }) => parseJson(stdout), (error) => {
-    throw sqlHata(error);
-  });
+  return psCalistir(sql, "json").then((stdout) => parseJsonMetin(sorguMetni(stdout)), sorguHatasi);
 }
 
 function queryLines(sql) {
@@ -327,6 +322,25 @@ function tamSayi(value, max = 9999) {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 1 || n > max) return null;
   return n;
+}
+
+function sqlTarihIfade(value) {
+  const yazi = String(value || "").trim();
+  if (!/^\d{2}\.\d{2}\.\d{4}$/.test(yazi)) return "";
+  return `CONVERT(datetime, N'${yazi}', 104)`;
+}
+
+function sqlOndalik(value) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0";
+  return (Math.round(n * 10000) / 10000).toFixed(4);
+}
+
+function portNo(value) {
+  const n = Number(String(value ?? "").replace(/[^\d]/g, ""));
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  const ham = n >= 100000000 ? n - 100000000 : n;
+  return ham > 2147483647 ? 0 : ham;
 }
 
 function metin(value, max) {
@@ -388,6 +402,614 @@ function sayfaOku() {
   const yaninda = join(dirname(process.execPath), "index.html");
   if (existsSync(yaninda)) return readFileSync(yaninda);
   return readFileSync(join(__dirname, "index.html"));
+}
+
+function uygulamaKok() {
+  try {
+    if (require("node:sea").isSea()) return dirname(process.execPath);
+  } catch { /* geliştirme */ }
+  return __dirname;
+}
+
+function whatsappKlasor() {
+  return join(uygulamaKok(), "whatsapp-oturum");
+}
+
+const wa = {
+  sock: null,
+  durum: "kapali",
+  qr: "",
+  ad: "",
+  hata: "",
+  kapanis: false,
+  baslatma: null,
+};
+
+function whatsappDurum() {
+  return {
+    hazir: wa.durum === "bagli",
+    durum: wa.durum,
+    qr: wa.durum === "qr" ? wa.qr : "",
+    ad: wa.ad,
+    hata: wa.hata,
+  };
+}
+
+function telefonNorm(value) {
+  let rakam = String(value || "").replace(/\D/g, "");
+  if (rakam.startsWith("00")) rakam = rakam.slice(2);
+  if (rakam.startsWith("0")) rakam = "90" + rakam.slice(1);
+  if (rakam.length === 10 && rakam.startsWith("5")) rakam = "90" + rakam;
+  return rakam;
+}
+
+async function whatsappAc() {
+  const {
+    default: makeWASocket,
+    useMultiFileAuthState,
+    DisconnectReason,
+    Browsers,
+  } = await import("@whiskeysockets/baileys");
+  const pino = (await import("pino")).default;
+  const qrcode = await import("qrcode");
+  const toDataURL = qrcode.toDataURL || qrcode.default.toDataURL;
+  const klasor = whatsappKlasor();
+  mkdirSync(klasor, { recursive: true });
+  const { state, saveCreds } = await useMultiFileAuthState(klasor);
+  wa.durum = "baglaniyor";
+  wa.hata = "";
+  const sock = makeWASocket({
+    auth: state,
+    logger: pino({ level: "silent" }),
+    browser: Browsers.windows("Vega Raporlama"),
+    syncFullHistory: false,
+    markOnlineOnConnect: false,
+  });
+  wa.sock = sock;
+  sock.ev.on("creds.update", saveCreds);
+  sock.ev.on("connection.update", (update) => {
+    if (update.qr) {
+      toDataURL(update.qr, { margin: 1, width: 280 }).then((adres) => {
+        if (wa.sock !== sock) return;
+        wa.qr = adres;
+        wa.durum = "qr";
+      }).catch((error) => {
+        wa.hata = error.message || "QR oluşturulamadı.";
+      });
+    }
+    if (update.connection === "open") {
+      wa.durum = "bagli";
+      wa.qr = "";
+      wa.hata = "";
+      const kullanici = sock.user || {};
+      wa.ad = String(kullanici.name || kullanici.id || "").split(":")[0].split("@")[0];
+    }
+    if (update.connection === "close") {
+      const kod = update.lastDisconnect?.error?.output?.statusCode;
+      if (wa.sock === sock) wa.sock = null;
+      wa.qr = "";
+      const cikis = wa.kapanis || kod === DisconnectReason.loggedOut || kod === DisconnectReason.forbidden;
+      if (cikis) {
+        wa.durum = "kapali";
+        wa.ad = "";
+        if (kod === DisconnectReason.loggedOut || kod === DisconnectReason.forbidden) {
+          wa.hata = "Telefon bağlantısı kapandı. Yeniden QR okutun.";
+          try { rmSync(klasor, { recursive: true, force: true }); } catch { /* oturum silinemedi */ }
+        }
+        return;
+      }
+      wa.durum = "baglaniyor";
+      setTimeout(() => {
+        if (wa.kapanis || wa.sock) return;
+        whatsappAc().catch((error) => {
+          wa.durum = "hata";
+          wa.hata = error.message || "WhatsApp bağlantısı kurulamadı.";
+        });
+      }, 2000);
+    }
+  });
+}
+
+async function whatsappBagla() {
+  if (wa.sock && (wa.durum === "bagli" || wa.durum === "qr" || wa.durum === "baglaniyor")) {
+    return whatsappDurum();
+  }
+  if (wa.baslatma) {
+    await wa.baslatma;
+    return whatsappDurum();
+  }
+  wa.kapanis = false;
+  wa.baslatma = whatsappAc().finally(() => { wa.baslatma = null; });
+  await wa.baslatma;
+  return whatsappDurum();
+}
+
+async function whatsappCikis() {
+  wa.kapanis = true;
+  const sock = wa.sock;
+  wa.sock = null;
+  wa.qr = "";
+  wa.ad = "";
+  wa.hata = "";
+  wa.durum = "kapali";
+  try { await sock?.logout(); } catch { /* oturum zaten kapalı */ }
+  try { rmSync(whatsappKlasor(), { recursive: true, force: true }); } catch { /* oturum silinemedi */ }
+  return whatsappDurum();
+}
+
+function edgeBul() {
+  const pf = process.env.ProgramFiles || "C:\\Program Files";
+  const pf86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
+  const local = process.env.LOCALAPPDATA || "";
+  return ilkVarolan([
+    join(pf, "Microsoft", "Edge", "Application", "msedge.exe"),
+    join(pf86, "Microsoft", "Edge", "Application", "msedge.exe"),
+    join(local, "Microsoft", "Edge", "Application", "msedge.exe"),
+    join(pf, "Google", "Chrome", "Application", "chrome.exe"),
+    join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
+  ]);
+}
+
+async function htmlPdf(html) {
+  const tarayici = edgeBul();
+  if (!tarayici) throw new Error("PDF için Microsoft Edge bulunamadı.");
+  const kok = join(tmpdir(), "vega-pdf-" + randomBytes(6).toString("hex"));
+  mkdirSync(kok, { recursive: true });
+  const htmlDosya = join(kok, "ekstre.html");
+  const pdfDosya = join(kok, "ekstre.pdf");
+  writeFileSync(htmlDosya, html, "utf8");
+  const adres = "file:///" + htmlDosya.replace(/\\/g, "/");
+  const arguman = (baslik) => [
+    baslik,
+    "--disable-gpu",
+    "--no-first-run",
+    "--no-pdf-header-footer",
+    "--virtual-time-budget=4000",
+    "--user-data-dir=" + join(kok, "profil"),
+    "--print-to-pdf=" + pdfDosya,
+    adres,
+  ];
+  let pdf = null;
+  try {
+    for (const baslik of ["--headless=new", "--headless"]) {
+      try {
+        await execFileAsync(tarayici, arguman(baslik), { windowsHide: true, timeout: 30000, maxBuffer: 4 * 1024 * 1024 });
+      } catch { /* Edge bazen dosyayı yazıp hata kodu döndürür */ }
+      if (existsSync(pdfDosya)) {
+        pdf = readFileSync(pdfDosya);
+        break;
+      }
+    }
+  } finally {
+    try { rmSync(kok, { recursive: true, force: true }); } catch { /* geçici klasör silinemedi */ }
+  }
+  if (!pdf) throw new Error("PDF oluşturulamadı.");
+  return pdf;
+}
+
+async function whatsappPdf(telefon, pdf, dosyaAdi, ozet) {
+  if (wa.durum !== "bagli" || !wa.sock) throw new Error("Önce telefonu QR ile bağlayın.");
+  const bulunan = await wa.sock.onWhatsApp(telefon);
+  const sonuc = Array.isArray(bulunan) ? bulunan.find((kayit) => kayit?.jid) : null;
+  if (!sonuc) throw new Error("Bu numara WhatsApp'ta bulunamadı.");
+  const ad = String(dosyaAdi || "hesap-ekstresi.pdf").replace(/[\\/:*?"<>|]/g, "").slice(0, 80) || "hesap-ekstresi.pdf";
+  const yazi = String(ozet || "Detaylı hesap ekstreniz ekte bilgilerinize sunulmuştur.\nExpert Bilişim").slice(0, 1000);
+  await wa.sock.sendMessage(sonuc.jid, { text: yazi });
+  const giden = await wa.sock.sendMessage(sonuc.jid, {
+    document: pdf,
+    mimetype: "application/pdf",
+    fileName: ad.toLowerCase().endsWith(".pdf") ? ad : ad + ".pdf",
+    caption: yazi,
+  });
+  return { id: giden?.key?.id || "" };
+}
+
+const FATURA_XSLT = "C:\\eArsiv\\invoice.xslt";
+const FATURA_TEMP = "C:\\eArsiv\\temp";
+const XSLT_PS = [
+  "$ErrorActionPreference = 'Stop'",
+  "$yuklu = ''",
+  "$xslt = $null",
+  "[Console]::Out.WriteLine('HAZIR')",
+  "while ($true) {",
+  "  $line = [Console]::In.ReadLine()",
+  "  if ([string]::IsNullOrWhiteSpace($line)) { continue }",
+  "  if ($line -eq 'CIK') { break }",
+  "  $p = $line.Split('|')",
+  "  if ($p.Length -lt 3) { [Console]::Out.WriteLine('HATA'); continue }",
+  "  try {",
+  "    if ($yuklu -ne $p[0]) {",
+  "      $xslt = New-Object System.Xml.Xsl.XslCompiledTransform",
+  "      $xslt.Load($p[0])",
+  "      $yuklu = $p[0]",
+  "    }",
+  "    $xslt.Transform($p[1], $p[2])",
+  "    [Console]::Out.WriteLine('OK')",
+  "  } catch {",
+  "    $yuklu = ''",
+  "    [Console]::Out.WriteLine('HATA')",
+  "  }",
+  "}",
+].join("\r\n");
+let xsltProc = null;
+let xsltZincir = Promise.resolve();
+const faturaHtmlOnbellek = new Map();
+
+function xmlKacis(deger) {
+  return String(deger ?? "").replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&apos;",
+  }[ch]));
+}
+
+function paraXml(deger) {
+  return (Math.round((Number(deger) || 0) * 100) / 100).toFixed(2);
+}
+
+function tutarYazi(tutar) {
+  const birler = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"];
+  const onlar = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"];
+  const grup = (n) => {
+    const yuz = Math.floor(n / 100);
+    const on = Math.floor((n % 100) / 10);
+    const bir = n % 10;
+    return (yuz > 1 ? birler[yuz] : "") + (yuz ? "yüz" : "") + onlar[on] + birler[bir];
+  };
+  const sabit = Math.round((Number(tutar) || 0) * 100);
+  let lira = Math.floor(sabit / 100);
+  const kurus = Math.abs(sabit % 100);
+  const bolum = [];
+  const ekle = (adet, ad) => {
+    if (!adet) return;
+    bolum.push((ad === "bin" && adet === 1 ? "" : grup(adet)) + ad);
+  };
+  ekle(Math.floor(lira / 1000000000), "milyar");
+  lira %= 1000000000;
+  ekle(Math.floor(lira / 1000000), "milyon");
+  lira %= 1000000;
+  ekle(Math.floor(lira / 1000), "bin");
+  lira %= 1000;
+  if (lira) bolum.push(grup(lira));
+  let yazi = "Yalnız " + (bolum.join(" ") || "sıfır").toLocaleUpperCase("tr-TR") + " TL";
+  if (kurus) yazi += " " + grup(kurus).toLocaleUpperCase("tr-TR") + " KRŞ";
+  return yazi;
+}
+
+function htmlCoz(yol) {
+  const buf = readFileSync(yol);
+  const html = buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe
+    ? buf.toString("utf16le")
+    : buf.toString("utf8");
+  return html.replace(/charset=utf-16/ig, "charset=utf-8");
+}
+
+function hazirFaturaHtml(no) {
+  if (!existsSync(FATURA_TEMP)) return "";
+  let secilen = "";
+  let zaman = 0;
+  for (const ad of readdirSync(FATURA_TEMP)) {
+    if (!ad.toLowerCase().endsWith(".html")) continue;
+    const yol = join(FATURA_TEMP, ad);
+    let html = "";
+    try { html = htmlCoz(yol); } catch { continue; }
+    if (!html.includes(`"no":"${no}"`)) continue;
+    const mtime = statSync(yol).mtimeMs;
+    if (mtime >= zaman) {
+      zaman = mtime;
+      secilen = html;
+    }
+  }
+  return secilen;
+}
+
+function saticiXml() {
+  if (!existsSync(FATURA_TEMP)) return "";
+  const dosyalar = readdirSync(FATURA_TEMP).filter((ad) => ad.endsWith("_dump.xml"));
+  dosyalar.sort((a, b) => statSync(join(FATURA_TEMP, b)).mtimeMs - statSync(join(FATURA_TEMP, a)).mtimeMs);
+  for (const ad of dosyalar) {
+    try {
+      const xml = readFileSync(join(FATURA_TEMP, ad), "utf8");
+      const eslesen = xml.match(/<cac:AccountingSupplierParty>[\s\S]*?<\/cac:AccountingSupplierParty>/);
+      if (eslesen) return eslesen[0];
+    } catch { /* döküm okunamadı */ }
+  }
+  return `<cac:AccountingSupplierParty><cac:Party><cac:PartyName><cbc:Name>EXPERT BİLİŞİM</cbc:Name></cac:PartyName></cac:Party></cac:AccountingSupplierParty>`;
+}
+
+function xsltProcAl() {
+  if (xsltProc && xsltProc.exitCode == null) return xsltProc;
+  const ps1 = join(tmpdir(), "vega-fatura-xslt.ps1");
+  writeFileSync(ps1, XSLT_PS, "utf8");
+  const child = spawn("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", ps1], {
+    windowsHide: true,
+    stdio: ["pipe", "pipe", "pipe"],
+  });
+  child.buf = "";
+  child.kuyruk = [];
+  child.stdout.on("data", (chunk) => {
+    child.buf += chunk.toString("utf8");
+    let kesim = child.buf.indexOf("\n");
+    while (kesim >= 0) {
+      const satir = child.buf.slice(0, kesim).replace(/\r/g, "").trim();
+      child.buf = child.buf.slice(kesim + 1);
+      if (satir === "OK" || satir === "HATA") {
+        const bekleyen = child.kuyruk.shift();
+        if (bekleyen) bekleyen(satir);
+      }
+      kesim = child.buf.indexOf("\n");
+    }
+  });
+  child.on("exit", () => {
+    for (const bekleyen of child.kuyruk) bekleyen("HATA");
+    if (xsltProc === child) xsltProc = null;
+  });
+  xsltProc = child;
+  return child;
+}
+
+function xsltDonustur(xml, xsltYol) {
+  const is = xsltZincir.then(() => new Promise((resolve, reject) => {
+    const id = randomBytes(8).toString("hex");
+    const xmlYol = join(tmpdir(), `vega-ubl-${id}.xml`);
+    const htmlYol = join(tmpdir(), `vega-ubl-${id}.html`);
+    writeFileSync(xmlYol, xml, "utf8");
+    const child = xsltProcAl();
+    const zaman = setTimeout(() => {
+      reject(new Error("Fatura görseli hazırlanamadı."));
+    }, 25000);
+    child.kuyruk.push((sonuc) => {
+      clearTimeout(zaman);
+      try { unlinkSync(xmlYol); } catch { /* geçici xml silinemedi */ }
+      if (sonuc !== "OK" || !existsSync(htmlYol)) {
+        reject(new Error("Fatura görseli hazırlanamadı."));
+        return;
+      }
+      const html = htmlCoz(htmlYol);
+      try { unlinkSync(htmlYol); } catch { /* geçici html silinemedi */ }
+      resolve(html);
+    });
+    const sablon = xsltYol && existsSync(xsltYol) ? xsltYol : FATURA_XSLT;
+    child.stdin.write(`${sablon}|${xmlYol}|${htmlYol}\n`);
+  }));
+  xsltZincir = is.catch(() => {});
+  return is;
+}
+
+function birimKodu(birim) {
+  const ad = String(birim || "").trim().toUpperCase();
+  const kodlar = { ADET: "NIU", AD: "NIU", KG: "KGM", KILOGRAM: "KGM", LT: "LTR", LITRE: "LTR", M: "MTR", M2: "MTK", M3: "MTQ", PAKET: "PA", KUTU: "BX" };
+  if (kodlar[ad]) return kodlar[ad];
+  if (/^[A-Z0-9]{2,3}$/.test(ad)) return ad;
+  return "NIU";
+}
+
+async function faturaUbl(firma, donem, no) {
+  const cari = firmaTablo(firma, "TBLCARI");
+  const yazi = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+  let baslik = null;
+  let satirlar = [];
+  for (const ad of ["TBLSATFAT", "TBLPSATFAT"]) {
+    const baslikTablo = donemTablo(firma, donem, ad + "BASLIK");
+    const hareketTablo = donemTablo(firma, donem, ad + "HAREKET");
+    try {
+      const baslikSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), b.TARIH, 23),
+  REPLACE(REPLACE(RTRIM(ISNULL(CAST(b.EFATURAUUID AS nvarchar(40)), N'')), N'{', N''), N'}', N''),
+  CAST(ISNULL(b.TUTAR, 0) AS decimal(18, 2)),
+  ${yazi("c.FIRMAADI")},
+  ${yazi("CAST(c.ADRESFATURA AS nvarchar(300))")},
+  ${yazi("c.IL")},
+  ${yazi("c.SEHIR")},
+  ${yazi("c.VERGIDAIRESI")},
+  ${yazi("c.VERGINO")},
+  ${yazi("c.EMAIL")},
+  ${yazi("c.TELEFON1")}
+FROM ${baslikTablo} b
+JOIN ${cari} c ON c.IND = b.FIRMANO
+WHERE RTRIM(b.BELGENO) = N'${no}';
+`);
+      if (!baslikSatir.length) continue;
+      const [tarih, uuid, tutar, firmaAdi, adres, ilce, sehir, vergiDairesi, vergiNo, eposta, telefon] = baslikSatir[0].split("|").map((part) => part.trim());
+      baslik = { tarih, uuid, tutar: Number(tutar) || 0, firmaAdi, adres, ilce, sehir, vergiDairesi, vergiNo, eposta, telefon };
+      satirlar = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(ISNULL(h.SATIRNO, 0) AS varchar(6)),
+  ${yazi("h.MALINCINSI")},
+  CAST(ISNULL(h.MIKTAR, 0) AS decimal(18, 2)),
+  ${yazi("h.BIRIM")},
+  CAST(ISNULL(h.FIYATI, 0) AS decimal(18, 2)),
+  CAST(ISNULL(h.KDV, 0) AS decimal(18, 2)),
+  CAST(ISNULL(h.GERCEKTOPLAM, 0) AS decimal(18, 2))
+FROM ${hareketTablo} h
+JOIN ${baslikTablo} b ON b.IND = h.EVRAKNO
+WHERE RTRIM(b.BELGENO) = N'${no}'
+ORDER BY h.SATIRNO, h.IND;
+`);
+      break;
+    } catch { /* bu fatura tablosu yok */ }
+  }
+  if (!baslik || !satirlar.length) return "";
+  const kalemler = satirlar.map((line) => {
+    const [sira, ad, miktar, birim, fiyat, kdv, net] = line.split("|").map((part) => part.trim());
+    const adet = Number(miktar) || 0;
+    const birimFiyat = Number(fiyat) || 0;
+    const brut = Math.round(adet * birimFiyat * 100) / 100;
+    const tutar = Number(net) > 0 ? Number(net) : brut;
+    const iskonto = Math.max(0, Math.round((brut - tutar) * 100) / 100);
+    const oran = Number(kdv) || 0;
+    const kdvTutar = Math.round(tutar * oran) / 100;
+    return { sira: sira || "1", ad, adet, birim, birimFiyat, tutar, iskonto, oran, kdvTutar };
+  });
+  const ara = kalemler.reduce((toplam, kalem) => toplam + kalem.tutar, 0);
+  const iskonto = kalemler.reduce((toplam, kalem) => toplam + kalem.iskonto, 0);
+  const gruplar = new Map();
+  for (const kalem of kalemler) {
+    const grup = gruplar.get(kalem.oran) || { oran: kalem.oran, matrah: 0, vergi: 0 };
+    grup.matrah += kalem.tutar;
+    grup.vergi += kalem.kdvTutar;
+    gruplar.set(kalem.oran, grup);
+  }
+  let kdvTutar = [...gruplar.values()].reduce((toplam, grup) => toplam + grup.vergi, 0);
+  let odenecek = Math.round((ara + kdvTutar) * 100) / 100;
+  if (baslik.tutar > 0 && Math.abs(baslik.tutar - odenecek) < 1 && gruplar.size === 1) {
+    const fark = Math.round((baslik.tutar - ara) * 100) / 100;
+    const tek = [...gruplar.values()][0];
+    tek.vergi = fark;
+    kdvTutar = fark;
+    odenecek = baslik.tutar;
+  }
+  const vergiNo = baslik.vergiNo.replace(/\D/g, "");
+  const kimlik = vergiNo.length === 11 ? "TCKN" : "VKN";
+  const uuid = baslik.uuid || randomBytes(16).toString("hex").replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, "$1-$2-$3-$4-$5").toUpperCase();
+  const satirXml = kalemler.map((kalem) => `<cac:InvoiceLine>
+    <cbc:ID>${xmlKacis(kalem.sira)}</cbc:ID>
+    <cbc:InvoicedQuantity unitCode="${birimKodu(kalem.birim)}">${paraXml(kalem.adet)}</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="TRY">${paraXml(kalem.tutar)}</cbc:LineExtensionAmount>
+    ${kalem.iskonto > 0 ? `<cac:AllowanceCharge><cbc:ChargeIndicator>false</cbc:ChargeIndicator><cbc:Amount currencyID="TRY">${paraXml(kalem.iskonto)}</cbc:Amount></cac:AllowanceCharge>` : ""}
+    <cac:TaxTotal><cbc:TaxAmount currencyID="TRY">${paraXml(kalem.kdvTutar)}</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="TRY">${paraXml(kalem.tutar)}</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="TRY">${paraXml(kalem.kdvTutar)}</cbc:TaxAmount>
+        <cbc:Percent>${paraXml(kalem.oran)}</cbc:Percent>
+        <cac:TaxCategory><cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme></cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item><cbc:Name>${xmlKacis(kalem.ad)}</cbc:Name></cac:Item>
+    <cac:Price><cbc:PriceAmount currencyID="TRY">${paraXml(kalem.birimFiyat)}</cbc:PriceAmount></cac:Price>
+  </cac:InvoiceLine>`).join("");
+  const vergiXml = [...gruplar.values()].map((grup) => `<cac:TaxSubtotal>
+    <cbc:TaxableAmount currencyID="TRY">${paraXml(grup.matrah)}</cbc:TaxableAmount>
+    <cbc:TaxAmount currencyID="TRY">${paraXml(grup.vergi)}</cbc:TaxAmount>
+    <cbc:CalculationSequenceNumeric>1</cbc:CalculationSequenceNumeric>
+    <cbc:Percent>${paraXml(grup.oran)}</cbc:Percent>
+    <cac:TaxCategory><cac:TaxScheme><cbc:Name>KDV</cbc:Name><cbc:TaxTypeCode>0015</cbc:TaxTypeCode></cac:TaxScheme></cac:TaxCategory>
+  </cac:TaxSubtotal>`).join("");
+  return `<?xml version="1.0" encoding="utf-8"?>
+<Invoice xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2" xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2" xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2" xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2">
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+  <cbc:CustomizationID>TR1.2</cbc:CustomizationID>
+  <cbc:ProfileID>TICARIFATURA</cbc:ProfileID>
+  <cbc:ID>${xmlKacis(no)}</cbc:ID>
+  <cbc:CopyIndicator>false</cbc:CopyIndicator>
+  <cbc:UUID>${xmlKacis(uuid)}</cbc:UUID>
+  <cbc:IssueDate>${xmlKacis(baslik.tarih)}</cbc:IssueDate>
+  <cbc:InvoiceTypeCode>SATIS</cbc:InvoiceTypeCode>
+  <cbc:Note>${xmlKacis(tutarYazi(odenecek))}</cbc:Note>
+  <cbc:DocumentCurrencyCode>TRY</cbc:DocumentCurrencyCode>
+  <cbc:LineCountNumeric>${kalemler.length}</cbc:LineCountNumeric>
+  ${saticiXml()}
+  <cac:AccountingCustomerParty><cac:Party>
+    ${vergiNo ? `<cac:PartyIdentification><cbc:ID schemeID="${kimlik}">${xmlKacis(vergiNo)}</cbc:ID></cac:PartyIdentification>` : ""}
+    <cac:PartyName><cbc:Name>${xmlKacis(baslik.firmaAdi)}</cbc:Name></cac:PartyName>
+    <cac:PostalAddress>
+      <cbc:StreetName>${xmlKacis(baslik.adres)}</cbc:StreetName>
+      <cbc:CitySubdivisionName>${xmlKacis(baslik.ilce)}</cbc:CitySubdivisionName>
+      <cbc:CityName>${xmlKacis(baslik.sehir)}</cbc:CityName>
+      <cac:Country><cbc:Name>Türkiye</cbc:Name></cac:Country>
+    </cac:PostalAddress>
+    <cac:PartyTaxScheme><cac:TaxScheme><cbc:Name>${xmlKacis(baslik.vergiDairesi)}</cbc:Name></cac:TaxScheme></cac:PartyTaxScheme>
+    <cac:Contact>
+      ${baslik.telefon ? `<cbc:Telephone>${xmlKacis(baslik.telefon)}</cbc:Telephone>` : ""}
+      ${baslik.eposta ? `<cbc:ElectronicMail>${xmlKacis(baslik.eposta)}</cbc:ElectronicMail>` : ""}
+    </cac:Contact>
+  </cac:Party></cac:AccountingCustomerParty>
+  <cac:TaxTotal><cbc:TaxAmount currencyID="TRY">${paraXml(kdvTutar)}</cbc:TaxAmount>${vergiXml}</cac:TaxTotal>
+  <cac:LegalMonetaryTotal>
+    <cbc:LineExtensionAmount currencyID="TRY">${paraXml(ara)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="TRY">${paraXml(ara)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="TRY">${paraXml(odenecek)}</cbc:TaxInclusiveAmount>
+    <cbc:AllowanceTotalAmount currencyID="TRY">${paraXml(iskonto)}</cbc:AllowanceTotalAmount>
+    <cbc:PayableAmount currencyID="TRY">${paraXml(odenecek)}</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+  ${satirXml}
+</Invoice>`;
+}
+
+function gomuluSablon(xml) {
+  const blok = /<cbc:EmbeddedDocumentBinaryObject\b([^>]*)>([\s\S]*?)<\/cbc:EmbeddedDocumentBinaryObject>/gi;
+  let eslesen;
+  while ((eslesen = blok.exec(xml))) {
+    if (!/\.xslt/i.test(eslesen[1])) continue;
+    try {
+      const metin = Buffer.from(eslesen[2].replace(/\s+/g, ""), "base64").toString("utf8").replace(/^\uFEFF/, "");
+      if (metin.includes("xsl:stylesheet")) return metin;
+    } catch { /* gömülü şablon çözülemedi */ }
+  }
+  return "";
+}
+
+function gelenFaturaXml(firma, donem, no) {
+  const tablo = donemTablo(firma, donem, "TBLEFAINBOX");
+  if (!/^F\d{4}D\d{4}TBLEFAINBOX$/.test(tablo)) return Promise.resolve("");
+  const id = randomBytes(6).toString("hex");
+  const out = join(tmpdir(), `vega-gelen-${id}.xml`);
+  const ps1 = join(tmpdir(), `vega-gelen-${id}.ps1`);
+  const sunucu = String(link.server || "(local)").replace(/'/g, "''");
+  const veritabani = String(link.database || "VEGADB").replace(/'/g, "''");
+  writeFileSync(ps1, [
+    "$ErrorActionPreference='Stop'",
+    `$con = New-Object System.Data.SqlClient.SqlConnection "Data Source=${sunucu};Initial Catalog=${veritabani};Integrated Security=True"`,
+    "$con.Open()",
+    "$cmd = $con.CreateCommand()",
+    `$cmd.CommandText = "SELECT TOP 1 CAST(RAWINVOICE AS varbinary(max)) FROM ${tablo} WHERE RTRIM(Evrakno)=@no AND RAWINVOICE IS NOT NULL ORDER BY IND DESC"`,
+    "$p = $cmd.Parameters.Add('@no',[Data.SqlDbType]::NVarChar,40)",
+    `$p.Value = '${no.replace(/'/g, "''")}'`,
+    "$bytes = $cmd.ExecuteScalar()",
+    "$con.Close()",
+    "if ($bytes -isnot [byte[]] -or $bytes.Length -lt 20) { 'YOK'; exit 0 }",
+    `[IO.File]::WriteAllBytes('${out.replace(/'/g, "''")}', $bytes)`,
+    "'OK'",
+  ].join("\r\n"), "utf8");
+  return execFileAsync("powershell.exe", ["-NoProfile", "-NonInteractive", "-File", ps1], { windowsHide: true, timeout: 20000 })
+    .then(() => {
+      try { unlinkSync(ps1); } catch { /* geçici komut silinemedi */ }
+      if (!existsSync(out)) return "";
+      const buf = readFileSync(out);
+      try { unlinkSync(out); } catch { /* geçici xml silinemedi */ }
+      if (buf.length >= 2 && buf[0] === 0xff && buf[1] === 0xfe) return buf.toString("utf16le");
+      return buf.toString("utf8");
+    })
+    .catch(() => "");
+}
+
+async function gelenHtml(xml) {
+  const sablon = gomuluSablon(xml);
+  let ozel = "";
+  if (sablon.includes("xsl:stylesheet")) {
+    ozel = join(tmpdir(), `vega-sablon-${randomBytes(6).toString("hex")}.xslt`);
+    writeFileSync(ozel, sablon, "utf8");
+    try {
+      return await xsltDonustur(xml, ozel);
+    } catch { /* gelen şablon açılmadı */ }
+    finally {
+      try { unlinkSync(ozel); } catch { /* geçici şablon silinemedi */ }
+    }
+  }
+  return xsltDonustur(xml, FATURA_XSLT);
+}
+
+async function faturaGorunumHtml(firma, donem, no) {
+  const anahtar = firma + ":" + donem + ":" + no;
+  const onbellek = faturaHtmlOnbellek.get(anahtar);
+  if (onbellek) return onbellek;
+  let html = "";
+  const gelen = await gelenFaturaXml(firma, donem, no);
+  if (gelen.includes("<Invoice") && existsSync(FATURA_XSLT)) {
+    try { html = await gelenHtml(gelen); } catch { html = ""; }
+  }
+  if (!html) html = hazirFaturaHtml(no);
+  if (!html && existsSync(FATURA_XSLT)) {
+    const xml = await faturaUbl(firma, donem, no);
+    if (xml) {
+      try { html = await xsltDonustur(xml, FATURA_XSLT); } catch { html = ""; }
+    }
+  }
+  if (!html) return "";
+  if (faturaHtmlOnbellek.size > 40) faturaHtmlOnbellek.clear();
+  faturaHtmlOnbellek.set(anahtar, html);
+  return html;
 }
 
 const server = createServer(async (req, res) => {
@@ -658,29 +1280,59 @@ WHERE CATEGORY BETWEEN 1 AND 7 AND RTRIM(ISNULL(KOD, N'')) <> N'';
       const q = ara(url.searchParams.get("q"));
       if (!firma || !donem) return gonder(res, 400, { error: "Firma ve dönem seçin." });
       const like = q ? `%${q}%` : "";
-      const ozet = donemTablo(firma, donem, "VARESCARIHAREKETOZET");
+      const hareketsiz = url.searchParams.get("hareketsiz") === "1";
+      const ozet = hareketsiz ? firmaTablo(firma, "TBLCARI") : donemTablo(firma, donem, "VARESCARIHAREKETOZET");
       const kosullar = [];
-      if (like) kosullar.push(`(FIRMAKODU COLLATE Latin1_General_CI_AI LIKE N'${like}' OR FIRMAADI COLLATE Latin1_General_CI_AI LIKE N'${like}')`);
+      if (hareketsiz) {
+        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
+        kosullar.push("ISNULL(DELETED, 0) = 0");
+        kosullar.push(`NOT EXISTS (SELECT 1 FROM ${hareket} h WHERE h.FIRMANO = ${ozet}.IND)`);
+      }
+      if (like) {
+        const kodAlan = hareketsiz ? "FIRMAKODU" : "v.FIRMAKODU";
+        const adAlan = hareketsiz ? "FIRMAADI" : "v.FIRMAADI";
+        kosullar.push(`(${kodAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}' OR ${adAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}')`);
+      }
       for (let no = 1; no <= 7; no += 1) {
         const deger = metin(url.searchParams.get("ok" + no), 80).trim();
-        if (deger) kosullar.push(`CARIKOD${no} = N'${deger}'`);
+        if (!deger) continue;
+        kosullar.push(hareketsiz ? `RTRIM(KOD${no}) = N'${deger}'` : `v.CARIKOD${no} = N'${deger}'`);
       }
       const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
-      const lines = await queryLines(`
+      const yazi = (ifade) => `REPLACE(REPLACE(REPLACE(${ifade}, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const lines = hareketsiz
+        ? await queryLines(`
 SET NOCOUNT ON;
 SELECT
-  REPLACE(REPLACE(REPLACE(ISNULL(FIRMAKODU, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
-  REPLACE(REPLACE(REPLACE(ISNULL(FIRMAADI, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
-  REPLACE(REPLACE(REPLACE(ISNULL(PARABIRIMI, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
-  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(FIRMATIPI, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
-  REPLACE(REPLACE(REPLACE(ISNULL(BAKIYEDURUMU, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
-  CAST(SUM(ISNULL(TLBORC, 0)) AS decimal(18, 2)),
-  CAST(SUM(ISNULL(TLALACAK, 0)) AS decimal(18, 2)),
-  CAST(SUM(ISNULL(TLBAKIYE, 0)) AS decimal(18, 2))
+  ${yazi("ISNULL(FIRMAKODU, N'')")},
+  ${yazi("ISNULL(FIRMAADI, N'')")},
+  ${yazi("ISNULL(PARABIRIMI, N'')")},
+  ${yazi("CASE FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(FIRMATIPI, 0) AS nvarchar(10))) END")},
+  N'Bakiyesizler',
+  CAST(0 AS decimal(18, 2)),
+  CAST(0 AS decimal(18, 2)),
+  CAST(0 AS decimal(18, 2))
 FROM ${ozet}
 ${filtre}
-GROUP BY FIRMAKODU, FIRMAADI, PARABIRIMI, FIRMATIPI, BAKIYEDURUMU
-ORDER BY FIRMAKODU, PARABIRIMI;
+ORDER BY FIRMAKODU;
+`)
+        : await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${yazi("ISNULL(v.FIRMAKODU, N'')")},
+  ${yazi("ISNULL(v.FIRMAADI, N'')")},
+  ${yazi("ISNULL(c.PARABIRIMI, N'TL')")},
+  ${yazi("RTRIM(ISNULL(v.FIRMATIPI, N''))")},
+  CASE WHEN ABS(SUM(ISNULL(v.TLBAKIYE, 0))) > 0.004 THEN N'Bakiye Verenler' ELSE N'Bakiyesizler' END,
+  CAST(SUM(ISNULL(v.TLBORC, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(v.TLALACAK, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(v.TLBAKIYE, 0)) AS decimal(18, 2))
+FROM ${ozet} v
+LEFT JOIN ${firmaTablo(firma, "TBLCARI")} c
+  ON c.FIRMAKODU COLLATE Latin1_General_CI_AI = v.FIRMAKODU COLLATE Latin1_General_CI_AI
+${filtre}
+GROUP BY v.FIRMAKODU, v.FIRMAADI, v.FIRMATIPI, c.PARABIRIMI
+ORDER BY v.FIRMAKODU;
 `);
       const items = lines.map((line) => {
         const [kod, ad, pb, tip, durum, borc, alacak, bakiye] = line.split("|").map((part) => part.trim());
@@ -727,27 +1379,305 @@ SELECT
   CAST(ISNULL(h.BORC, 0) AS decimal(18, 2)),
   CAST(ISNULL(h.ALACAK, 0) AS decimal(18, 2)),
   RTRIM(ISNULL(h.PARABIRIMI, N'')),
-  CAST(ISNULL(h.LN, 0) AS int)
+  CAST(ISNULL(h.LN, 0) AS int),
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(h.OZELKOD1, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')
 FROM ${hareket} h
 JOIN ${cari} c ON c.IND = h.FIRMANO
 WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
   ${pbSql}
 ORDER BY h.TARIH, h.IND;
 `);
+      const kalemler = new Map();
+      const kalemEkle = (anahtar, kalem) => {
+        const liste = kalemler.get(anahtar) || [];
+        liste.push(kalem);
+        kalemler.set(anahtar, liste);
+      };
+      const yaziAlan = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      try {
+        const stokHareket = donemTablo(firma, donem, "TBLSTOKHAREKETLERI");
+        const stok = firmaTablo(firma, "TBLSTOKLAR");
+        const stokSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  h.IZAHAT,
+  CAST(ISNULL(h.BELGENO, 0) AS int),
+  CAST(CASE WHEN ISNULL(h.GIREN, 0) <> 0 THEN h.GIREN ELSE ISNULL(h.CIKAN, 0) END AS decimal(18, 2)),
+  ${yaziAlan("s.MALINCINSI")},
+  CAST(ISNULL(h.TUTAR, 0) AS decimal(18, 2))
+FROM ${stokHareket} h
+JOIN ${stok} s ON s.IND = h.STOKNO
+JOIN ${cari} c ON c.IND = h.FIRMANO
+WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+ORDER BY h.BELGENO, h.IND;
+`);
+        for (const line of stokSatir) {
+          const [izahat, belgeNo, miktar, ad, tutar] = line.split("|").map((part) => part.trim());
+          kalemEkle(izahat + "|" + belgeNo, { miktar: Number(miktar), ad, tutar: Number(tutar) });
+        }
+      } catch { /* stok satırı yok */ }
+      for (const tabloAd of ["TBLSATFAT", "TBLPSATFAT"]) {
+        try {
+          const baslik = donemTablo(firma, donem, tabloAd + "BASLIK");
+          const detay = donemTablo(firma, donem, tabloAd + "HAREKET");
+          const faturaSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(b.IND AS int),
+  CAST(ISNULL(h.MIKTAR, 0) AS decimal(18, 2)),
+  ${yaziAlan("h.MALINCINSI")},
+  CAST(ISNULL(h.GERCEKTOPLAM, 0) AS decimal(18, 2))
+FROM ${detay} h
+JOIN ${baslik} b ON b.IND = h.EVRAKNO
+JOIN ${cari} c ON c.IND = b.FIRMANO
+WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+ORDER BY b.IND, h.SATIRNO, h.IND;
+`);
+          for (const line of faturaSatir) {
+            const [belgeNo, miktar, ad, tutar] = line.split("|").map((part) => part.trim());
+            kalemEkle("fatura|" + tabloAd + "|" + belgeNo, { miktar: Number(miktar), ad, tutar: Number(tutar) });
+          }
+        } catch { /* fatura satırı yok */ }
+      }
+      for (const baslikAd of ["TBLCARGIRBASLIK", "TBLCARCIKBASLIK"]) {
+        try {
+          const baslik = donemTablo(firma, donem, baslikAd);
+          const detay = donemTablo(firma, donem, baslikAd.replace("BASLIK", "HAREKET"));
+          const cekSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(b.IND AS int),
+  CAST(ISNULL(h.IZAHAT, 0) AS int),
+  ${yaziAlan("CAST(h.ACIKLAMA AS nvarchar(180))")},
+  CONVERT(varchar(10), h.VADE, 104),
+  CAST(ISNULL(h.TUTAR, 0) AS decimal(18, 2))
+FROM ${detay} h
+JOIN ${baslik} b ON RTRIM(ISNULL(h.EVRAKNO, N'')) = CAST(b.IND AS nvarchar(20))
+JOIN ${cari} c ON c.IND = b.FIRMANO
+WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+ORDER BY b.IND, h.IND;
+`);
+          for (const line of cekSatir) {
+            const [belgeNo, tur, ad, vade, tutar] = line.split("|").map((part) => part.trim());
+            kalemEkle("cek|" + belgeNo, { miktar: 0, ad, vade, tutar: Number(tutar), tur: Number(tur) || 0 });
+          }
+        } catch { /* çek satırı yok */ }
+      }
+      let firmaNo = 0;
+      try {
+        const noSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT CAST(IND AS varchar(12)) + N'|1'
+FROM ${cari}
+WHERE FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}';
+`);
+        firmaNo = noSatir.length ? Number(noSatir[0].split("|")[0]) || 0 : 0;
+      } catch { /* firma no yok */ }
       const items = lines.map((line) => {
-        const [izahat, tarih, evrakNo, aciklamaYazi, borc, alacak, paraBirimi, belgeNo] = line.split("|").map((part) => part.trim());
+        const [izahat, tarih, evrakNo, aciklamaYazi, borc, alacak, paraBirimi, belgeNo, ozelKod] = line.split("|").map((part) => part.trim());
+        const anahtar = izahat + "|" + (Number(belgeNo) || 0);
+        const stokKalem = kalemler.get(anahtar) || [];
+        const cekKalem = kalemler.get("cek|" + (Number(belgeNo) || 0)) || [];
+        const faturaTablo = [21, 23].includes(Number(izahat))
+          ? "TBLSATFAT"
+          : ([85, 87].includes(Number(izahat)) ? "TBLPSATFAT" : "");
+        const faturaKalem = faturaTablo
+          ? (kalemler.get("fatura|" + faturaTablo + "|" + (Number(belgeNo) || 0)) || [])
+          : [];
         return {
           izahat: Number(izahat),
           tarih,
           evrakNo,
           aciklama: aciklamaYazi,
+          ozelKod: ozelKod || "",
           borc: Number(borc),
           alacak: Number(alacak),
           pb: paraBirimi,
           belgeNo: Number(belgeNo) || 0,
+          kalemler: stokKalem.length ? stokKalem : (faturaKalem.length ? faturaKalem : cekKalem),
+          gorseller: [],
         };
       });
-      gonder(res, 200, { kod, items });
+      try {
+        const uidListe = [];
+        for (const baslikAd of ["TBLCARGIRBASLIK", "TBLCARCIKBASLIK"]) {
+          const baslikTablo = donemTablo(firma, donem, baslikAd);
+          const uidSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(b.IND AS varchar(12)),
+  UPPER(REPLACE(REPLACE(RTRIM(CAST(b.UID AS nvarchar(40))), N'{', N''), N'}', N''))
+FROM ${baslikTablo} b
+JOIN ${cari} c ON c.IND = b.FIRMANO
+WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+  AND b.UID IS NOT NULL;
+`);
+          uidListe.push(...uidSatir);
+        }
+        const dokumanSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(Id AS varchar(12)),
+  UPPER(REPLACE(REPLACE(RTRIM(OwnerGuid), N'{', N''), N'}', N'')),
+  RTRIM(REPLACE(Name, N'|', N'/'))
+FROM VegaDocuments.dbo.Documents
+WHERE ISNULL(Deleted, 0) = 0;
+`);
+        const guidGorsel = new Map();
+        for (const line of dokumanSatir) {
+          const [id, guid, ad] = line.split("|").map((part) => part.trim());
+          if (!guid) continue;
+          const liste = guidGorsel.get(guid) || [];
+          liste.push({ id: Number(id), ad });
+          guidGorsel.set(guid, liste);
+        }
+        const indGorsel = new Map();
+        for (const line of uidListe) {
+          const [ind, guid] = line.split("|").map((part) => part.trim());
+          const dosyalar = guidGorsel.get(guid);
+          if (dosyalar) indGorsel.set(Number(ind), dosyalar);
+        }
+        for (const item of items) {
+          item.gorseller = indGorsel.get(item.belgeNo) || [];
+        }
+      } catch { /* belge görseli yok */ }
+      let telefon = "";
+      let telefonlar = [];
+      let smsGonder = false;
+      try {
+        const telSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(YGSM, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(TELEFON1, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(TELEFON2, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(TELEFON3, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  CASE WHEN SMSGONDER = 1 THEN 1 ELSE 0 END
+FROM ${cari}
+WHERE FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}';
+`);
+        const parca = telSatir.length ? telSatir[0].split("|").map((part) => part.trim()) : [];
+        smsGonder = parca[4] === "1";
+        const gorulen = new Set();
+        telefonlar = parca.slice(1, 4).map(telefonNorm).filter((no) => {
+          if (no.length < 12 || no.length > 15 || gorulen.has(no)) return false;
+          gorulen.add(no);
+          return true;
+        });
+        telefon = telefonlar[0] || "";
+      } catch { /* telefon alanı yok */ }
+      gonder(res, 200, { kod, telefon, telefonlar, smsGonder, firmaNo, items });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/whatsapp") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, whatsappDurum());
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/whatsapp/baslat") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, await whatsappBagla());
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/whatsapp/cikis") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, await whatsappCikis());
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/fatura-gorunum") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const no = String(url.searchParams.get("no") || "").trim().toUpperCase();
+      if (!firma || !donem || !/^[A-Z0-9][A-Z0-9-]{2,39}$/.test(no)) {
+        return gonder(res, 400, { error: "Fatura seçin." });
+      }
+      let html = "";
+      try { html = await faturaGorunumHtml(firma, donem, no); } catch { html = ""; }
+      if (!html) return gonder(res, 404, { error: "Fatura görseli yok." });
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "private, max-age=60" });
+      res.end(html);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/dokuman") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const id = tamSayi(url.searchParams.get("id"), 100000000);
+      if (!id) return gonder(res, 400, { error: "Belge görseli yok." });
+      const satir = await queryLines(`
+SET NOCOUNT ON;
+SELECT RTRIM(LocalFileName), RTRIM(REPLACE(Name, N'|', N'/'))
+FROM VegaDocuments.dbo.Documents
+WHERE Id = ${id} AND ISNULL(Deleted, 0) = 0;
+`);
+      if (!satir.length) return gonder(res, 404, { error: "Belge görseli yok." });
+      const [dosya, ad] = satir[0].split("|").map((part) => part.trim());
+      if (!/^[0-9a-f-]{36}$/i.test(dosya)) return gonder(res, 404, { error: "Belge görseli yok." });
+      const yol = ["C:\\ArcTos\\Vega.Service\\Documents", "C:\\ArcTos\\Bin\\Documents"]
+        .map((kok) => join(kok, dosya))
+        .find((aday) => existsSync(aday));
+      if (!yol) return gonder(res, 404, { error: "Belge görseli yok." });
+      const uzanti = String(ad || "").toLowerCase().split(".").pop();
+      const turlar = { pdf: "application/pdf", png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp", tif: "image/tiff", tiff: "image/tiff" };
+      res.writeHead(200, {
+        "Content-Type": turlar[uzanti] || "application/octet-stream",
+        "Cache-Control": "private, max-age=300",
+      });
+      res.end(readFileSync(yol));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/pdf") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const html = String(body.html || "");
+      if (html.length < 40 || html.length > 2000000) return gonder(res, 400, { error: "Rapor hazırlanamadı." });
+      const pdf = await htmlPdf(html);
+      const ad = String(body.dosyaAdi || "hesap-ekstresi.pdf").replace(/[\\/:*?"<>|]/g, "").slice(0, 80) || "hesap-ekstresi.pdf";
+      res.writeHead(200, {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${ad.toLowerCase().endsWith(".pdf") ? ad : ad + ".pdf"}"`,
+        "Cache-Control": "no-store",
+      });
+      res.end(pdf);
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/whatsapp-gonder") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      if (wa.durum !== "bagli") return gonder(res, 400, { error: "Sağ üstteki Ayarlar'dan telefonu bağlayın." });
+      const body = await okuGovde(req);
+      const gelen = Array.isArray(body.telefonlar) ? body.telefonlar : [body.telefon];
+      const gorulen = new Set();
+      const numaralar = gelen.map(telefonNorm).filter((no) => {
+        if (no.length < 12 || no.length > 15 || gorulen.has(no)) return false;
+        gorulen.add(no);
+        return true;
+      });
+      const html = String(body.html || "");
+      const ozet = String(body.ozet || "").trim().slice(0, 1000);
+      const dosyaAdi = String(body.dosyaAdi || "hesap-ekstresi-detayli.pdf");
+      if (!numaralar.length) return gonder(res, 400, { error: "Cari kartında Telefon 1, 2 veya 3 yok." });
+      if (html.length < 40 || html.length > 2000000) return gonder(res, 400, { error: "Gönderilecek rapor yok." });
+      const pdf = await htmlPdf(html);
+      let adet = 0;
+      let sonId = "";
+      const hatalar = [];
+      for (const no of numaralar) {
+        try {
+          const sonuc = await whatsappPdf(no, pdf, dosyaAdi, ozet);
+          sonId = sonuc.id;
+          adet += 1;
+        } catch (error) {
+          hatalar.push(error.message || "Gönderilemedi");
+        }
+      }
+      if (!adet) return gonder(res, 400, { error: hatalar[0] || "WhatsApp gönderilemedi." });
+      gonder(res, 200, { ok: true, id: sonId, adet, eksik: hatalar.length, dosya: true });
       return;
     }
 
@@ -1079,6 +2009,94 @@ ORDER BY b.sira;
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/bordro") {
+      const kim = oturum(req);
+      if (!kim) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const cikis = body.tur === "cikis";
+      const kod = metin(body.kod, 40).trim();
+      const tarih = sqlTarihIfade(body.tarih);
+      const izinli = new Set([1, 2, 4, 6, 11]);
+      const temizSatir = [];
+      for (const satir of Array.isArray(body.satirlar) ? body.satirlar : []) {
+        const izahat = tamSayi(satir?.izahat, 11);
+        const tutar = Number(satir?.tutar);
+        if (!izinli.has(izahat) || !Number.isFinite(tutar) || tutar <= 0) continue;
+        const vade = sqlTarihIfade(satir?.vade) || tarih;
+        if (!vade) continue;
+        temizSatir.push({
+          izahat,
+          portno: portNo(satir?.portfoy),
+          aciklama: metin(satir?.aciklama, 200),
+          vade,
+          tutar: sqlOndalik(tutar),
+          pb: metin(satir?.pb || body.pb || "TL", 3).trim() || "TL",
+          kur: sqlOndalik(satir?.kur || body.kur || 1),
+        });
+      }
+      if (!kod || !tarih || !temizSatir.length) {
+        return gonder(res, 400, { error: "Firma, tarih ve en az bir tutarlı satır gerekli." });
+      }
+      const toplam = sqlOndalik(temizSatir.reduce((sum, satir) => sum + Number(satir.tutar), 0));
+      const pb = metin(body.pb || "TL", 3).trim() || "TL";
+      const kur = sqlOndalik(body.kur || 1);
+      const baslik = donemTablo(kim.firma, kim.donem, cikis ? "TBLCARCIKBASLIK" : "TBLCARGIRBASLIK");
+      const detay = donemTablo(kim.firma, kim.donem, cikis ? "TBLCARCIKHAREKET" : "TBLCARGIRHAREKET");
+      const hareket = donemTablo(kim.firma, kim.donem, "TBLCARIHAREKETLERI");
+      const cari = firmaTablo(kim.firma, "TBLCARI");
+      const onek = cikis ? "ARC" : "C";
+      const hane = cikis ? 5 : 7;
+      const basamak = cikis ? 4 : 2;
+      const satirSql = temizSatir.map((satir) => `
+INSERT INTO ${detay} (IZAHAT, PORTNO, EVRAKNO, ACIKLAMA, VADE, TUTAR, PARABIRIMI, KUR, FIRMANO, STATUS)
+VALUES (${satir.izahat}, ${satir.portno}, @ind, N'${satir.aciklama}', ${satir.vade}, ${satir.tutar}, N'${satir.pb}', ${satir.kur}, @firma, 0);`).join("");
+      const sql = `
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRY
+  BEGIN TRAN;
+  DECLARE @firma int, @ind int, @sira int, @belge nvarchar(16);
+  SELECT TOP 1 @firma = IND
+  FROM ${cari}
+  WHERE FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}';
+  IF @firma IS NULL
+  BEGIN
+    ROLLBACK;
+    SELECT N'hata|Cari bulunamadı';
+    RETURN;
+  END
+  SELECT @sira = ISNULL(MAX(CONVERT(int, SUBSTRING(BELGENO, ${basamak}, 16))), 0) + 1
+  FROM ${baslik} WITH (UPDLOCK, HOLDLOCK)
+  WHERE BELGENO LIKE N'${onek}' + REPLICATE(N'[0-9]', ${hane});
+  SET @belge = N'${onek}' + RIGHT(REPLICATE(N'0', ${hane}) + CAST(@sira AS nvarchar(10)), CASE WHEN LEN(CAST(@sira AS nvarchar(10))) > ${hane} THEN LEN(CAST(@sira AS nvarchar(10))) ELSE ${hane} END);
+  INSERT INTO ${baslik} (
+    FIRMANO, BELGENO, TARIH, IADE, AYLIKVADE, TUTAR, PARABIRIMI, KUR, BELGETIPI, IPTAL, GIRIS,
+    USERNO, OZELKOD1, OZELKOD2, OZELKOD3, OZELKOD4, OZELKOD5, OZELKOD6, ACIKLAMA, CREDATE
+  ) VALUES (
+    @firma, @belge, ${tarih}, 0, ${sqlOndalik(body.vadeYuzde || 0)}, ${toplam}, N'${pb}', ${kur}, ${cikis ? 11 : 13}, 0, ${cikis ? 0 : 1},
+    ${tamSayi(kim.no, 999999) || 0}, N'${metin(body.sube || "MERKEZ", 15)}', N'${metin(body.kasa || "MERKEZ", 15)}',
+    N'${metin(body.ok1, 30)}', N'${metin(body.ok2, 30)}', N'${metin(body.ok3, 200)}', N'${metin(body.ok4, 30)}',
+    N'${metin(body.aciklama, 400)}', GETDATE()
+  );
+  SET @ind = SCOPE_IDENTITY();
+  ${satirSql}
+  INSERT INTO ${hareket} (IZAHAT, LN, EVRAKNO, BORC, ALACAK, PARABIRIMI, KUR, TARIH, FIRMANO)
+  VALUES (${cikis ? 11 : 13}, @ind, @belge, ${cikis ? toplam : "0"}, ${cikis ? "0" : toplam}, N'${pb}', ${kur}, ${tarih}, @firma);
+  COMMIT;
+  SELECT N'ok|' + @belge + N'|' + CAST(@ind AS nvarchar(20));
+END TRY
+BEGIN CATCH
+  IF @@TRANCOUNT > 0 ROLLBACK;
+  SELECT N'hata|' + REPLACE(REPLACE(ERROR_MESSAGE(), N'|', N'/'), NCHAR(13), N' ');
+END CATCH;
+`;
+      const sonuc = await queryLines(sql);
+      const parca = (sonuc[0] || "").split("|");
+      if (parca[0] !== "ok") return gonder(res, 400, { error: parca.slice(1).join("|") || "Belge yazılamadı." });
+      gonder(res, 200, { belgeNo: parca[1], belgeInd: Number(parca[2]) || 0 });
+      return;
+    }
+
     gonder(res, 404, { error: "Sayfa yok." });
   } catch (error) {
     gonder(res, 500, { error: error.message || "Sunucu hatası" });
@@ -1094,13 +2112,24 @@ server.on("error", (error) => {
   process.exit(1);
 });
 
-server.listen(PORT, "127.0.0.1", () => {
+server.listen(PORT, "0.0.0.0", () => {
   const adres = `http://127.0.0.1:${PORT}`;
   console.log(`Vega Raporlama ${adres}`);
+  for (const ag of Object.values(networkInterfaces()).flat()) {
+    if (!ag || ag.internal) continue;
+    if (ag.family !== "IPv4" && ag.family !== 4) continue;
+    console.log(`Ağdan: http://${ag.address}:${PORT}`);
+  }
   console.log(`Veritabanı: ${link.server} / ${link.database}`);
   if (!existsSync(UDL)) console.warn(`Bağlantı dosyası bulunamadı: ${UDL}`);
   console.log(SQLCMD ? "Sorgu aracı: sqlcmd" : "Sorgu aracı: Windows SQL istemcisi");
   console.log("Kapatmak için bu pencereyi kapatın.");
+  if (existsSync(join(whatsappKlasor(), "creds.json"))) {
+    whatsappBagla().catch((error) => {
+      wa.durum = "hata";
+      wa.hata = error.message || "Kayıtlı telefon bağlantısı açılamadı.";
+    });
+  }
   let paketli = false;
   try { paketli = require("node:sea").isSea(); } catch { paketli = false; }
   if (paketli) execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });

@@ -1,2 +1,5 @@
+node_modules/
 dist/sea-prep.blob
 dist/*.exe
+whatsapp.json
+whatsapp-oturum/
