@@ -3,7 +3,7 @@ const { randomBytes } = require("node:crypto");
 const { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync, unlinkSync, rmSync } = require("node:fs");
 const { createServer } = require("node:http");
 const { networkInterfaces, tmpdir } = require("node:os");
-const { dirname, join } = require("node:path");
+const { basename, dirname, join } = require("node:path");
 const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
@@ -337,6 +337,36 @@ WHERE TABLE_NAME IN (${liste});
   return adlar.find((item) => bulunan.has(item.toUpperCase())) || "";
 }
 
+async function kolonKumesi(tablo) {
+  const ad = String(tablo).replace(/[^\w]/g, "");
+  if (!ad) return new Set();
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'v', COLUMN_NAME
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_NAME = N'${ad}';
+`);
+  return new Set(lines.map((line) => (line.split("|")[1] || "").trim().toUpperCase()));
+}
+
+function notIfadesi(kolonlar, takma, adaylar) {
+  const ad = adaylar.find((item) => kolonlar.has(item));
+  if (!ad) return "N''";
+  const alan = `CAST(${takma}.${ad} AS nvarchar(400))`;
+  return `LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(
+    CASE
+      WHEN CHARINDEX(CHAR(13), ISNULL(${alan}, N'')) > 1 THEN LEFT(${alan}, CHARINDEX(CHAR(13), ${alan}) - 1)
+      WHEN CHARINDEX(CHAR(10), ISNULL(${alan}, N'')) > 1 THEN LEFT(${alan}, CHARINDEX(CHAR(10), ${alan}) - 1)
+      ELSE ISNULL(${alan}, N'')
+    END, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')))`;
+}
+
+function duzYazi(kolonlar, takma, adaylar) {
+  const ad = adaylar.find((item) => kolonlar.has(item));
+  if (!ad) return "N''";
+  return `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${takma}.${ad}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+}
+
 function tamSayi(value, max = 9999) {
   const n = Number(value);
   if (!Number.isInteger(n) || n < 1 || n > max) return null;
@@ -567,6 +597,69 @@ function edgeBul() {
     join(pf, "Google", "Chrome", "Application", "chrome.exe"),
     join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
   ]);
+}
+
+function paketMi() {
+  try { return require("node:sea").isSea(); } catch { return false; }
+}
+
+function ikonYolu() {
+  return ilkVarolan([
+    join(__dirname, "assets", "expert-bilisim.ico"),
+    join(dirname(process.execPath), "expert-bilisim.ico"),
+  ]);
+}
+
+function konsoluGizle() {
+  if (!paketMi()) return;
+  execFile("powershell.exe", [
+    "-NoProfile",
+    "-WindowStyle", "Hidden",
+    "-Command",
+    `Add-Type -Namespace Vega -Name Pencere -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
+  ], { windowsHide: true });
+}
+
+function uygulamaPenceresi(adres, izle = true) {
+  if (process.env.VEGA_PENCERE === "0") return;
+  const tarayici = edgeBul();
+  if (!tarayici) {
+    execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });
+    return;
+  }
+  const profil = join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere");
+  mkdirSync(profil, { recursive: true });
+  const child = spawn(tarayici, [
+    "--app=" + adres,
+    "--user-data-dir=" + profil,
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-extensions",
+    "--disable-sync",
+    "--start-maximized",
+  ], { windowsHide: true, stdio: "ignore" });
+  child.on("error", () => {
+    execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });
+  });
+  if (!izle) return;
+  const bas = Date.now();
+  const denetle = () => {
+    execFile("powershell.exe", [
+      "-NoProfile",
+      "-WindowStyle", "Hidden",
+      "-Command",
+      "$bul = Get-CimInstance Win32_Process -Filter \"Name='$env:VEGA_PENCERE_AD'\" | Where-Object { $_.CommandLine -and $_.CommandLine.Contains($env:VEGA_PENCERE_PROFIL) }; if ($bul) { 'acik' } else { 'kapali' }",
+    ], {
+      windowsHide: true,
+      timeout: 15000,
+      env: { ...process.env, VEGA_PENCERE_AD: basename(tarayici), VEGA_PENCERE_PROFIL: profil },
+    }, (error, stdout) => {
+      if (error) return;
+      if (String(stdout).includes("kapali") && Date.now() - bas > 8000) process.exit(0);
+    });
+  };
+  const zaman = setInterval(denetle, 3000);
+  zaman.unref();
 }
 
 async function htmlPdf(html) {
@@ -1040,6 +1133,14 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && (url.pathname === "/favicon.ico" || url.pathname === "/expert-bilisim.ico")) {
+      const yol = ikonYolu();
+      if (!yol) { res.writeHead(404); res.end(); return; }
+      res.writeHead(200, { "Content-Type": "image/x-icon", "Cache-Control": "public, max-age=86400" });
+      res.end(readFileSync(yol));
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/baglanti") {
       gonder(res, 200, { server: link.server, database: link.database });
       return;
@@ -1318,27 +1419,32 @@ ${parcalar.join("\nUNION ALL\n")};
       if (!firma || !donem) return gonder(res, 400, { error: "Firma ve dönem seçin." });
       const like = q ? `%${q}%` : "";
       const hareketsiz = url.searchParams.get("hareketsiz") === "1";
-      const ozet = hareketsiz ? firmaTablo(firma, "TBLCARI") : donemTablo(firma, donem, "VARESCARIHAREKETOZET");
-      const kosullar = [];
-      if (hareketsiz) {
-        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
-        kosullar.push("ISNULL(DELETED, 0) = 0");
-        kosullar.push(`NOT EXISTS (SELECT 1 FROM ${hareket} h WHERE h.FIRMANO = ${ozet}.IND)`);
-      }
-      if (like) {
-        const kodAlan = hareketsiz ? "FIRMAKODU" : "v.FIRMAKODU";
-        const adAlan = hareketsiz ? "FIRMAADI" : "v.FIRMAADI";
-        kosullar.push(`(${kodAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}' OR ${adAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}')`);
-      }
-      for (let no = 1; no <= 7; no += 1) {
-        const deger = metin(url.searchParams.get("ok" + no), 80).trim();
-        if (!deger) continue;
-        kosullar.push(hareketsiz ? `RTRIM(KOD${no}) = N'${deger}'` : `v.CARIKOD${no} = N'${deger}'`);
-      }
-      const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
       const yazi = (ifade) => `REPLACE(REPLACE(REPLACE(${ifade}, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
-      const lines = hareketsiz
-        ? await queryLines(`
+      const arama = (kodAlan, adAlan) => like
+        ? `(${kodAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}' OR ${adAlan} COLLATE Latin1_General_CI_AI LIKE N'${like}')`
+        : "";
+      const ozelKodlar = (yaz) => {
+        const liste = [];
+        for (let no = 1; no <= 7; no += 1) {
+          const deger = metin(url.searchParams.get("ok" + no), 80).trim();
+          if (!deger) continue;
+          const kosul = yaz(no, deger);
+          if (kosul) liste.push(kosul);
+        }
+        return liste;
+      };
+      let lines;
+      if (hareketsiz) {
+        const ozet = firmaTablo(firma, "TBLCARI");
+        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
+        const kosullar = [
+          "ISNULL(DELETED, 0) = 0",
+          `NOT EXISTS (SELECT 1 FROM ${hareket} h WHERE h.FIRMANO = ${ozet}.IND)`,
+        ];
+        const bulunan = arama("FIRMAKODU", "FIRMAADI");
+        if (bulunan) kosullar.push(bulunan);
+        kosullar.push(...ozelKodlar((no, deger) => `RTRIM(KOD${no}) = N'${deger}'`));
+        lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT
   ${yazi("ISNULL(FIRMAKODU, N'')")},
@@ -1350,10 +1456,17 @@ SELECT
   CAST(0 AS decimal(18, 2)),
   CAST(0 AS decimal(18, 2))
 FROM ${ozet}
-${filtre}
+WHERE ${kosullar.join(" AND ")}
 ORDER BY FIRMAKODU;
-`)
-        : await queryLines(`
+`);
+      } else if (await nesneVar(donemTablo(firma, donem, "VARESCARIHAREKETOZET"))) {
+        const ozet = donemTablo(firma, donem, "VARESCARIHAREKETOZET");
+        const kosullar = [];
+        const bulunan = arama("v.FIRMAKODU", "v.FIRMAADI");
+        if (bulunan) kosullar.push(bulunan);
+        kosullar.push(...ozelKodlar((no, deger) => `v.CARIKOD${no} = N'${deger}'`));
+        const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
+        lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT
   ${yazi("ISNULL(v.FIRMAKODU, N'')")},
@@ -1371,6 +1484,44 @@ ${filtre}
 GROUP BY v.FIRMAKODU, v.FIRMAADI, v.FIRMATIPI, c.PARABIRIMI
 ORDER BY v.FIRMAKODU;
 `);
+      } else {
+        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
+        const cari = firmaTablo(firma, "TBLCARI");
+        const hareketKolon = await kolonKumesi(hareket);
+        const cariKolon = await kolonKumesi(cari);
+        const borc = hareketKolon.has("TLBORC") ? "h.TLBORC" : "h.BORC";
+        const alacak = hareketKolon.has("TLALACAK") ? "h.TLALACAK" : "h.ALACAK";
+        const pbIfade = cariKolon.has("PARABIRIMI") ? "ISNULL(c.PARABIRIMI, N'TL')" : "N'TL'";
+        const tipIfade = cariKolon.has("FIRMATIPI")
+          ? "CASE c.FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(c.FIRMATIPI, 0) AS nvarchar(10))) END"
+          : "N''";
+        const grup = ["c.FIRMAKODU", "c.FIRMAADI"];
+        if (cariKolon.has("PARABIRIMI")) grup.push("c.PARABIRIMI");
+        if (cariKolon.has("FIRMATIPI")) grup.push("c.FIRMATIPI");
+        const kosullar = [];
+        if (cariKolon.has("DELETED")) kosullar.push("ISNULL(c.DELETED, 0) = 0");
+        const bulunan = arama("c.FIRMAKODU", "c.FIRMAADI");
+        if (bulunan) kosullar.push(bulunan);
+        kosullar.push(...ozelKodlar((no, deger) => cariKolon.has("KOD" + no) ? `RTRIM(c.KOD${no}) = N'${deger}'` : ""));
+        const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
+        lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${yazi("ISNULL(c.FIRMAKODU, N'')")},
+  ${yazi("ISNULL(c.FIRMAADI, N'')")},
+  ${yazi(pbIfade)},
+  ${yazi(tipIfade)},
+  CASE WHEN ABS(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0))) > 0.004 THEN N'Bakiye Verenler' ELSE N'Bakiyesizler' END,
+  CAST(SUM(ISNULL(${borc}, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2))
+FROM ${cari} c
+JOIN ${hareket} h ON h.FIRMANO = c.IND
+${filtre}
+GROUP BY ${grup.join(", ")}
+ORDER BY c.FIRMAKODU;
+`);
+      }
       const items = lines.map((line) => {
         const [kod, ad, pb, tip, durum, borc, alacak, bakiye] = line.split("|").map((part) => part.trim());
         return {
@@ -1397,15 +1548,13 @@ ORDER BY v.FIRMAKODU;
       if (!firma || !donem || !kod) return gonder(res, 400, { error: "Cari seçin." });
       const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
       const cari = firmaTablo(firma, "TBLCARI");
-      const pbSql = pb
+      const hareketKolon = await kolonKumesi(hareket);
+      const pbSql = pb && hareketKolon.has("PARABIRIMI")
         ? `AND RTRIM(ISNULL(h.PARABIRIMI, N'')) = N'${pb}'`
         : "";
-      const aciklama = `LTRIM(RTRIM(REPLACE(REPLACE(REPLACE(
-        CASE
-          WHEN CHARINDEX(CHAR(13), ISNULL(CAST(h.ALTNOT AS nvarchar(400)), N'')) > 1 THEN LEFT(CAST(h.ALTNOT AS nvarchar(400)), CHARINDEX(CHAR(13), CAST(h.ALTNOT AS nvarchar(400))) - 1)
-          WHEN CHARINDEX(CHAR(10), ISNULL(CAST(h.ALTNOT AS nvarchar(400)), N'')) > 1 THEN LEFT(CAST(h.ALTNOT AS nvarchar(400)), CHARINDEX(CHAR(10), CAST(h.ALTNOT AS nvarchar(400))) - 1)
-          ELSE ISNULL(CAST(h.ALTNOT AS nvarchar(400)), N'')
-        END, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')))`;
+      const aciklama = notIfadesi(hareketKolon, "h", ["ALTNOT", "ACIKLAMA", "NOT"]);
+      const pbAlan = hareketKolon.has("PARABIRIMI") ? "RTRIM(ISNULL(h.PARABIRIMI, N''))" : "N''";
+      const sube = duzYazi(hareketKolon, "h", ["OZELKOD1", "OZELKOD"]);
       const lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT
@@ -1415,9 +1564,9 @@ SELECT
   ${aciklama},
   CAST(ISNULL(h.BORC, 0) AS decimal(18, 2)),
   CAST(ISNULL(h.ALACAK, 0) AS decimal(18, 2)),
-  RTRIM(ISNULL(h.PARABIRIMI, N'')),
+  ${pbAlan},
   CAST(ISNULL(h.LN, 0) AS int),
-  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(h.OZELKOD1, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')
+  ${sube}
 FROM ${hareket} h
 JOIN ${cari} c ON c.IND = h.FIRMANO
 WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
@@ -2142,10 +2291,10 @@ END CATCH;
 
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
-    console.error(`Port ${PORT} dolu. Açık Vega Raporlama penceresini kapatıp yeniden deneyin.`);
-  } else {
-    console.error(error.message || "Sunucu açılmadı");
+    uygulamaPenceresi(`http://127.0.0.1:${PORT}`, false);
+    process.exit(0);
   }
+  console.error(error.message || "Sunucu açılmadı");
   process.exit(1);
 });
 
@@ -2160,14 +2309,12 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`Veritabanı: ${link.server} / ${link.database}`);
   if (!existsSync(UDL)) console.warn(`Bağlantı dosyası bulunamadı: ${UDL}`);
   console.log(SQLCMD ? "Sorgu aracı: sqlcmd" : "Sorgu aracı: Windows SQL istemcisi");
-  console.log("Kapatmak için bu pencereyi kapatın.");
   if (existsSync(join(whatsappKlasor(), "creds.json"))) {
     whatsappBagla().catch((error) => {
       wa.durum = "hata";
       wa.hata = error.message || "Kayıtlı telefon bağlantısı açılamadı.";
     });
   }
-  let paketli = false;
-  try { paketli = require("node:sea").isSea(); } catch { paketli = false; }
-  if (paketli) execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });
+  konsoluGizle();
+  uygulamaPenceresi(adres);
 });

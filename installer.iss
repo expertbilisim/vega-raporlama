@@ -16,16 +16,18 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 UninstallDisplayName=Vega Raporlama
+SetupIconFile=assets\expert-bilisim.ico
 
 [Languages]
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
 Source: "dist\VegaRaporlama.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\expert-bilisim.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"
-Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"
+Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"
+Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"
 
 [Run]
 Filename: "{app}\VegaRaporlama.exe"; Description: "Vega Raporlama'yı başlat"; Flags: nowait postinstall skipifsilent
