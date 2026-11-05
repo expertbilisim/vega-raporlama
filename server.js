@@ -124,8 +124,16 @@ function parseJson(stdout) {
   return parseJsonMetin(decodeSql(stdout));
 }
 
+function sqlParcasi(value) {
+  if (value == null) return "";
+  if (Buffer.isBuffer(value) && value.length === 0) return "";
+  return decodeSql(value).trim();
+}
+
 function sqlHata(error) {
-  const detail = decodeSql(error.stderr || error.stdout || error.message)
+  const detail = [sqlParcasi(error && error.stderr), sqlParcasi(error && error.stdout), sqlParcasi(error && error.message)]
+    .filter(Boolean)
+    .join(" ")
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter(Boolean)
@@ -308,14 +316,25 @@ function queryLines(sql) {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .filter((line) => line && !line.startsWith("(") && line.includes("|"));
-  if (!SQLCMD) {
-    return psCalistir(sql, "lines").then((stdout) => ayikla(sorguMetni(stdout)), sorguHatasi);
-  }
+  const ps = () => psCalistir(sql, "lines").then((stdout) => ayikla(sorguMetni(stdout)), sorguHatasi);
+  if (!SQLCMD) return ps();
   return sqlCalistir(sql, ["-h", "-1", "-s", "|", "-y", "400", "-Y", "400"]).then(({ stdout }) => {
     return ayikla(decodeSql(stdout));
-  }, (error) => {
-    throw sqlHata(error);
-  });
+  }).catch(() => ps());
+}
+
+async function nesneVar(ad) {
+  const adlar = (Array.isArray(ad) ? ad : [ad]).map((item) => String(item).replace(/[^\w]/g, "")).filter(Boolean);
+  if (!adlar.length) return "";
+  const liste = adlar.map((item) => `N'${item}'`).join(", ");
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'v', TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_NAME IN (${liste});
+`);
+  const bulunan = new Set(lines.map((line) => (line.split("|")[1] || "").trim().toUpperCase()));
+  return adlar.find((item) => bulunan.has(item.toUpperCase())) || "";
 }
 
 function tamSayi(value, max = 9999) {
@@ -1124,18 +1143,27 @@ FOR JSON PATH, WITHOUT_ARRAY_WRAPPER;
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const firma = tamSayi(url.searchParams.get("firma"));
       if (!firma) return gonder(res, 400, { error: "Firma seçin." });
-      const label = firmaTablo(firma, "TBLSTOKKARTKODLABEL");
-      const tan = firmaTablo(firma, "TBLSTOKKODTAN");
+      const label = await nesneVar([
+        firmaTablo(firma, "TBLSTOKKARTKODLABEL"),
+        firmaTablo(firma, "TBLSTOKKODLABEL"),
+      ]);
+      const tan = await nesneVar(firmaTablo(firma, "TBLSTOKKODTAN"));
+      if (!label && !tan) return gonder(res, 200, { gruplar: [] });
       const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const parcalar = [];
+      if (label) {
+        parcalar.push(`SELECT CAST(CATEGORY AS varchar(4)), ${temiz("CAPTION")}, N''
+FROM ${label}
+WHERE CATEGORY BETWEEN 1 AND 10`);
+      }
+      if (tan) {
+        parcalar.push(`SELECT CAST(CATEGORY AS varchar(4)), N'', ${temiz("KOD")}
+FROM ${tan}
+WHERE CATEGORY BETWEEN 1 AND 10 AND RTRIM(ISNULL(KOD, N'')) <> N''`);
+      }
       const lines = await queryLines(`
 SET NOCOUNT ON;
-SELECT CAST(CATEGORY AS varchar(4)), ${temiz("CAPTION")}, N''
-FROM ${label}
-WHERE CATEGORY BETWEEN 1 AND 10
-UNION ALL
-SELECT CAST(CATEGORY AS varchar(4)), N'', ${temiz("KOD")}
-FROM ${tan}
-WHERE CATEGORY BETWEEN 1 AND 10 AND RTRIM(ISNULL(KOD, N'')) <> N'';
+${parcalar.join("\nUNION ALL\n")};
 `);
       const gruplar = new Map();
       for (let no = 1; no <= 10; no += 1) gruplar.set(no, { no, ad: "Özel " + no, degerler: [] });
@@ -1245,18 +1273,27 @@ ORDER BY s.STOKKODU;
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const firma = tamSayi(url.searchParams.get("firma"));
       if (!firma) return gonder(res, 400, { error: "Firma seçin." });
-      const label = firmaTablo(firma, "TBLCARIKARTKODLABEL");
-      const tan = firmaTablo(firma, "TBLCARIKODTAN");
+      const label = await nesneVar([
+        firmaTablo(firma, "TBLCARIKARTKODLABEL"),
+        firmaTablo(firma, "TBLCARIKODLABEL"),
+      ]);
+      const tan = await nesneVar(firmaTablo(firma, "TBLCARIKODTAN"));
+      if (!label && !tan) return gonder(res, 200, { gruplar: [] });
       const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const parcalar = [];
+      if (label) {
+        parcalar.push(`SELECT CAST(CATEGORY - 100 AS varchar(4)), ${temiz("CAPTION")}, N''
+FROM ${label}
+WHERE CATEGORY BETWEEN 101 AND 107`);
+      }
+      if (tan) {
+        parcalar.push(`SELECT CAST(CATEGORY AS varchar(4)), N'', ${temiz("KOD")}
+FROM ${tan}
+WHERE CATEGORY BETWEEN 1 AND 7 AND RTRIM(ISNULL(KOD, N'')) <> N''`);
+      }
       const lines = await queryLines(`
 SET NOCOUNT ON;
-SELECT CAST(CATEGORY - 100 AS varchar(4)), ${temiz("CAPTION")}, N''
-FROM ${label}
-WHERE CATEGORY BETWEEN 101 AND 107
-UNION ALL
-SELECT CAST(CATEGORY AS varchar(4)), N'', ${temiz("KOD")}
-FROM ${tan}
-WHERE CATEGORY BETWEEN 1 AND 7 AND RTRIM(ISNULL(KOD, N'')) <> N'';
+${parcalar.join("\nUNION ALL\n")};
 `);
       const gruplar = new Map();
       for (let no = 1; no <= 7; no += 1) gruplar.set(no, { no, ad: "Özel " + no, degerler: [] });

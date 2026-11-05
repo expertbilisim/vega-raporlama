@@ -2833,8 +2833,12 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     async function ozelKodlariYukle() {
-      const body = await getir("/api/stok-ozel-kod?firma=" + oturum.firma);
-      ozelKodSelectleri(document.getElementById("ozelKodlar"), body.gruplar, () => {
+      let gruplar = [];
+      try {
+        const body = await getir("/api/stok-ozel-kod?firma=" + oturum.firma);
+        gruplar = body.gruplar;
+      } catch { gruplar = []; }
+      ozelKodSelectleri(document.getElementById("ozelKodlar"), gruplar, () => {
         raporuAc(document.getElementById("ara").value.trim()).catch((error) => {
           document.getElementById("durum").textContent = error.message;
         });
@@ -2842,8 +2846,12 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     async function cariOzelKodlariYukle() {
-      const body = await getir("/api/cari-ozel-kod?firma=" + oturum.firma);
-      ozelKodSelectleri(document.getElementById("cariOzelKodlar"), body.gruplar, () => {
+      let gruplar = [];
+      try {
+        const body = await getir("/api/cari-ozel-kod?firma=" + oturum.firma);
+        gruplar = body.gruplar;
+      } catch { gruplar = []; }
+      ozelKodSelectleri(document.getElementById("cariOzelKodlar"), gruplar, () => {
         cariAc(document.getElementById("cariAra").value.trim()).catch((error) => {
           document.getElementById("cariDurum").textContent = error.message;
         });
