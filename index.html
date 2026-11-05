@@ -1418,6 +1418,57 @@
       ortKar.classList.toggle("eksi", karToplam < 0);
     }
 
+    function pencereKaydet(anahtar, pencere) {
+      try {
+        if (!pencere || pencere.closed) return;
+        const genislik = pencere.innerWidth;
+        const yukseklik = pencere.innerHeight;
+        if (genislik < 480 || yukseklik < 320) return;
+        localStorage.setItem(anahtar, JSON.stringify({
+          genislik,
+          yukseklik,
+          left: pencere.screenX,
+          top: pencere.screenY,
+        }));
+      } catch { /* pencere kapandı */ }
+    }
+
+    function pencereOzelligi(anahtar, varsayilan) {
+      let kayit = null;
+      try { kayit = JSON.parse(localStorage.getItem(anahtar) || "null"); } catch { kayit = null; }
+      const genislik = Math.min(Number(kayit?.genislik) || varsayilan.genislik, screen.availWidth);
+      const yukseklik = Math.min(Number(kayit?.yukseklik) || varsayilan.yukseklik, screen.availHeight);
+      let left = Number(kayit?.left);
+      let top = Number(kayit?.top);
+      if (!Number.isFinite(left) || !Number.isFinite(top)) {
+        left = Math.max(0, Math.round((screen.availWidth - genislik) / 2));
+        top = Math.max(0, Math.round((screen.availHeight - yukseklik) / 6));
+      }
+      return "popup=yes,width=" + Math.round(genislik)
+        + ",height=" + Math.round(yukseklik)
+        + ",left=" + Math.round(left)
+        + ",top=" + Math.round(top)
+        + ",resizable=yes";
+    }
+
+    function pencereAc(url, ad, anahtar, varsayilan) {
+      const pencere = window.open(url, ad + Date.now(), pencereOzelligi(anahtar, varsayilan));
+      if (!pencere) return null;
+      const kaydet = () => pencereKaydet(anahtar, pencere);
+      try {
+        pencere.addEventListener("resize", kaydet);
+        pencere.addEventListener("beforeunload", kaydet);
+      } catch { /* boyut yine de aralıkla yazılır */ }
+      const zaman = setInterval(() => {
+        if (pencere.closed) {
+          clearInterval(zaman);
+          return;
+        }
+        kaydet();
+      }, 500);
+      return pencere;
+    }
+
     function belgePenceresi(row) {
       if (!row?.belgeNo && !row?.evrakNo) return;
       sessionStorage.setItem("vegaBelgePencere", JSON.stringify({
@@ -1430,16 +1481,10 @@
           kasa: oturum.kasa || "",
         },
       }));
-      const olcu = belgeOlcusu();
-      const genislik = olcu?.genislik || Math.min(1180, screen.availWidth - 48);
-      const yukseklik = olcu?.yukseklik || Math.min(520, screen.availHeight - 80);
-      const left = Math.max(8, Math.round((screen.availWidth - genislik) / 2));
-      const top = Math.max(8, Math.round((screen.availHeight - yukseklik) / 5));
-      window.open(
-        "/?belge=1",
-        "vega-belge-" + Date.now(),
-        `popup=yes,width=${genislik},height=${yukseklik},left=${left},top=${top},resizable=yes`
-      );
+      pencereAc("/?belge=1", "vega-belge-", "vegaBelgeOlcu", {
+        genislik: Math.min(1180, screen.availWidth - 48),
+        yukseklik: Math.min(520, screen.availHeight - 80),
+      });
     }
 
     const BELGE_SUTUN = [150, 240, 150, 72, 72, 52, 64, 52, 100, 120, 120];
@@ -1516,8 +1561,10 @@
       if (olcuBizden) return;
       if (window.outerWidth < 480 || window.outerHeight < 320) return;
       localStorage.setItem("vegaBelgeOlcu", JSON.stringify({
-        genislik: window.outerWidth,
-        yukseklik: window.outerHeight,
+        genislik: window.innerWidth,
+        yukseklik: window.innerHeight,
+        left: window.screenX,
+        top: window.screenY,
       }));
     }
 
@@ -1748,11 +1795,7 @@
       document.querySelectorAll("#satirlar tr").forEach((satir) => satir.classList.remove("secili"));
       if (tr) tr.classList.add("secili");
       urunKaydi(row);
-      const pencere = window.open(
-        "/?urun=1",
-        "vega-urun-" + Date.now(),
-        "popup=yes,width=1180,height=820,resizable=yes"
-      );
+      const pencere = pencereAc("/?urun=1", "vega-urun-", "vegaUrunOlcu", { genislik: 1180, yukseklik: 820 });
       if (!pencere) {
         panelUrun = row;
         document.getElementById("panel").hidden = false;
@@ -1963,7 +2006,7 @@
         oturum,
         cari: { kod: row.kod, ad: row.ad, pb: row.pb },
       }));
-      window.open("/?cari=1", "vega-cari-" + Date.now(), "popup=yes,width=1420,height=800,resizable=yes");
+      pencereAc("/?cari=1", "vega-cari-", "vegaCariOlcu", { genislik: 1420, yukseklik: 800 });
     }
 
     async function cariHareketleriYukle(cari) {
@@ -2499,7 +2542,7 @@
         document.getElementById("cariHareketNot").textContent = "Önce cari hareketleri gelsin.";
         return;
       }
-      const pencere = window.open("", "vega-cikti-" + Date.now(), "popup=yes,width=980,height=720,resizable=yes");
+      const pencere = pencereAc("", "vega-cikti-", "vegaCiktiOlcu", { genislik: 980, yukseklik: 720 });
       if (!pencere) {
         document.getElementById("cariHareketNot").textContent = "Çıktı penceresi açılamadı. Açılır pencereye izin verin.";
         return;
@@ -2941,6 +2984,31 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("sifre").value = "";
     };
 
+    if (!urunModu && !belgeModu && !cariModu && !bordroModu) {
+      let anaPencereZaman = 0;
+      const anaPencereOlcusu = () => {
+        const tam = window.outerWidth >= screen.availWidth - 16 && window.outerHeight >= screen.availHeight - 16;
+        const govde = JSON.stringify({
+          genislik: window.innerWidth,
+          yukseklik: window.innerHeight,
+          left: window.screenX,
+          top: window.screenY,
+          tam,
+        });
+        fetch("/api/pencere", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: govde,
+          keepalive: true,
+        }).catch(() => {});
+      };
+      window.addEventListener("resize", () => {
+        clearTimeout(anaPencereZaman);
+        anaPencereZaman = setTimeout(anaPencereOlcusu, 300);
+      });
+      window.addEventListener("beforeunload", anaPencereOlcusu);
+    }
+
     if (belgeModu) {
       window.addEventListener("resize", () => {
         clearTimeout(olcuZaman);
@@ -2970,7 +3038,7 @@ ${"<" + "/script>"}</body></html>`);
         kasa: oturum?.kasa || "MERKEZ",
       });
       sessionStorage.setItem("vegaBordro", JSON.stringify({ oturum, tur, cari }));
-      window.open("/?" + params, "vega-bordro-" + Date.now(), "popup=yes,width=1180,height=740,resizable=yes");
+      pencereAc("/?" + params, "vega-bordro-", "vegaBordroOlcu", { genislik: 1180, yukseklik: 740 });
     }
 
     function tarihBugun() {

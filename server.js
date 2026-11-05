@@ -620,6 +620,36 @@ function konsoluGizle() {
   ], { windowsHide: true });
 }
 
+function pencereOlcuDosya() {
+  return join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere-olcu.json");
+}
+
+function pencereArguman(adres, profil) {
+  const arguman = [
+    "--app=" + adres,
+    "--user-data-dir=" + profil,
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-extensions",
+    "--disable-sync",
+  ];
+  try {
+    const olcu = JSON.parse(readFileSync(pencereOlcuDosya(), "utf8"));
+    const genislik = Math.round(Number(olcu.genislik));
+    const yukseklik = Math.round(Number(olcu.yukseklik));
+    const left = Math.round(Number(olcu.left));
+    const top = Math.round(Number(olcu.top));
+    if (olcu.tam === true) arguman.push("--start-maximized");
+    else if (genislik >= 480 && genislik <= 8000 && yukseklik >= 320 && yukseklik <= 8000) {
+      arguman.push("--window-size=" + genislik + "," + yukseklik);
+      if (left >= -4000 && left <= 8000 && top >= -4000 && top <= 8000) {
+        arguman.push("--window-position=" + left + "," + top);
+      }
+    }
+  } catch { /* ilk açılış */ }
+  return arguman;
+}
+
 function uygulamaPenceresi(adres, izle = true) {
   if (process.env.VEGA_PENCERE === "0") return;
   const tarayici = edgeBul();
@@ -629,15 +659,7 @@ function uygulamaPenceresi(adres, izle = true) {
   }
   const profil = join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere");
   mkdirSync(profil, { recursive: true });
-  const child = spawn(tarayici, [
-    "--app=" + adres,
-    "--user-data-dir=" + profil,
-    "--no-first-run",
-    "--no-default-browser-check",
-    "--disable-extensions",
-    "--disable-sync",
-    "--start-maximized",
-  ], { windowsHide: true, stdio: "ignore" });
+  const child = spawn(tarayici, pencereArguman(adres, profil), { windowsHide: true, stdio: "ignore" });
   child.on("error", () => {
     execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });
   });
@@ -1133,6 +1155,26 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/pencere") {
+      const body = await okuGovde(req);
+      const genislik = Math.round(Number(body.genislik));
+      const yukseklik = Math.round(Number(body.yukseklik));
+      const left = Math.round(Number(body.left));
+      const top = Math.round(Number(body.top));
+      if (genislik < 320 || yukseklik < 240) return gonder(res, 400, { error: "Pencere ölçüsü yok." });
+      const dosya = pencereOlcuDosya();
+      mkdirSync(dirname(dosya), { recursive: true });
+      writeFileSync(dosya, JSON.stringify({
+        genislik,
+        yukseklik,
+        left: Number.isFinite(left) ? left : 0,
+        top: Number.isFinite(top) ? top : 0,
+        tam: body.tam === true,
+      }));
+      gonder(res, 200, { ok: true });
+      return;
+    }
+
     if (req.method === "GET" && (url.pathname === "/favicon.ico" || url.pathname === "/expert-bilisim.ico")) {
       const yol = ikonYolu();
       if (!yol) { res.writeHead(404); res.end(); return; }
@@ -1433,6 +1475,44 @@ ${parcalar.join("\nUNION ALL\n")};
         }
         return liste;
       };
+      const cariBakiyesiniHareketten = async () => {
+        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
+        const cari = firmaTablo(firma, "TBLCARI");
+        const hareketKolon = await kolonKumesi(hareket);
+        const cariKolon = await kolonKumesi(cari);
+        const borc = hareketKolon.has("TLBORC") ? "h.TLBORC" : "h.BORC";
+        const alacak = hareketKolon.has("TLALACAK") ? "h.TLALACAK" : "h.ALACAK";
+        const pbIfade = cariKolon.has("PARABIRIMI") ? "ISNULL(c.PARABIRIMI, N'TL')" : "N'TL'";
+        const tipIfade = cariKolon.has("FIRMATIPI")
+          ? "CASE c.FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(c.FIRMATIPI, 0) AS nvarchar(10))) END"
+          : "N''";
+        const grup = ["c.FIRMAKODU", "c.FIRMAADI"];
+        if (cariKolon.has("PARABIRIMI")) grup.push("c.PARABIRIMI");
+        if (cariKolon.has("FIRMATIPI")) grup.push("c.FIRMATIPI");
+        const kosullar = [];
+        if (cariKolon.has("DELETED")) kosullar.push("ISNULL(c.DELETED, 0) = 0");
+        const bulunan = arama("c.FIRMAKODU", "c.FIRMAADI");
+        if (bulunan) kosullar.push(bulunan);
+        kosullar.push(...ozelKodlar((no, deger) => cariKolon.has("KOD" + no) ? `RTRIM(c.KOD${no}) = N'${deger}'` : ""));
+        const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
+        return queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${yazi("ISNULL(c.FIRMAKODU, N'')")},
+  ${yazi("ISNULL(c.FIRMAADI, N'')")},
+  ${yazi(pbIfade)},
+  ${yazi(tipIfade)},
+  CASE WHEN ABS(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0))) > 0.004 THEN N'Bakiye Verenler' ELSE N'Bakiyesizler' END,
+  CAST(SUM(ISNULL(${borc}, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2))
+FROM ${cari} c
+JOIN ${hareket} h ON h.FIRMANO = c.IND
+${filtre}
+GROUP BY ${grup.join(", ")}
+ORDER BY c.FIRMAKODU;
+`);
+      };
       let lines;
       if (hareketsiz) {
         const ozet = firmaTablo(firma, "TBLCARI");
@@ -1459,14 +1539,18 @@ FROM ${ozet}
 WHERE ${kosullar.join(" AND ")}
 ORDER BY FIRMAKODU;
 `);
-      } else if (await nesneVar(donemTablo(firma, donem, "VARESCARIHAREKETOZET"))) {
-        const ozet = donemTablo(firma, donem, "VARESCARIHAREKETOZET");
-        const kosullar = [];
-        const bulunan = arama("v.FIRMAKODU", "v.FIRMAADI");
-        if (bulunan) kosullar.push(bulunan);
-        kosullar.push(...ozelKodlar((no, deger) => `v.CARIKOD${no} = N'${deger}'`));
-        const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
-        lines = await queryLines(`
+      } else {
+        let ozetVar = false;
+        try { ozetVar = Boolean(await nesneVar(donemTablo(firma, donem, "VARESCARIHAREKETOZET"))); } catch { ozetVar = false; }
+        if (ozetVar) {
+          const ozet = donemTablo(firma, donem, "VARESCARIHAREKETOZET");
+          const kosullar = [];
+          const bulunan = arama("v.FIRMAKODU", "v.FIRMAADI");
+          if (bulunan) kosullar.push(bulunan);
+          kosullar.push(...ozelKodlar((no, deger) => `v.CARIKOD${no} = N'${deger}'`));
+          const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
+          try {
+            lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT
   ${yazi("ISNULL(v.FIRMAKODU, N'')")},
@@ -1484,43 +1568,13 @@ ${filtre}
 GROUP BY v.FIRMAKODU, v.FIRMAADI, v.FIRMATIPI, c.PARABIRIMI
 ORDER BY v.FIRMAKODU;
 `);
-      } else {
-        const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
-        const cari = firmaTablo(firma, "TBLCARI");
-        const hareketKolon = await kolonKumesi(hareket);
-        const cariKolon = await kolonKumesi(cari);
-        const borc = hareketKolon.has("TLBORC") ? "h.TLBORC" : "h.BORC";
-        const alacak = hareketKolon.has("TLALACAK") ? "h.TLALACAK" : "h.ALACAK";
-        const pbIfade = cariKolon.has("PARABIRIMI") ? "ISNULL(c.PARABIRIMI, N'TL')" : "N'TL'";
-        const tipIfade = cariKolon.has("FIRMATIPI")
-          ? "CASE c.FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(c.FIRMATIPI, 0) AS nvarchar(10))) END"
-          : "N''";
-        const grup = ["c.FIRMAKODU", "c.FIRMAADI"];
-        if (cariKolon.has("PARABIRIMI")) grup.push("c.PARABIRIMI");
-        if (cariKolon.has("FIRMATIPI")) grup.push("c.FIRMATIPI");
-        const kosullar = [];
-        if (cariKolon.has("DELETED")) kosullar.push("ISNULL(c.DELETED, 0) = 0");
-        const bulunan = arama("c.FIRMAKODU", "c.FIRMAADI");
-        if (bulunan) kosullar.push(bulunan);
-        kosullar.push(...ozelKodlar((no, deger) => cariKolon.has("KOD" + no) ? `RTRIM(c.KOD${no}) = N'${deger}'` : ""));
-        const filtre = kosullar.length ? `WHERE ${kosullar.join(" AND ")}` : "";
-        lines = await queryLines(`
-SET NOCOUNT ON;
-SELECT
-  ${yazi("ISNULL(c.FIRMAKODU, N'')")},
-  ${yazi("ISNULL(c.FIRMAADI, N'')")},
-  ${yazi(pbIfade)},
-  ${yazi(tipIfade)},
-  CASE WHEN ABS(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0))) > 0.004 THEN N'Bakiye Verenler' ELSE N'Bakiyesizler' END,
-  CAST(SUM(ISNULL(${borc}, 0)) AS decimal(18, 2)),
-  CAST(SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2)),
-  CAST(SUM(ISNULL(${borc}, 0)) - SUM(ISNULL(${alacak}, 0)) AS decimal(18, 2))
-FROM ${cari} c
-JOIN ${hareket} h ON h.FIRMANO = c.IND
-${filtre}
-GROUP BY ${grup.join(", ")}
-ORDER BY c.FIRMAKODU;
-`);
+          } catch (error) {
+            const mesaj = String(error && error.message || "");
+            if (!/Invalid object name|Geçersiz nesne/i.test(mesaj)) throw error;
+            lines = null;
+          }
+        }
+        if (!lines) lines = await cariBakiyesiniHareketten();
       }
       const items = lines.map((line) => {
         const [kod, ad, pb, tip, durum, borc, alacak, bakiye] = line.split("|").map((part) => part.trim());
