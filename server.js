@@ -408,6 +408,19 @@ function firmaTablo(firma, ad) {
   return `F${pad(firma)}${ad}`;
 }
 
+async function cariHareketTablolari(firma) {
+  const onek = `F${pad(firma)}D`;
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'v', TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_NAME LIKE N'${onek}%TBLCARIHAREKETLERI';
+`);
+  return lines
+    .map((line) => (line.split("|")[1] || "").trim())
+    .filter((ad) => new RegExp(`^F${pad(firma)}D\\d+TBLCARIHAREKETLERI$`, "i").test(ad));
+}
+
 function donemTablo(firma, donem, ad) {
   return `F${pad(firma)}D${pad(donem)}${ad}`;
 }
@@ -1323,6 +1336,117 @@ ${parcalar.join("\nUNION ALL\n")};
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/maliyet-deger") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const q = ara(url.searchParams.get("q"));
+      const bas = sqlTarihIfade(url.searchParams.get("bas"));
+      const bit = sqlTarihIfade(url.searchParams.get("bit"));
+      const ekstreHam = sqlTarihIfade(url.searchParams.get("ekstre")) || bit;
+      if (!firma || !donem || !bas || !bit || !ekstreHam) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
+      const like = q ? `%${q}%` : "";
+      const ozelFiltre = [];
+      for (let no = 1; no <= 10; no += 1) {
+        const deger = metin(url.searchParams.get("ok" + no), 80).trim();
+        if (deger) ozelFiltre.push(`AND s.KOD${no} = N'${deger}'`);
+      }
+      const hareket = donemTablo(firma, donem, "TBLSTOKHAREKETLERI");
+      const stok = firmaTablo(firma, "TBLSTOKLAR");
+      const arama = like
+        ? `AND (s.STOKKODU COLLATE Latin1_General_CI_AI LIKE N'${like}' OR s.MALINCINSI COLLATE Latin1_General_CI_AI LIKE N'${like}')`
+        : "";
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+WITH env AS (
+  SELECT h.STOKNO,
+    SUM(ISNULL(h.GIREN, 0) - ISNULL(h.CIKAN, 0)) AS miktar
+  FROM ${hareket} h
+  WHERE h.TARIH < DATEADD(day, 1, ${ekstreHam})
+  GROUP BY h.STOKNO
+)
+SELECT
+  REPLACE(REPLACE(REPLACE(s.STOKKODU, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  REPLACE(REPLACE(REPLACE(ISNULL(s.MALINCINSI, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  CAST(ISNULL(e.miktar, 0) AS decimal(18, 2)),
+  CAST(ISNULL(s.MALIYET, 0) AS decimal(18, 4)),
+  CAST(ISNULL(e.miktar, 0) * ISNULL(s.MALIYET, 0) AS decimal(18, 2)),
+  CAST(ISNULL(s.ALISFIYATI, 0) AS decimal(18, 4))
+FROM ${stok} s
+JOIN env e ON e.STOKNO = s.IND
+WHERE ISNULL(s.DELETED, 0) = 0
+  AND ABS(ISNULL(e.miktar, 0)) > 0.004
+  ${arama}
+  ${ozelFiltre.join("\n  ")}
+ORDER BY ABS(ISNULL(e.miktar, 0) * ISNULL(s.MALIYET, 0)) DESC, s.STOKKODU;
+`);
+      const items = lines.map((line) => {
+        const [kod, ad, miktar, maliyet, deger, alis] = line.split("|").map((part) => part.trim());
+        return {
+          kod,
+          ad,
+          miktar: Number(miktar),
+          maliyet: Number(maliyet),
+          deger: Number(deger),
+          alis: Number(alis),
+        };
+      });
+      gonder(res, 200, {
+        items,
+        miktar: items.reduce((sum, row) => sum + Number(row.miktar || 0), 0),
+        deger: items.reduce((sum, row) => sum + Number(row.deger || 0), 0),
+      });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/stok-ekstre") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const kod = metin(url.searchParams.get("kod"), 200).trim();
+      const bas = sqlTarihIfade(url.searchParams.get("bas"));
+      const bit = sqlTarihIfade(url.searchParams.get("bit"));
+      if (!firma || !donem || !kod || !bas || !bit) return gonder(res, 400, { error: "Stok ve tarih seçin." });
+      const hareket = donemTablo(firma, donem, "TBLSTOKHAREKETLERI");
+      const stok = firmaTablo(firma, "TBLSTOKLAR");
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), h.TARIH, 104),
+  CAST(ISNULL(h.IZAHAT, 0) AS varchar(6)),
+  REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(h.EVRAKNO, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' '),
+  CAST(ISNULL(h.GIREN, 0) AS decimal(18, 2)),
+  CAST(ISNULL(h.CIKAN, 0) AS decimal(18, 2)),
+  CAST(ISNULL(h.BIRIMMALIYET, 0) AS decimal(18, 4)),
+  CAST(ISNULL(h.BELGENO, 0) AS varchar(12))
+FROM ${hareket} h
+JOIN ${stok} s ON s.IND = h.STOKNO
+WHERE s.STOKKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+  AND h.TARIH >= ${bas}
+  AND h.TARIH < DATEADD(day, 1, ${bit})
+ORDER BY h.TARIH, h.IND;
+`);
+      let bakiye = 0;
+      const items = lines.map((line) => {
+        const [tarih, izahat, evrakNo, giren, cikan, birimMaliyet, belgeNo] = line.split("|").map((part) => part.trim());
+        const g = Number(giren) || 0;
+        const c = Number(cikan) || 0;
+        bakiye += g - c;
+        return {
+          tarih,
+          izahat: Number(izahat) || 0,
+          evrakNo,
+          giren: g,
+          cikan: c,
+          bakiye,
+          birimMaliyet: Number(birimMaliyet) || 0,
+          belgeNo: Number(belgeNo) || 0,
+        };
+      });
+      gonder(res, 200, { kod, items });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/karlilik") {
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const firma = tamSayi(url.searchParams.get("firma"));
@@ -1453,6 +1577,68 @@ ${parcalar.join("\nUNION ALL\n")};
       return;
     }
 
+    if (req.method === "POST" && url.pathname === "/api/cari-pasif") {
+      const kim = oturum(req);
+      if (!kim) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const kodlar = [...new Set((Array.isArray(body.kodlar) ? body.kodlar : [])
+        .map((kod) => metin(kod, 80).trim())
+        .filter(Boolean))].slice(0, 400);
+      if (!kodlar.length) return gonder(res, 400, { error: "Cari seçin." });
+      const cari = firmaTablo(kim.firma, "TBLCARI");
+      const kolon = await kolonKumesi(cari);
+      if (!kolon.has("STATUS")) return gonder(res, 400, { error: "Cari durum kolonu yok." });
+      const sonuc = await queryLines(`
+SET NOCOUNT ON;
+UPDATE ${cari}
+SET STATUS = 2
+WHERE ISNULL(DELETED, 0) = 0
+  AND FIRMAKODU IN (${kodlar.map((kod) => `N'${kod}'`).join(", ")});
+SELECT N'n', CAST(@@ROWCOUNT AS varchar(12));
+`);
+      const adet = Number((sonuc[0] || "").split("|")[1]) || kodlar.length;
+      gonder(res, 200, { adet });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/cari-aylik") {
+      const kim = oturum(req);
+      if (!kim) return gonder(res, 401, { error: "Giriş gerekli." });
+      const kod = metin(url.searchParams.get("kod"), 80).trim();
+      if (!kod) return gonder(res, 400, { error: "Cari seçin." });
+      const hareket = donemTablo(kim.firma, kim.donem, "TBLCARIHAREKETLERI");
+      const cari = firmaTablo(kim.firma, "TBLCARI");
+      const yilSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'y', CAST(ISNULL(DONEM, 0) AS varchar(8))
+FROM TBLDONEM
+WHERE FIND = ${kim.firma} AND IND = ${kim.donem};
+`);
+      const yil = Number((yilSatir[0] || "").split("|")[1]) || 0;
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(MONTH(h.TARIH) AS varchar(2)),
+  CAST(SUM(ISNULL(h.BORC, 0)) AS decimal(18, 2)),
+  CAST(SUM(ISNULL(h.ALACAK, 0)) AS decimal(18, 2))
+FROM ${hareket} h
+JOIN ${cari} c ON c.IND = h.FIRMANO
+WHERE c.FIRMAKODU COLLATE Latin1_General_CI_AI = N'${kod}'
+GROUP BY MONTH(h.TARIH);
+`);
+      const harita = new Map(lines.map((line) => {
+        const [ay, borc, alacak] = line.split("|").map((part) => part.trim());
+        return [Number(ay), { borc: Number(borc) || 0, alacak: Number(alacak) || 0 }];
+      }));
+      const aylar = [];
+      for (let ay = 1; ay <= 12; ay += 1) {
+        const bulunan = harita.get(ay) || { borc: 0, alacak: 0 };
+        aylar.push({ ay, borc: bulunan.borc, alacak: bulunan.alacak });
+      }
+      gonder(res, 200, { yil, kod, aylar });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/cari-bakiye") {
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const firma = tamSayi(url.searchParams.get("firma"));
@@ -1517,27 +1703,53 @@ ORDER BY c.FIRMAKODU;
       if (hareketsiz) {
         const ozet = firmaTablo(firma, "TBLCARI");
         const hareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
-        const kosullar = [
-          "ISNULL(DELETED, 0) = 0",
-          `NOT EXISTS (SELECT 1 FROM ${hareket} h WHERE h.FIRMANO = ${ozet}.IND)`,
-        ];
-        const bulunan = arama("FIRMAKODU", "FIRMAADI");
+        const kolon = await kolonKumesi(ozet);
+        const hareketKolon = await kolonKumesi(hareket);
+        const kosullar = ["ISNULL(c.DELETED, 0) = 0"];
+        const bulunan = arama("c.FIRMAKODU", "c.FIRMAADI");
         if (bulunan) kosullar.push(bulunan);
-        kosullar.push(...ozelKodlar((no, deger) => `RTRIM(KOD${no}) = N'${deger}'`));
+        kosullar.push(...ozelKodlar((no, deger) => kolon.has("KOD" + no) ? `RTRIM(c.KOD${no}) = N'${deger}'` : ""));
+        const tablolar = await cariHareketTablolari(firma);
+        const sonKaynak = tablolar.length
+          ? tablolar.map((tablo) => `SELECT FIRMANO, TARIH FROM ${tablo}`).join(" UNION ALL ")
+          : "SELECT CAST(NULL AS int) FIRMANO, CAST(NULL AS datetime) TARIH WHERE 1 = 0";
+        const kartIfade = kolon.has("STATUS")
+          ? "CASE WHEN ISNULL(c.STATUS, 1) = 2 THEN N'Pasif' ELSE N'Aktif' END"
+          : "N'Aktif'";
+        const borcAlan = hareketKolon.has("TLBORC") ? "h.TLBORC" : "h.BORC";
+        const alacakAlan = hareketKolon.has("TLALACAK") ? "h.TLALACAK" : "h.ALACAK";
         lines = await queryLines(`
 SET NOCOUNT ON;
+WITH son AS (
+  SELECT FIRMANO, MAX(TARIH) AS SON
+  FROM (${sonKaynak}) x
+  GROUP BY FIRMANO
+),
+donemOzet AS (
+  SELECT
+    h.FIRMANO,
+    SUM(ISNULL(${borcAlan}, 0)) AS BORC,
+    SUM(ISNULL(${alacakAlan}, 0)) AS ALACAK
+  FROM ${hareket} h
+  GROUP BY h.FIRMANO
+)
 SELECT
-  ${yazi("ISNULL(FIRMAKODU, N'')")},
-  ${yazi("ISNULL(FIRMAADI, N'')")},
-  ${yazi("ISNULL(PARABIRIMI, N'')")},
-  ${yazi("CASE FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(FIRMATIPI, 0) AS nvarchar(10))) END")},
-  N'Bakiyesizler',
-  CAST(0 AS decimal(18, 2)),
-  CAST(0 AS decimal(18, 2)),
-  CAST(0 AS decimal(18, 2))
-FROM ${ozet}
+  ${yazi("ISNULL(c.FIRMAKODU, N'')")},
+  ${yazi("ISNULL(c.FIRMAADI, N'')")},
+  ${yazi("ISNULL(c.PARABIRIMI, N'')")},
+  ${yazi("CASE c.FIRMATIPI WHEN 1 THEN N'A' WHEN 2 THEN N'S' WHEN 3 THEN N'AS' ELSE RTRIM(CAST(ISNULL(c.FIRMATIPI, 0) AS nvarchar(10))) END")},
+  CASE WHEN ABS(ISNULL(d.BORC, 0) - ISNULL(d.ALACAK, 0)) > 0.004 THEN N'Bakiye Verenler' ELSE N'Bakiyesizler' END,
+  CAST(ISNULL(d.BORC, 0) AS decimal(18, 2)),
+  CAST(ISNULL(d.ALACAK, 0) AS decimal(18, 2)),
+  CAST(ISNULL(d.BORC, 0) - ISNULL(d.ALACAK, 0) AS decimal(18, 2)),
+  ${kartIfade},
+  ISNULL(CONVERT(varchar(10), s.SON, 104), N'-'),
+  CASE WHEN s.SON IS NULL THEN N'-' ELSE CAST(DATEDIFF(day, s.SON, GETDATE()) AS varchar(12)) END
+FROM ${ozet} c
+LEFT JOIN son s ON s.FIRMANO = c.IND
+LEFT JOIN donemOzet d ON d.FIRMANO = c.IND
 WHERE ${kosullar.join(" AND ")}
-ORDER BY FIRMAKODU;
+ORDER BY CASE WHEN s.SON IS NULL THEN 1 ELSE 0 END DESC, DATEDIFF(day, s.SON, GETDATE()) DESC, c.FIRMAKODU;
 `);
       } else {
         let ozetVar = false;
@@ -1577,7 +1789,9 @@ ORDER BY v.FIRMAKODU;
         if (!lines) lines = await cariBakiyesiniHareketten();
       }
       const items = lines.map((line) => {
-        const [kod, ad, pb, tip, durum, borc, alacak, bakiye] = line.split("|").map((part) => part.trim());
+        const [kod, ad, pb, tip, durum, borc, alacak, bakiye, kart, sonHareket, gun] = line.split("|").map((part) => part.trim());
+        const [gunYazi, ayYazi, yilYazi] = String(sonHareket || "").split(".");
+        const sonSayi = Number(yilYazi) * 10000 + Number(ayYazi) * 100 + Number(gunYazi);
         return {
           kod,
           ad,
@@ -1587,6 +1801,10 @@ ORDER BY v.FIRMAKODU;
           borc: Number(borc),
           alacak: Number(alacak),
           bakiye: Number(bakiye),
+          kart: kart || "",
+          sonHareket: sonHareket && sonHareket !== "-" ? sonHareket : "",
+          sonSayi: Number.isFinite(sonSayi) && sonHareket !== "-" ? sonSayi : 0,
+          gun: gun === "" || gun == null || gun === "-" ? null : Number(gun),
         };
       });
       gonder(res, 200, { items });
@@ -2029,6 +2247,26 @@ WHERE s.STOKKODU COLLATE Latin1_General_CI_AI = N'${kod}'
       return;
     }
 
+    async function bordroGorselleri(baslikTablo, belgeNo) {
+      try {
+        const dokuman = await queryLines(`
+SET NOCOUNT ON;
+SELECT CAST(d.Id AS varchar(12)), RTRIM(REPLACE(ISNULL(d.Name, N''), N'|', N'/'))
+FROM ${baslikTablo} b
+JOIN VegaDocuments.dbo.Documents d
+  ON UPPER(REPLACE(REPLACE(RTRIM(CAST(b.UID AS nvarchar(40))), N'{', N''), N'}', N''))
+   = UPPER(REPLACE(REPLACE(RTRIM(d.OwnerGuid), N'{', N''), N'}', N''))
+WHERE ISNULL(d.Deleted, 0) = 0 AND b.IND = ${belgeNo};
+`);
+        return dokuman.map((line) => {
+          const [id, ad] = line.split("|").map((part) => part.trim());
+          return { id: Number(id) || 0, ad };
+        }).filter((gorsel) => gorsel.id);
+      } catch {
+        return [];
+      }
+    }
+
     if (req.method === "GET" && url.pathname === "/api/belge") {
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const firma = tamSayi(url.searchParams.get("firma"));
@@ -2045,9 +2283,11 @@ WHERE s.STOKKODU COLLATE Latin1_General_CI_AI = N'${kod}'
       const sube = firmaTablo(firma, "TBLSUBELER");
       const kasa = firmaTablo(firma, "TBLKASA");
       const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
-      if (izahat === 13 && belgeNo) {
-        const baslikTablo = donemTablo(firma, donem, "TBLCARGIRBASLIK");
-        const detayTablo = donemTablo(firma, donem, "TBLCARGIRHAREKET");
+      const cikisBelge = izahat === 11 || izahat === 12 || izahat === 19;
+      const girisBelge = izahat === 13 || izahat === 14 || izahat === 18;
+      if ((cikisBelge || girisBelge) && belgeNo) {
+        const baslikTablo = donemTablo(firma, donem, cikisBelge ? "TBLCARCIKBASLIK" : "TBLCARGIRBASLIK");
+        const detayTablo = donemTablo(firma, donem, cikisBelge ? "TBLCARCIKHAREKET" : "TBLCARGIRHAREKET");
         const baslikSatir = await queryLines(`
 SET NOCOUNT ON;
 SELECT
@@ -2102,7 +2342,7 @@ ORDER BY h.IND;
             };
           });
           gonder(res, 200, {
-            tur: "cargir",
+            tur: cikisBelge ? "carcik" : "cargir",
             izahat,
             belgeNo,
             evrakNo,
@@ -2118,6 +2358,7 @@ ORDER BY h.IND;
             firmaKod,
             firmaAd,
             items,
+            gorseller: await bordroGorselleri(baslikTablo, belgeNo),
           });
           return;
         }
@@ -2334,6 +2575,242 @@ END CATCH;
       const parca = (sonuc[0] || "").split("|");
       if (parca[0] !== "ok") return gonder(res, 400, { error: parca.slice(1).join("|") || "Belge yazılamadı." });
       gonder(res, 200, { belgeNo: parca[1], belgeInd: Number(parca[2]) || 0 });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/islem-kasa") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const tarihIfade = sqlTarihIfade(url.searchParams.get("tarih"));
+      const sube = metin(url.searchParams.get("sube"), 80).trim();
+      const kasaAd = metin(url.searchParams.get("kasa"), 80).trim();
+      if (!firma || !donem || !tarihIfade) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
+      const hareket = await nesneVar(donemTablo(firma, donem, "TBLKASA"));
+      const gorunum = await nesneVar(donemTablo(firma, donem, "VARESISLEMKASASI"));
+      const subeTablo = await nesneVar(firmaTablo(firma, "TBLSUBELER"));
+      if (!hareket && !gorunum) return gonder(res, 200, { items: [], gelir: 0, gider: 0, son: 0, subeler: [], kasalar: [] });
+      const kaynak = hareket || gorunum;
+      const kolon = await kolonKumesi(kaynak);
+      const nakit = kolon.has("ISLEMTIPI")
+        ? (hareket ? "ISNULL(k.ISLEMTIPI, 0) = 1" : "RTRIM(ISNULL(k.ISLEMTIPI, N'')) = N'Nakit'")
+        : "1 = 1";
+      const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const kosullar = [nakit];
+      if (sube && kolon.has("SUBEADI")) kosullar.push(`RTRIM(ISNULL(k.SUBEADI, N'')) = N'${sube}'`);
+      if (kasaAd && kolon.has("KASAADI")) kosullar.push(`RTRIM(ISNULL(k.KASAADI, N'')) = N'${kasaAd}'`);
+      const where = kosullar.join(" AND ");
+      const gun = `k.TARIH >= ${tarihIfade} AND k.TARIH < DATEADD(day, 1, ${tarihIfade})`;
+      const sinir = `k.TARIH < DATEADD(day, 1, ${tarihIfade})`;
+      const gelirAlan = kolon.has("GELIR") ? "k.GELIR" : "k.TLGELIR";
+      const giderAlan = kolon.has("GIDER") ? "k.GIDER" : "k.TLGIDER";
+      const baglar = [`FROM ${kaynak} k`];
+      if (hareket && gorunum) baglar.push(`LEFT JOIN ${gorunum} v ON v.IND = k.IND`);
+      if (kolon.has("USERNO")) baglar.push("LEFT JOIN TBLUSERS u ON u.IND = k.USERNO");
+      const from = baglar.join("\n");
+      const islemNo = hareket && gorunum
+        ? `COALESCE(NULLIF(${temiz("v.BELGENO")}, N''), ${temiz(kolon.has("EVRAKNO") ? "k.EVRAKNO" : "N''")})`
+        : temiz(kolon.has("BELGENO") ? "k.BELGENO" : (kolon.has("EVRAKNO") ? "k.EVRAKNO" : "N''"));
+      const islem = hareket && gorunum ? temiz("v.KASAISLEM") : temiz(kolon.has("KASAISLEM") ? "k.KASAISLEM" : "N''");
+      const kullanici = kolon.has("USERNO")
+        ? (hareket && gorunum
+          ? `COALESCE(NULLIF(${temiz("v.USERNAME")}, N''), ${temiz("u.USERNAME")})`
+          : temiz("u.USERNAME"))
+        : temiz(kolon.has("USERNAME") ? "k.USERNAME" : "N''");
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), k.TARIH, 104),
+  ${temiz(kolon.has("ACIKLAMA") ? "k.ACIKLAMA" : "N''")},
+  ${islemNo},
+  ${islem},
+  CAST(ISNULL(${gelirAlan}, 0) AS decimal(18, 2)),
+  CAST(ISNULL(${giderAlan}, 0) AS decimal(18, 2)),
+  ${temiz(kolon.has("SUBEADI") ? "k.SUBEADI" : "N''")},
+  ${temiz(kolon.has("KASAADI") ? "k.KASAADI" : "N''")},
+  ${temiz(kolon.has("BELGENEVI") ? "k.BELGENEVI" : "N''")},
+  ${kullanici}
+${from}
+WHERE ${where} AND ${gun}
+ORDER BY k.TARIH, k.IND;
+`);
+      const ozetSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(ISNULL(SUM(CASE WHEN ${gun} THEN ISNULL(${gelirAlan}, 0) ELSE 0 END), 0) AS decimal(18, 2)),
+  CAST(ISNULL(SUM(CASE WHEN ${gun} THEN ISNULL(${giderAlan}, 0) ELSE 0 END), 0) AS decimal(18, 2)),
+  CAST(ISNULL(SUM(ISNULL(${gelirAlan}, 0) - ISNULL(${giderAlan}, 0)), 0) AS decimal(18, 2))
+${from}
+WHERE ${where} AND ${sinir};
+`);
+      const tanimParcasi = [];
+      if (subeTablo) {
+        tanimParcasi.push(`SELECT DISTINCT N'sube', RTRIM(ISNULL(SUBEAD, N'')) FROM ${subeTablo} WHERE RTRIM(ISNULL(SUBEAD, N'')) <> N''`);
+      } else if (kolon.has("SUBEADI")) {
+        tanimParcasi.push(`SELECT DISTINCT N'sube', RTRIM(ISNULL(SUBEADI, N'')) FROM ${kaynak} WHERE RTRIM(ISNULL(SUBEADI, N'')) <> N''`);
+      }
+      if (kolon.has("KASAADI")) {
+        tanimParcasi.push(`SELECT DISTINCT N'kasa', RTRIM(ISNULL(KASAADI, N'')) FROM ${kaynak} WHERE RTRIM(ISNULL(KASAADI, N'')) <> N''`);
+      }
+      const tanimlar = tanimParcasi.length
+        ? await queryLines(`SET NOCOUNT ON;\n${tanimParcasi.join("\nUNION ALL\n")};`)
+        : [];
+      const subeler = [];
+      const kasalar = [];
+      for (const line of tanimlar) {
+        const [tur, ad] = line.split("|").map((part) => part.trim());
+        if (!ad) continue;
+        if (tur === "sube" && !subeler.includes(ad)) subeler.push(ad);
+        if (tur === "kasa" && !kasalar.includes(ad)) kasalar.push(ad);
+      }
+      subeler.sort((a, b) => a.localeCompare(b, "tr"));
+      kasalar.sort((a, b) => a.localeCompare(b, "tr"));
+      const [gelir, gider, son] = (ozetSatir[0] || "0|0|0").split("|").map((part) => Number(part) || 0);
+      const items = lines.map((line) => {
+        const [tarih, aciklama, islemNoDeger, islemAd, giren, cikan, subeAdi, kasaAdi, belgeNevi, kullaniciAd] = line.split("|").map((part) => part.trim());
+        return {
+          tarih,
+          aciklama,
+          islemNo: islemNoDeger,
+          islem: islemAd,
+          giren: Number(giren) || 0,
+          cikan: Number(cikan) || 0,
+          sube: subeAdi,
+          kasa: kasaAdi,
+          belgeNevi,
+          kullanici: kullaniciAd,
+        };
+      });
+      gonder(res, 200, { items, gelir, gider, son, subeler, kasalar });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/portfoy") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const bas = sqlTarihIfade(url.searchParams.get("bas"));
+      const bit = sqlTarihIfade(url.searchParams.get("bit"));
+      const tur = String(url.searchParams.get("tur") || "");
+      const tanim = {
+        cek: { view: "VARESALINANCEKLER", islem: "CEKISLEM", izahat: 2 },
+        senet: { view: "VARESALINANSENETLER", islem: "SENETISLEM", izahat: 6 },
+        visa: { view: "VARESALINANKREDIKARTI", islem: "KARTISLEM", izahat: 4 },
+      }[tur];
+      if (!firma || !donem || !bas || !bit || !tanim) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
+      const view = await nesneVar(donemTablo(firma, donem, tanim.view));
+      if (!view) return gonder(res, 200, { items: [], toplam: 0, durumlar: [] });
+      const kolon = await kolonKumesi(view);
+      const filtreTarih = kolon.has("TARIH") ? "TARIH" : "VADE";
+      const listeTarih = kolon.has("VADE") ? "VADE" : filtreTarih;
+      const durumAlan = kolon.has(tanim.islem) ? tanim.islem : "";
+      const secilen = [...new Set(String(url.searchParams.get("durum") || "").split(",").map((parca) => metin(parca, 80).trim()).filter(Boolean))].slice(0, 30);
+      const kosullar = [`k.${filtreTarih} >= ${bas}`, `k.${filtreTarih} < DATEADD(day, 1, ${bit})`];
+      if (durumAlan && secilen.length) {
+        kosullar.push(`RTRIM(ISNULL(k.${durumAlan}, N'')) IN (${secilen.map((ad) => `N'${ad}'`).join(", ")})`);
+      }
+      const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const yaziKolon = (ad) => kolon.has(ad) ? temiz(`k.${ad}`) : "N''";
+      const sayiKolon = (ad) => kolon.has(ad) ? `CAST(ISNULL(k.${ad}, 0) AS decimal(18, 2))` : "CAST(0 AS decimal(18, 2))";
+      const girisBaslik = kolon.has("BASIND") ? await nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK")) : "";
+      const belgeIfade = girisBaslik
+        ? `CASE WHEN ${yaziKolon("BELGENO")} <> N'' THEN ${yaziKolon("BELGENO")} ELSE ${temiz("g.BELGENO")} END`
+        : yaziKolon("BELGENO");
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), k.${listeTarih}, 104),
+  ${belgeIfade},
+  ${yaziKolon("FIRMAADI")},
+  ${yaziKolon("KESIDEEDEN")},
+  ${durumAlan ? yaziKolon(durumAlan) : "N''"},
+  ${yaziKolon("TAKASTAHSILBANKAADI")},
+  ${kolon.has("TAKASTAHSILBANKAADI") ? "N''" : yaziKolon("BANKAADI")},
+  ${yaziKolon("CIROEDILENFIRMAADI")},
+  ${sayiKolon("TUTAR")},
+  ${kolon.has("BASIND") ? "CAST(ISNULL(k.BASIND, 0) AS varchar(12))" : "N'0'"},
+  ${kolon.has("PORTNO") ? "CAST(ISNULL(k.PORTNO, 0) AS varchar(12))" : "N'0'"},
+  ${kolon.has("BELGETIPI") ? "CAST(ISNULL(k.BELGETIPI, 13) AS varchar(6))" : "N'13'"}
+FROM ${view} k
+${girisBaslik ? `LEFT JOIN ${girisBaslik} g ON g.IND = k.BASIND` : ""}
+WHERE ${kosullar.join(" AND ")}
+ORDER BY k.${listeTarih} ASC${kolon.has("BELGENO") ? ", k.BELGENO" : ""};
+`);
+      const durumSatir = durumAlan
+        ? await queryLines(`
+SET NOCOUNT ON;
+SELECT DISTINCT N'd', ${temiz(`k.${durumAlan}`)}
+FROM ${view} k
+WHERE RTRIM(ISNULL(k.${durumAlan}, N'')) <> N'';
+`)
+        : [];
+      const durumlar = durumSatir.map((line) => (line.split("|")[1] || "").trim()).filter(Boolean).sort((a, b) => a.localeCompare(b, "tr"));
+      const items = lines.map((line) => {
+        const [vade, belge, firmaAdi, keside, durum, takasBanka, kartBanka, ciro, tutar, basInd, portNoDeger, belgeTipi] = line.split("|");
+        return {
+          vade: (vade || "").trim(),
+          belge: (belge || "").trim(),
+          firma: (firmaAdi || "").trim(),
+          keside: (keside || "").trim(),
+          durum: (durum || "").trim(),
+          banka: ((takasBanka || "").trim() || (kartBanka || "").trim()),
+          ciro: (ciro || "").trim(),
+          tutar: Number((tutar || "").trim()) || 0,
+          basInd: Number((basInd || "").trim()) || 0,
+          portNo: Number((portNoDeger || "").trim()) || 0,
+          belgeTipi: Number((belgeTipi || "").trim()) || 13,
+          gorseller: [],
+        };
+      });
+      try {
+        const baslik = await nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK"));
+        const guidEsle = `UPPER(REPLACE(REPLACE(RTRIM(CAST(b.UID AS nvarchar(40))), N'{', N''), N'}', N'')) = UPPER(REPLACE(REPLACE(RTRIM(d.OwnerGuid), N'{', N''), N'}', N''))`;
+        if (baslik && items.some((item) => item.basInd)) {
+          const nolar = [...new Set(items.map((item) => item.basInd).filter((no) => no > 0))].slice(0, 400);
+          const dokuman = await queryLines(`
+SET NOCOUNT ON;
+SELECT CAST(b.IND AS varchar(12)), CAST(d.Id AS varchar(12)), RTRIM(REPLACE(ISNULL(d.Name, N''), N'|', N'/'))
+FROM ${baslik} b
+JOIN VegaDocuments.dbo.Documents d ON ${guidEsle}
+WHERE ISNULL(d.Deleted, 0) = 0 AND b.IND IN (${nolar.join(", ")});
+`);
+          const harita = new Map();
+          for (const line of dokuman) {
+            const [ind, id, ad] = line.split("|").map((part) => part.trim());
+            const liste = harita.get(Number(ind)) || [];
+            liste.push({ id: Number(id) || 0, ad });
+            harita.set(Number(ind), liste);
+          }
+          for (const item of items) item.gorseller = harita.get(item.basInd) || [];
+        } else if (baslik && items.some((item) => item.portNo)) {
+          const detay = await nesneVar(donemTablo(firma, donem, "TBLCARGIRHAREKET"));
+          const nolar = [...new Set(items.map((item) => item.portNo).filter((no) => no > 0))].slice(0, 400);
+          if (detay && nolar.length) {
+            const dokuman = await queryLines(`
+SET NOCOUNT ON;
+SELECT CAST(h.PORTNO AS varchar(12)), CAST(d.Id AS varchar(12)), RTRIM(REPLACE(ISNULL(d.Name, N''), N'|', N'/'))
+FROM ${detay} h
+JOIN ${baslik} b ON RTRIM(ISNULL(CAST(h.EVRAKNO AS nvarchar(20)), N'')) = CAST(b.IND AS nvarchar(20))
+JOIN VegaDocuments.dbo.Documents d ON ${guidEsle}
+WHERE ISNULL(d.Deleted, 0) = 0 AND ISNULL(h.IZAHAT, 0) = ${tanim.izahat} AND h.PORTNO IN (${nolar.join(", ")});
+`);
+            const harita = new Map();
+            for (const line of dokuman) {
+              const [port, id, ad] = line.split("|").map((part) => part.trim());
+              const liste = harita.get(Number(port)) || [];
+              liste.push({ id: Number(id) || 0, ad });
+              harita.set(Number(port), liste);
+            }
+            for (const item of items) if (!item.gorseller.length) item.gorseller = harita.get(item.portNo) || [];
+          }
+        }
+      } catch { /* taranmış belge yok */ }
+      const toplam = items.reduce((sum, item) => sum + item.tutar, 0);
+      gonder(res, 200, {
+        items: items.map(({ portNo, ...item }) => item),
+        toplam,
+        durumlar,
+      });
       return;
     }
 

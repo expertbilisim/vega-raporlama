@@ -138,12 +138,128 @@
     .geri:active, .rapor-btn:active { box-shadow: inset 0 2px 4px rgba(0,0,0,.22), 0 1px 0 #0c4650; }
     #menu { display: flex; gap: 12px; flex-wrap: wrap; }
     .rapor-btn {
+      display: inline-flex; align-items: center; gap: 8px;
       border: 1px solid #0e5962; color: #fff;
       padding: 10px 16px; font-size: 14px;
       background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 46%, #14616c 100%);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 3px 0 #0c4650, 0 8px 14px rgba(14, 70, 80, .26);
       text-shadow: 0 1px 0 rgba(0, 40, 48, .25);
     }
+    .btn-ikon { width: 22px; height: 22px; flex: none; }
+    .durum-menu { position: relative; }
+    .durum-liste {
+      position: absolute; z-index: 25; top: calc(100% + 4px); left: 0; min-width: 230px; max-height: 260px;
+      overflow: auto; background: #fff; border: 1px solid #c5d5de; border-radius: 10px;
+      box-shadow: 0 12px 24px rgba(22, 40, 54, .18); padding: 8px 10px;
+    }
+    .durum-liste label { display: flex; align-items: center; gap: 8px; padding: 4px 0; color: #1d2430; font-weight: 650; }
+    #portfoy .durum-liste { min-width: 248px; padding: 6px; background: #fff; }
+    #portfoy .durum-liste label {
+      display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: center;
+      column-gap: 10px; margin: 0; padding: 5px 8px; white-space: nowrap; border-radius: 6px;
+    }
+    #portfoy .durum-liste label:hover { background: #e7f6f8; }
+    #portfoy .durum-liste input {
+      flex: none; width: 16px; height: 16px; min-width: 16px; max-width: 16px;
+      margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent;
+      accent-color: #1f7f8c;
+    }
+    #portfoy th { overflow: visible; text-overflow: clip; }
+    #portfoy td { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #portfoy thead .sirala, #portfoy thead .filtre-ok {
+      border: 0; background: transparent; color: inherit; font: inherit; font-weight: 650;
+      padding: 0; cursor: pointer;
+    }
+    #portfoy thead .filtre-ok {
+      width: 28px; height: 26px; margin-left: 6px; font-size: 20px; line-height: 22px;
+      vertical-align: middle;
+    }
+    #portfoy thead .filtre-ok.dolu { color: #ffe08a; }
+    #portfoy thead .yon { font-size: 9px; margin-left: 3px; }
+    #portfoyFiltre {
+      position: fixed; z-index: 90; min-width: 180px; max-width: 280px; max-height: 260px;
+      overflow: auto; background: #fff; border: 1px solid #c5d5de; border-radius: 10px;
+      box-shadow: 0 12px 24px rgba(22, 40, 54, .18); padding: 6px 8px;
+    }
+    #portfoyFiltre label {
+      display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: center;
+      column-gap: 8px; padding: 3px 4px; color: #1d2430; font-weight: 650; font-size: 12px;
+    }
+    #portfoyFiltre input { width: 16px; height: 16px; margin: 0; padding: 0; border: 0; box-shadow: none; accent-color: #1f7f8c; }
+    #portfoy col.sec { width: 34px; }
+    #portfoy th.sec, #portfoy td.sec { text-align: center; overflow: visible; }
+    #portfoy input.secim { width: 16px; height: 16px; margin: 0; accent-color: #c05612; cursor: pointer; }
+    #portfoy tbody tr.secili td { background: linear-gradient(180deg, #fff8ef 0%, #ffe3c4 100%); }
+    .portfoy-alt {
+      flex: none; display: flex; justify-content: flex-end; align-items: center; gap: 28px;
+      margin-top: 8px; padding: 12px 16px; border-radius: 12px; font-weight: 750;
+      background: linear-gradient(180deg, #f3fbf8 0%, #d7f0e6 100%);
+      border: 1px solid #b7dfcf;
+    }
+    .portfoy-alt b { font-size: 22px; margin-left: 8px; }
+    .portfoy-alt .secilen { color: #8a3b08; }
+    .portfoy-alt .secilen b { color: #c05612; }
+    #portfoy col.vade { width: 92px; }
+    #portfoy col.belge { width: 128px; }
+    #portfoy col.firma { width: 18%; }
+    #portfoy col.keside { width: 15%; }
+    #portfoy col.durum { width: 142px; }
+    #portfoy col.banka { width: 140px; }
+    #portfoy col.ciro { width: 16%; }
+    #portfoy col.tutar { width: 112px; }
+    #portfoy tbody tr:hover td { transform: none; }
+    #portfoy tbody tr[data-gorsel] { cursor: zoom-in; }
+    .kasa-gun {
+      border: 1px solid #0e5962; color: #0e5962; background: #fff;
+      border-radius: 8px; padding: 6px 12px; font-weight: 650;
+    }
+    .kasa-gun.secili {
+      color: #fff;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 46%, #14616c 100%);
+    }
+    #kasaTarih { flex: 0 0 150px; max-width: 150px; }
+    #islemKasa .araclar, #portfoy .araclar { flex-wrap: wrap; }
+    #portfoy .araclar input[type="date"] {
+      flex: 0 0 150px; max-width: 160px;
+      border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px;
+      background: #fff;
+    }
+    #portfoyAra { flex: 1 1 180px; max-width: 240px; min-width: 140px; }
+    #maliyetDeger .araclar input[type="date"] {
+      flex: 0 0 150px; max-width: 160px;
+      border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px; background: #fff;
+    }
+    .maliyet-detay {
+      position: fixed; z-index: 95; inset: 48px 24px 24px; background: #fff;
+      border: 1px solid #c5d5de; border-radius: 14px;
+      box-shadow: 0 20px 48px rgba(22, 40, 54, .28);
+      display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+    }
+    .maliyet-detay[hidden] { display: none; }
+    .maliyet-detay-ust {
+      flex: none; display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; padding: 12px 14px; border-bottom: 1px solid #dce5eb;
+      background: linear-gradient(180deg, #f7fbfc, #e7f0f4);
+    }
+    .maliyet-detay-ust button {
+      width: 32px; height: 32px; border: 0; border-radius: 8px; background: #dfe8ee; font-size: 20px;
+    }
+    .maliyet-detay-govde { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: grid; gap: 16px; }
+    .maliyet-detay-govde .tablo-wrap { max-height: 42vh; }
+    #islemKasa .araclar select {
+      flex: 0 1 160px; max-width: 180px;
+      border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px; font-weight: 650; color: #143e48;
+      background: linear-gradient(180deg, #ffffff 0%, #d9eef2 100%);
+    }
+    #islemKasa th, #islemKasa td { overflow: hidden; text-overflow: ellipsis; }
+    #islemKasa .aciklama { width: 22%; }
+    .kasa-son {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      margin-top: 8px; padding: 12px 14px; border-radius: 12px; font-weight: 750;
+      background: linear-gradient(180deg, #f3fbf8 0%, #d7f0e6 100%);
+      border: 1px solid #b7dfcf;
+    }
+    .kasa-son b { font-size: 22px; }
     .araclar {
       display: flex; gap: 8px; align-items: center; margin-bottom: 10px;
       padding: 8px 10px; border-radius: 14px;
@@ -225,6 +341,21 @@
       all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
       width: 100%; font-weight: 650; color: inherit;
     }
+    #portfoy thead th button.sirala {
+      width: auto; max-width: calc(100% - 30px); min-width: 0;
+    }
+    #portfoy thead th button.sirala .ad {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    #portfoy thead th button.filtre-ok {
+      all: unset; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; min-width: 22px; height: 22px; margin-left: 4px; flex: none;
+      color: #ffe08a; font-size: 16px; font-weight: 800; line-height: 1; vertical-align: middle;
+    }
+    #portfoy thead th button.filtre-ok.dolu { color: #fff4c4; }
+    #portfoy.visa col.keside, #portfoy.visa col.ciro,
+    #portfoy.visa th.keside, #portfoy.visa th.ciro,
+    #portfoy.visa td.keside, #portfoy.visa td.ciro { display: none; }
     th.num button { justify-content: flex-end; }
     th button:hover { color: #08343a; }
     .rapor-ekran th button:hover { color: #fff; filter: brightness(1.08); }
@@ -478,6 +609,48 @@
     #girisTablo td { border: 1px solid #e1e6ee; padding: 3px 6px; background: #fff; }
     #girisTablo tfoot td { background: #eef3f7; font-weight: 650; }
     #girisTablo .num, #girisTablo th.num { text-align: right; }
+    #cari:not(.hareketsiz) .hareket-ek { display: none; }
+    #cari th.sec, #cari td.sec { width: 34px; text-align: center; overflow: visible; }
+    #cari input.secim { width: 16px; height: 16px; margin: 0; padding: 0; border: 0; accent-color: #1f7f8c; cursor: pointer; }
+    #cari tbody tr.secili td { background: linear-gradient(180deg, #fff8ef 0%, #ffe3c4 100%); }
+    #cari.hareketsiz th { overflow: visible; }
+    #cari.hareketsiz thead th[data-alan] { white-space: nowrap; }
+    #cari.hareketsiz thead .sirala {
+      all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;
+      max-width: calc(100% - 28px); min-width: 0; font-weight: 650; color: inherit;
+    }
+    #cari.hareketsiz thead .sirala .ad { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #cari.hareketsiz thead .filtre-ok {
+      all: unset; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; min-width: 22px; height: 22px; margin-left: 4px; flex: none;
+      color: #ffe08a; font-size: 16px; font-weight: 800; line-height: 1;
+    }
+    #cari.hareketsiz thead .filtre-ok.dolu { color: #fff4c4; }
+    #cariFiltre {
+      position: fixed; z-index: 90; min-width: 180px; max-width: 280px; max-height: 260px;
+      overflow: auto; background: #fff; border: 1px solid #c5d5de; border-radius: 10px;
+      box-shadow: 0 12px 24px rgba(22, 40, 54, .18); padding: 6px 8px;
+    }
+    #cariFiltre .filtre-ust { display: flex; gap: 6px; margin-bottom: 6px; }
+    #cariFiltre .filtre-ust button {
+      flex: 1; border: 1px solid #b7c9d2; border-radius: 6px; padding: 4px 6px;
+      background: #f4f8fa; color: #16323a; font-size: 11px; font-weight: 700;
+    }
+    #cariFiltre label {
+      display: grid; grid-template-columns: 16px minmax(0, 1fr); align-items: center;
+      column-gap: 8px; padding: 3px 4px; color: #1d2430; font-weight: 650; font-size: 12px;
+    }
+    #cariFiltre input { width: 16px; height: 16px; margin: 0; padding: 0; border: 0; box-shadow: none; accent-color: #1f7f8c; }
+    #cariGunMin { width: 72px; flex: none; max-width: 72px; }
+    #cariAylik {
+      position: fixed; z-index: 90; min-width: 340px; max-width: 460px;
+      background: #fff; border: 1px solid #c5d5de; border-radius: 12px;
+      box-shadow: 0 16px 32px rgba(22, 40, 54, .2); padding: 10px 12px;
+    }
+    #cariAylik b { display: block; margin-bottom: 8px; }
+    #cariAylik table { width: 100%; min-width: 0; border-collapse: collapse; font-size: 12px; }
+    #cariAylik th, #cariAylik td { padding: 4px 6px; border-bottom: 1px solid #e6ebf0; }
+    #cariAylik th { position: static; background: #f4f7fa; }
     #cari th.islem, #cari td.islem { width: 96px; text-align: right; }
     #cari .tahsilat-btn {
       border: 1px solid #8aa0aa; border-radius: 4px; padding: 2px 8px;
@@ -530,6 +703,16 @@
     #bordroTablo .n, #bordroTablo th.n { text-align: right; }
     .fis-dar { width: 72px; flex: none; }
     .fis-grid { flex: 1; min-height: 0; min-width: 0; max-width: 100%; overflow: auto; background: #e7eef6; border: 1px solid #9eb4c6; }
+    #girisBolum .fis-grid { display: flex; flex-direction: column; }
+    #girisTablo { flex: none; }
+    .giris-tarama {
+      flex: 1; min-height: 180px; overflow: hidden; background: #fff;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .giris-tarama[hidden] { display: none; }
+    .giris-tarama img, .giris-tarama iframe {
+      width: 100%; height: 100%; min-height: 180px; border: 0; background: #fff; object-fit: contain;
+    }
     #belgeTablo { width: max-content; table-layout: fixed; border-collapse: collapse; background: #fff; }
     #belgeTablo th {
       position: sticky; top: 0; background: #f3ead0; border: 1px solid #d7c89a;
@@ -618,9 +801,179 @@
       </div>
     </div>
     <div id="menu">
-      <button class="rapor-btn" id="karlilikBtn" type="button">Satış Karlılığı</button>
-      <button class="rapor-btn" id="cariBtn" type="button">Cari Borç Alacak</button>
-      <button class="rapor-btn" id="hareketsizBtn" type="button">Hareket Görmemiş Cariler</button>
+      <button class="rapor-btn" id="karlilikBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15l3-4 3 2 5-7" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="1.6" fill="currentColor"/></svg>Satış Karlılığı</button>
+      <button class="rapor-btn" id="maliyetDegerBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5h8v2M9 12h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M17 14.7v2.6M15.7 16h2.6" stroke="currentColor" stroke-width="1.3"/></svg>Maliyet Değer Raporu</button>
+      <button class="rapor-btn" id="cariBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.8-3.2 2.9-5 5.5-5s4.7 1.8 5.5 5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M16 8h5M18.5 5.5v5" stroke="currentColor" stroke-width="1.6"/></svg>Cari Borç Alacak</button>
+      <button class="rapor-btn" id="hareketsizBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 19l14-14" stroke="currentColor" stroke-width="1.5"/></svg>Hareket Görmemiş Cariler</button>
+      <button class="rapor-btn" id="kasaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>İşlem Kasası</button>
+      <button class="rapor-btn" id="cekBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 10h8M5 14h5" stroke="currentColor" stroke-width="1.4"/><path d="M13 15.5c1.2-2 4.2-2 5.4 0" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Çek</button>
+      <button class="rapor-btn" id="senetBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 3v4h4M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>Senet</button>
+      <button class="rapor-btn" id="visaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20M5 15h4" stroke="currentColor" stroke-width="1.6"/></svg>Visa</button>
+    </div>
+    <div class="rapor-ekran" id="islemKasa" hidden>
+      <div class="araclar">
+        <button class="geri" id="kasaGeri" type="button">‹</button>
+        <strong class="baslik">İşlem Kasası</strong>
+        <button class="kasa-gun secili" id="kasaBugun" type="button">Bugün</button>
+        <button class="kasa-gun" id="kasaDun" type="button">Dün</button>
+        <input id="kasaTarih" type="date" aria-label="Kasa tarihi">
+        <label class="bakiye-tik">Şube
+          <select id="kasaSube" aria-label="Şube"></select>
+        </label>
+        <label class="bakiye-tik">Kasa
+          <select id="kasaAd" aria-label="Kasa"></select>
+        </label>
+        <span class="durum" id="kasaDurum"></span>
+      </div>
+      <div class="tablo-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Tarih</th>
+              <th class="aciklama">Açıklama</th>
+              <th>İşlem No</th>
+              <th>İşlem</th>
+              <th class="num">Giren</th>
+              <th class="num">Çıkan</th>
+              <th>Şube Adı</th>
+              <th>Kasa Adı</th>
+              <th>Belge Nevi</th>
+              <th>Kullanıcı</th>
+            </tr>
+          </thead>
+          <tbody id="kasaSatir"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="4">Günün kasası</td>
+              <td class="num" id="kasaGelir"></td>
+              <td class="num" id="kasaGider"></td>
+              <td colspan="4"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="kasa-son">
+        <span>Son kasa durumu</span>
+        <b id="kasaSon">0,00 ₺</b>
+      </div>
+    </div>
+    <div class="rapor-ekran" id="portfoy" hidden>
+      <div class="araclar">
+        <button class="geri" id="portfoyGeri" type="button">‹</button>
+        <strong class="baslik" id="portfoyBaslik">Çek</strong>
+        <label class="bakiye-tik">Başlangıç</label>
+        <input id="portfoyBas" type="date" aria-label="Başlangıç tarihi">
+        <label class="bakiye-tik">Bitiş</label>
+        <input id="portfoyBit" type="date" aria-label="Bitiş tarihi">
+        <div class="durum-menu">
+          <button class="kasa-gun" id="portfoyDurumBtn" type="button">Durum: Tümü</button>
+          <div class="durum-liste" id="portfoyDurumListe" hidden></div>
+        </div>
+        <input id="portfoyAra" type="search" placeholder="Ara" aria-label="Ara">
+        <span class="durum" id="portfoyDurum"></span>
+      </div>
+      <div class="tablo-wrap">
+        <table>
+          <colgroup>
+            <col class="sec">
+            <col class="vade">
+            <col class="belge" style="width:128px">
+            <col class="firma">
+            <col class="keside">
+            <col class="durum">
+            <col class="banka">
+            <col class="ciro">
+            <col class="tutar">
+          </colgroup>
+          <thead>
+            <tr>
+              <th class="sec"><input id="portfoyTumunuSec" class="secim" type="checkbox" aria-label="Tümünü seç"></th>
+              <th data-alan="vade"><button type="button" class="sirala"><span class="ad">Vade</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Vade filtresi">▼</button></th>
+              <th data-alan="belge"><button type="button" class="sirala"><span class="ad">Belge No</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Belge no filtresi">▼</button></th>
+              <th data-alan="firma"><button type="button" class="sirala"><span class="ad">Firma</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Firma filtresi">▼</button></th>
+              <th class="keside" data-alan="keside"><button type="button" class="sirala"><span class="ad">Keşide</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Keşide filtresi">▼</button></th>
+              <th data-alan="durum"><button type="button" class="sirala"><span class="ad">Durum</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Durum filtresi">▼</button></th>
+              <th class="banka" data-alan="banka"><button type="button" class="sirala"><span class="ad">Takas bankası</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Banka filtresi">▼</button></th>
+              <th class="ciro" data-alan="ciro"><button type="button" class="sirala"><span class="ad">Ciro edilen</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Ciro filtresi">▼</button></th>
+              <th class="num" data-alan="tutar"><button type="button" class="sirala"><span class="ad">Tutar</span><span class="yon"></span></button><button type="button" class="filtre-ok" aria-label="Tutar filtresi">▼</button></th>
+            </tr>
+          </thead>
+          <tbody id="portfoySatir"></tbody>
+        </table>
+      </div>
+      <div class="portfoy-alt">
+        <span>Genel toplam <b id="portfoyToplam">0,00</b></span>
+        <span class="secilen" id="portfoySecilenKutu" hidden>Seçilen toplam <b id="portfoySecilen">0,00</b></span>
+      </div>
+      <div id="portfoyOnizleme" class="gorsel-kutu" hidden></div>
+      <div id="portfoyFiltre" hidden></div>
+    </div>
+    <div class="rapor-ekran" id="maliyetDeger" hidden>
+      <div class="araclar">
+        <button class="geri" id="maliyetGeri" type="button">‹</button>
+        <strong class="baslik">Maliyet Değer Raporu</strong>
+        <label class="bakiye-tik">Başlangıç</label>
+        <input id="maliyetBas" type="date" aria-label="Başlangıç tarihi">
+        <label class="bakiye-tik">Bitiş</label>
+        <input id="maliyetBit" type="date" aria-label="Bitiş tarihi">
+        <label class="bakiye-tik">Ekstre tarihi</label>
+        <input id="maliyetEkstre" type="date" aria-label="Ekstre tarihi">
+        <span class="durum" id="maliyetDurum"></span>
+      </div>
+      <div class="araclar ara-satir">
+        <input id="maliyetAra" placeholder="Stok kodu veya adı" aria-label="Ara">
+        <div class="ozel-kodlar" id="maliyetOzelKodlar"></div>
+      </div>
+      <div class="tablo-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="kod"><button type="button" data-alan="kod">Stok Kodu<span class="ok"></span></button></th>
+              <th class="ad"><button type="button" data-alan="ad">Stok Adı<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="miktar">Miktar<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="maliyet">Birim Maliyet<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="deger">Maliyet Değeri<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="alis">Alış Fiyatı<span class="ok"></span></button></th>
+            </tr>
+          </thead>
+          <tbody id="maliyetSatir"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2">Toplam</td>
+              <td class="num" id="maliyetMiktarTop"></td>
+              <td></td>
+              <td class="num" id="maliyetDegerTop"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="ipucu">Sağ tık: stok ekstresi ve aylık satış hızı. Ekstre tarihi boşsa bitiş tarihi kullanılır.</p>
+      <div id="maliyetDetay" class="maliyet-detay" hidden>
+        <div class="maliyet-detay-ust">
+          <b id="maliyetDetayBaslik">Stok detayı</b>
+          <button type="button" id="maliyetDetayKapat" aria-label="Kapat">×</button>
+        </div>
+        <div class="maliyet-detay-govde">
+          <div class="tablo-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarih</th>
+                  <th>İzahat</th>
+                  <th>Evrak No</th>
+                  <th class="num">Giren</th>
+                  <th class="num">Çıkan</th>
+                  <th class="num">Bakiye</th>
+                  <th class="num">Birim Maliyet</th>
+                </tr>
+              </thead>
+              <tbody id="maliyetEkstreSatir"></tbody>
+            </table>
+          </div>
+          <div id="maliyetHizListe"></div>
+        </div>
+      </div>
     </div>
     <div class="rapor-ekran" id="rapor" hidden>
       <div class="araclar">
@@ -682,6 +1035,20 @@
             <option value="AS">Alıcı-Satıcı</option>
           </select>
         </label>
+        <label class="bakiye-tik" id="cariKartDurumKutu" hidden>Durum
+          <select id="cariKartDurum">
+            <option value="">Tümü</option>
+            <option value="Aktif">Aktif</option>
+            <option value="Pasif">Pasif</option>
+          </select>
+        </label>
+        <label class="bakiye-tik hareket-ek" id="cariHicKutu" hidden>
+          <input id="cariHicHareket" type="checkbox"> Hiç hareketi olmayanlar
+        </label>
+        <label class="bakiye-tik hareket-ek" id="cariGunKutu" hidden>Gün ≥
+          <input id="cariGunMin" type="number" min="0" step="1" placeholder="örn. 90" aria-label="En az kaç gündür hareketsiz">
+        </label>
+        <button class="kasa-gun" id="cariPasifBtn" type="button" hidden>Seçilenleri pasif yap</button>
       </div>
       <div class="araclar ara-satir">
         <input id="cariAra" placeholder="Firma kodu veya adı" aria-label="Cari ara">
@@ -692,19 +1059,29 @@
         <table>
           <thead>
             <tr>
-              <th class="kod"><button type="button" data-alan="kod">Firma Kodu<span class="ok"></span></button></th>
-              <th class="ad"><button type="button" data-alan="ad">Firma Adı<span class="ok"></span></button></th>
-              <th class="num"><button type="button" data-alan="borc">Borç<span class="ok"></span></button></th>
-              <th class="num"><button type="button" data-alan="alacak">Alacak<span class="ok"></span></button></th>
-              <th class="num"><button type="button" data-alan="bakiye">Bakiye<span class="ok"></span></button></th>
-              <th><button type="button" data-alan="pb">PB<span class="ok"></span></button></th>
+              <th class="hareket-ek sec"><input id="cariTumunuSec" class="secim" type="checkbox" aria-label="Tümünü seç"></th>
+              <th class="kod" data-alan="kod"><button type="button" class="sirala" data-alan="kod"><span class="ad">Firma Kodu</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="Firma kodu filtresi">▼</button></th>
+              <th class="ad" data-alan="ad"><button type="button" class="sirala" data-alan="ad"><span class="ad">Firma Adı</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="Firma adı filtresi">▼</button></th>
+              <th class="hareket-ek" data-alan="tip"><button type="button" class="sirala" data-alan="tip"><span class="ad">Firma Tipi</span><span class="ok"></span></button><button type="button" class="filtre-ok" aria-label="Firma tipi filtresi">▼</button></th>
+              <th class="hareket-ek" data-alan="sonHareket"><button type="button" class="sirala" data-alan="sonHareket"><span class="ad">Son Hareket</span><span class="ok"></span></button><button type="button" class="filtre-ok" aria-label="Son hareket filtresi">▼</button></th>
+              <th class="hareket-ek num" data-alan="gun"><button type="button" class="sirala" data-alan="gun"><span class="ad">Gün</span><span class="ok"></span></button><button type="button" class="filtre-ok" aria-label="Gün filtresi">▼</button></th>
+              <th class="hareket-ek" data-alan="kart"><button type="button" class="sirala" data-alan="kart"><span class="ad">Durum</span><span class="ok"></span></button><button type="button" class="filtre-ok" aria-label="Durum filtresi">▼</button></th>
+              <th class="num" data-alan="borc"><button type="button" class="sirala" data-alan="borc"><span class="ad">Borç</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="Borç filtresi">▼</button></th>
+              <th class="num" data-alan="alacak"><button type="button" class="sirala" data-alan="alacak"><span class="ad">Alacak</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="Alacak filtresi">▼</button></th>
+              <th class="num" data-alan="bakiye"><button type="button" class="sirala" data-alan="bakiye"><span class="ad">Bakiye</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="Bakiye filtresi">▼</button></th>
+              <th data-alan="pb"><button type="button" class="sirala" data-alan="pb"><span class="ad">PB</span><span class="ok"></span></button><button type="button" class="filtre-ok hareket-ek" aria-label="PB filtresi">▼</button></th>
               <th class="islem"></th>
             </tr>
           </thead>
           <tbody id="cariSatir"></tbody>
           <tfoot>
             <tr>
+              <td class="hareket-ek"></td>
               <td colspan="2" id="cariToplamEtiket">Toplam</td>
+              <td class="hareket-ek"></td>
+              <td class="hareket-ek"></td>
+              <td class="hareket-ek"></td>
+              <td class="hareket-ek"></td>
               <td class="num" id="cariBorc"></td>
               <td class="num" id="cariAlacak"></td>
               <td class="num" id="cariBakiye"></td>
@@ -714,7 +1091,9 @@
           </tfoot>
         </table>
       </div>
-      <p class="ipucu">Satıra çift tıklayınca cari hareketleri açılır.</p>
+      <p class="ipucu" id="cariIpucu">Satıra çift tıklayınca cari hareketleri açılır.</p>
+      <div id="cariAylik" hidden></div>
+      <div id="cariFiltre" hidden></div>
     </div>
   </div>
   <div id="panel" hidden>
@@ -930,6 +1309,7 @@
                 </tr>
               </tfoot>
             </table>
+            <div id="girisTarama" class="giris-tarama" hidden></div>
           </div>
         </div>
       </div>
@@ -1479,6 +1859,7 @@
           evrakNo: row.evrakNo || "",
           sube: oturum.sube || "",
           kasa: oturum.kasa || "",
+          gorseller: (row.gorseller || []).filter((gorsel) => Number(gorsel.id)),
         },
       }));
       pencereAc("/?belge=1", "vega-belge-", "vegaBelgeOlcu", {
@@ -1637,6 +2018,38 @@
       document.getElementById("girisGun").textContent = gunler.size === 1 ? String([...gunler][0]) : "";
       document.getElementById("girisVade").textContent = vadeler.size === 1 ? [...vadeler][0] : "";
       document.getElementById("girisToplam").textContent = para.format(toplam) + " ₺";
+      girisTaramayiYaz(body.gorseller || []);
+    }
+
+    async function girisTaramayiYaz(gorseller) {
+      const kutu = document.getElementById("girisTarama");
+      if (!kutu) return;
+      kutu.replaceChildren();
+      const liste = (gorseller || []).filter((gorsel) => Number(gorsel.id));
+      if (!liste.length) {
+        kutu.hidden = true;
+        return;
+      }
+      kutu.hidden = false;
+      kutu.textContent = "Belge açılıyor…";
+      try {
+        const parca = document.createDocumentFragment();
+        for (const gorsel of liste) {
+          let kayit = hareketOnbellek.get("gorsel:" + gorsel.id);
+          if (!kayit) {
+            const blob = await hareketBelgeGetir("/api/dokuman?id=" + encodeURIComponent(gorsel.id));
+            kayit = { url: URL.createObjectURL(blob), pdf: (blob.type || "").includes("pdf") };
+            hareketOnbellek.set("gorsel:" + gorsel.id, kayit);
+          }
+          const gorunen = document.createElement(kayit.pdf ? "iframe" : "img");
+          gorunen.src = kayit.url;
+          if (!kayit.pdf) gorunen.alt = gorsel.ad || "Taranan belge";
+          parca.appendChild(gorunen);
+        }
+        kutu.replaceChildren(parca);
+      } catch {
+        kutu.textContent = "Taranan belge açılamadı.";
+      }
     }
 
     async function belgePenceresiniBaslat() {
@@ -1676,10 +2089,12 @@
         document.getElementById("panelBaslik").textContent = baslik;
         document.getElementById("panelAlt").textContent = "";
         document.getElementById("belgeNot").textContent = "";
-        const giris = body.tur === "cargir";
+        const giris = body.tur === "cargir" || body.tur === "carcik";
         document.querySelector("#belgeBolum > .fis:not(#girisBolum)").hidden = giris;
         document.getElementById("girisBolum").hidden = !giris;
         if (giris) {
+          const gelen = Array.isArray(belge.gorseller) ? belge.gorseller : [];
+          if (!(body.gorseller || []).some((gorsel) => Number(gorsel.id)) && gelen.length) body.gorseller = gelen;
           girisBelgesiniCiz(body);
           return;
         }
@@ -1892,23 +2307,57 @@
     let cariAlan = "kod";
     let cariYon = 1;
     let cariHareketsiz = false;
+    let cariSecim = new Set();
+    let cariFiltre = {};
+    let cariFiltreKapatma = 0;
+    const CARI_TIP = { A: "Alıcı", S: "Satıcı", AS: "Alıcı-Satıcı" };
+    const CARI_AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
-    function cariCiz() {
+    function cariHucreDeger(row, alan) {
+      if (alan === "tip") return CARI_TIP[row.tip] || row.tip || "";
+      if (alan === "gun") return row.gun == null ? "—" : String(row.gun);
+      if (alan === "sonHareket") return row.sonHareket || "—";
+      if (alan === "borc" || alan === "alacak" || alan === "bakiye") return para.format(Number(row[alan] || 0));
+      if (alan === "pb") return pbYazi(row.pb);
+      return String(row[alan] || "");
+    }
+
+    function cariListe() {
       const veren = document.getElementById("bakiyeVeren").checked;
       const tip = document.getElementById("cariTip").value;
       const yon = document.getElementById("cariBakiyeYon").value;
+      const kart = document.getElementById("cariKartDurum").value;
+      const hic = document.getElementById("cariHicHareket").checked;
+      const gunMin = Number(document.getElementById("cariGunMin").value);
       let liste = cariSatirlari;
       if (tip) liste = liste.filter((row) => row.tip === tip);
+      if (cariHareketsiz && kart) liste = liste.filter((row) => row.kart === kart);
+      if (cariHareketsiz && hic) liste = liste.filter((row) => !row.sonHareket);
+      if (cariHareketsiz && Number.isFinite(gunMin) && gunMin > 0) {
+        liste = liste.filter((row) => row.gun == null || Number(row.gun) >= gunMin);
+      }
       if (veren) liste = liste.filter((row) => Math.abs(Number(row.bakiye)) > 0.004);
       if (yon === "borclu") liste = liste.filter((row) => Number(row.bakiye) > 0.004);
       if (yon === "alacakli") liste = liste.filter((row) => Number(row.bakiye) < -0.004);
-      const rows = liste.slice().sort((a, b) => {
-        const av = a[cariAlan];
-        const bv = b[cariAlan];
+      if (cariHareketsiz) {
+        liste = liste.filter((row) => Object.entries(cariFiltre).every(([alan, kume]) => !kume?.size || kume.has(cariHucreDeger(row, alan))));
+      }
+      return liste;
+    }
+
+    function cariCiz() {
+      const rows = cariListe().slice().sort((a, b) => {
+        const alan = cariAlan === "sonHareket" ? "sonSayi" : cariAlan;
+        let av = alan === "gun" ? (a.gun == null ? 1e12 : a.gun) : a[alan];
+        let bv = alan === "gun" ? (b.gun == null ? 1e12 : b.gun) : b[alan];
+        if (alan === "sonSayi") {
+          av = a.sonSayi || 0;
+          bv = b.sonSayi || 0;
+        }
         if (typeof av === "string" || typeof bv === "string") {
           return String(av || "").localeCompare(String(bv || ""), "tr", { sensitivity: "base" }) * cariYon;
         }
-        return (Number(av) - Number(bv)) * cariYon;
+        return ((Number(av) || 0) - (Number(bv) || 0)) * cariYon;
       });
       const govde = document.getElementById("cariSatir");
       govde.innerHTML = "";
@@ -1920,8 +2369,30 @@
         const adHucre = hucre(row.ad || "");
         adHucre.classList.add("ad");
         adHucre.title = row.ad || "";
+        const sec = document.createElement("td");
+        sec.className = "hareket-ek sec";
+        if (cariHareketsiz) {
+          const kutu = document.createElement("input");
+          kutu.type = "checkbox";
+          kutu.className = "secim";
+          kutu.checked = cariSecim.has(row.kod);
+          kutu.addEventListener("click", (event) => event.stopPropagation());
+          kutu.addEventListener("change", () => {
+            if (kutu.checked) cariSecim.add(row.kod);
+            else cariSecim.delete(row.kod);
+            tr.classList.toggle("secili", kutu.checked);
+            cariSecimYaz(rows);
+          });
+          sec.appendChild(kutu);
+          tr.classList.toggle("secili", kutu.checked);
+        }
+        tr.appendChild(sec);
         tr.appendChild(kodHucre);
         tr.appendChild(adHucre);
+        tr.appendChild(Object.assign(hucre(CARI_TIP[row.tip] || row.tip || ""), { className: "hareket-ek" }));
+        tr.appendChild(Object.assign(hucre(row.sonHareket || "—"), { className: "hareket-ek" }));
+        tr.appendChild(Object.assign(hucre(row.gun == null ? "—" : String(row.gun), true), { className: "hareket-ek num" }));
+        tr.appendChild(Object.assign(hucre(row.kart || ""), { className: "hareket-ek" }));
         tr.appendChild(hucre(para.format(Number(row.borc || 0)), true, Number(row.borc) < 0));
         tr.appendChild(hucre(para.format(Number(row.alacak || 0)), true, Number(row.alacak) < 0));
         tr.appendChild(hucre(para.format(Number(row.bakiye || 0)), true, Number(row.bakiye) < 0));
@@ -1941,7 +2412,12 @@
           islem.appendChild(btn);
         }
         tr.appendChild(islem);
-        tr.title = "Çift tıklayınca hareketler açılır";
+        tr.title = cariHareketsiz ? "Sağ tık: yıllık aylık hareket. Çift tık: hareketler." : "Çift tıklayınca hareketler açılır";
+        tr.oncontextmenu = (event) => {
+          if (!cariHareketsiz) return;
+          event.preventDefault();
+          cariAylikAc(row, event.clientX, event.clientY);
+        };
         tr.onclick = () => {
           document.querySelectorAll("#cariSatir tr").forEach((satir) => satir.classList.remove("secili"));
           tr.classList.add("secili");
@@ -1951,8 +2427,12 @@
         govde.appendChild(tr);
       }
       document.querySelectorAll("#cari thead .ok").forEach((ok) => { ok.textContent = ""; });
-      const aktif = document.querySelector(`#cari thead button[data-alan="${cariAlan}"] .ok`);
+      const aktif = document.querySelector(`#cari thead button.sirala[data-alan="${cariAlan}"] .ok`);
       if (aktif) aktif.textContent = cariYon > 0 ? "▲" : "▼";
+      document.querySelectorAll("#cari thead .filtre-ok").forEach((btn) => {
+        const alan = btn.closest("th")?.dataset.alan;
+        btn.classList.toggle("dolu", Boolean(alan && cariFiltre[alan]?.size));
+      });
       const tl = rows.filter((row) => {
         const pb = String(row.pb || "TL").trim().toUpperCase();
         return pb === "TL" || pb === "TRY" || pb === "₺";
@@ -1967,6 +2447,46 @@
       bakiyeHucre.textContent = para.format(bakiye);
       bakiyeHucre.classList.toggle("eksi", bakiye < 0);
       document.getElementById("cariDurum").textContent = rows.length + " cari";
+      cariSecimYaz(rows);
+    }
+
+    function cariSecimYaz(rows) {
+      const tumu = document.getElementById("cariTumunuSec");
+      const secili = rows.filter((row) => cariSecim.has(row.kod)).length;
+      tumu.checked = rows.length > 0 && secili === rows.length;
+      tumu.indeterminate = secili > 0 && secili < rows.length;
+      const btn = document.getElementById("cariPasifBtn");
+      btn.textContent = secili ? "Seçilenleri pasif yap (" + secili + ")" : "Seçilenleri pasif yap";
+    }
+
+    async function cariAylikAc(row, x, y) {
+      const kutu = document.getElementById("cariAylik");
+      kutu.hidden = false;
+      kutu.textContent = "Hazırlanıyor…";
+      kutu.style.left = Math.max(8, Math.min(x, window.innerWidth - 380)) + "px";
+      kutu.style.top = Math.max(8, Math.min(y, window.innerHeight - 420)) + "px";
+      try {
+        const params = new URLSearchParams({ kod: row.kod || "" });
+        const body = await getir("/api/cari-aylik?" + params);
+        const tablo = document.createElement("table");
+        const bas = document.createElement("thead");
+        bas.innerHTML = "<tr><th>Ay</th><th class=\"num\">Borç</th><th class=\"num\">Alacak</th></tr>";
+        const govde = document.createElement("tbody");
+        for (const ay of body.aylar || []) {
+          const tr = document.createElement("tr");
+          tr.appendChild(hucre(CARI_AY[ay.ay - 1] || String(ay.ay)));
+          tr.appendChild(hucre(para.format(Number(ay.borc || 0)), true));
+          tr.appendChild(hucre(para.format(Number(ay.alacak || 0)), true));
+          govde.appendChild(tr);
+        }
+        tablo.appendChild(bas);
+        tablo.appendChild(govde);
+        const baslik = document.createElement("b");
+        baslik.textContent = (row.ad || row.kod) + (body.yil ? " · " + body.yil : "") + " aylık hareket";
+        kutu.replaceChildren(baslik, tablo);
+      } catch (error) {
+        kutu.textContent = error.message;
+      }
     }
 
     let cariIstek = 0;
@@ -1985,8 +2505,13 @@
       const body = await getir("/api/cari-bakiye?" + params);
       if (no !== cariIstek) return;
       cariSatirlari = body.items || [];
-      cariAlan = "kod";
-      cariYon = 1;
+      if (cariHareketsiz) {
+        cariAlan = "gun";
+        cariYon = -1;
+      } else {
+        cariAlan = "kod";
+        cariYon = 1;
+      }
       cariCiz();
     }
 
@@ -2902,9 +3427,748 @@ ${"<" + "/script>"}</body></html>`);
       });
     }
 
+    function kasaTarihYazi(tarih) {
+      const iki = (n) => String(n).padStart(2, "0");
+      return iki(tarih.getDate()) + "." + iki(tarih.getMonth() + 1) + "." + tarih.getFullYear();
+    }
+
+    function kasaIso(yazi) {
+      const [gun, ay, yil] = String(yazi || "").split(".");
+      if (!gun || !ay || !yil) return "";
+      return yil + "-" + ay + "-" + gun;
+    }
+
+    function kasaEkraniKapat() {
+      document.getElementById("islemKasa").hidden = true;
+      const maliyet = document.getElementById("maliyetDeger");
+      if (maliyet) {
+        maliyet.hidden = true;
+        document.getElementById("maliyetDetay").hidden = true;
+      }
+      const portfoy = document.getElementById("portfoy");
+      if (portfoy) portfoy.hidden = true;
+      const liste = document.getElementById("portfoyDurumListe");
+      if (liste) liste.hidden = true;
+      const onizleme = document.getElementById("portfoyOnizleme");
+      if (onizleme) {
+        onizleme.hidden = true;
+        onizleme.replaceChildren();
+      }
+      portfoyGorselSabit = false;
+    }
+
+    function kasaSecenekleri(select, liste, secili) {
+      const istenen = secili || select.value;
+      select.innerHTML = "";
+      for (const ad of liste || []) {
+        const option = document.createElement("option");
+        option.value = ad;
+        option.textContent = ad;
+        select.appendChild(option);
+      }
+      if ([...select.options].some((option) => option.value === istenen)) select.value = istenen;
+    }
+
+    function kasaFiltreDegeri(selectId, anahtar, yedek) {
+      const select = document.getElementById(selectId);
+      if (select.value) return select.value;
+      return localStorage.getItem(anahtar) || yedek || "";
+    }
+
+    async function kasaAc(yazi) {
+      const tarih = yazi || kasaTarihYazi(new Date());
+      document.getElementById("kasaTarih").value = kasaIso(tarih);
+      const bugun = kasaTarihYazi(new Date());
+      const dunTarih = new Date();
+      dunTarih.setDate(dunTarih.getDate() - 1);
+      const dun = kasaTarihYazi(dunTarih);
+      document.getElementById("kasaBugun").classList.toggle("secili", tarih === bugun);
+      document.getElementById("kasaDun").classList.toggle("secili", tarih === dun);
+      const sube = kasaFiltreDegeri("kasaSube", "vegaIslemKasaSube", oturum.sube || "");
+      const kasaAd = kasaFiltreDegeri("kasaAd", "vegaIslemKasaKasa", oturum.kasa || "");
+      document.getElementById("kasaDurum").textContent = "Yükleniyor...";
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        tarih,
+        sube,
+        kasa: kasaAd,
+      });
+      const body = await getir("/api/islem-kasa?" + params);
+      kasaSecenekleri(document.getElementById("kasaSube"), body.subeler, sube);
+      kasaSecenekleri(document.getElementById("kasaAd"), body.kasalar, kasaAd);
+      const secilenSube = document.getElementById("kasaSube").value;
+      const secilenKasa = document.getElementById("kasaAd").value;
+      if ((sube && secilenSube && secilenSube !== sube) || (kasaAd && secilenKasa && secilenKasa !== kasaAd)) {
+        localStorage.setItem("vegaIslemKasaSube", secilenSube);
+        localStorage.setItem("vegaIslemKasaKasa", secilenKasa);
+        return kasaAc(tarih);
+      }
+      if (secilenSube) localStorage.setItem("vegaIslemKasaSube", secilenSube);
+      if (secilenKasa) localStorage.setItem("vegaIslemKasaKasa", secilenKasa);
+      const govde = document.getElementById("kasaSatir");
+      govde.innerHTML = "";
+      const hucre = (yazi, sayi, sinif) => {
+        const td = document.createElement("td");
+        if (sayi) td.className = "num";
+        else if (sinif) td.className = sinif;
+        td.textContent = yazi;
+        return td;
+      };
+      for (const row of body.items || []) {
+        const tr = document.createElement("tr");
+        tr.appendChild(hucre(row.tarih || ""));
+        tr.appendChild(hucre(row.aciklama || "", false, "aciklama"));
+        tr.appendChild(hucre(row.islemNo || ""));
+        tr.appendChild(hucre(row.islem || ""));
+        tr.appendChild(hucre(para.format(Number(row.giren || 0)), true));
+        tr.appendChild(hucre(para.format(Number(row.cikan || 0)), true));
+        tr.appendChild(hucre(row.sube || ""));
+        tr.appendChild(hucre(row.kasa || ""));
+        tr.appendChild(hucre(row.belgeNevi || ""));
+        tr.appendChild(hucre(row.kullanici || ""));
+        govde.appendChild(tr);
+      }
+      document.getElementById("kasaGelir").textContent = para.format(Number(body.gelir || 0));
+      document.getElementById("kasaGider").textContent = para.format(Number(body.gider || 0));
+      const son = Number(body.son || 0);
+      const sonYazi = document.getElementById("kasaSon");
+      sonYazi.textContent = para.format(son) + " ₺";
+      sonYazi.classList.toggle("eksi", son < 0);
+      const adet = (body.items || []).length;
+      const yer = [secilenSube, secilenKasa].filter(Boolean).join(" · ");
+      document.getElementById("kasaDurum").textContent = adet
+        ? tarih + (yer ? " · " + yer : "") + " · " + adet + " nakit"
+        : tarih + (yer ? " · " + yer : "") + " · nakit hareket yok";
+    }
+
+    document.getElementById("kasaBtn").onclick = async () => {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("islemKasa").hidden = false;
+      try {
+        await kasaAc(kasaTarihYazi(new Date()));
+      } catch (error) {
+        document.getElementById("kasaDurum").textContent = error.message;
+      }
+    };
+    document.getElementById("kasaGeri").onclick = () => {
+      kasaEkraniKapat();
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("kasaBugun").onclick = () => {
+      kasaAc(kasaTarihYazi(new Date())).catch((error) => {
+        document.getElementById("kasaDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("kasaDun").onclick = () => {
+      const tarih = new Date();
+      tarih.setDate(tarih.getDate() - 1);
+      kasaAc(kasaTarihYazi(tarih)).catch((error) => {
+        document.getElementById("kasaDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("kasaTarih").onchange = () => {
+      const iso = document.getElementById("kasaTarih").value;
+      const [yil, ay, gun] = iso.split("-");
+      if (!yil || !ay || !gun) return;
+      kasaAc(gun + "." + ay + "." + yil).catch((error) => {
+        document.getElementById("kasaDurum").textContent = error.message;
+      });
+    };
+    const kasaFiltreDegisti = (selectId, anahtar) => {
+      const deger = document.getElementById(selectId).value;
+      if (deger) localStorage.setItem(anahtar, deger);
+      const iso = document.getElementById("kasaTarih").value;
+      const [yil, ay, gun] = iso.split("-");
+      const tarih = yil && ay && gun ? gun + "." + ay + "." + yil : kasaTarihYazi(new Date());
+      kasaAc(tarih).catch((error) => {
+        document.getElementById("kasaDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("kasaSube").onchange = () => kasaFiltreDegisti("kasaSube", "vegaIslemKasaSube");
+    document.getElementById("kasaAd").onchange = () => kasaFiltreDegisti("kasaAd", "vegaIslemKasaKasa");
+
+    let portfoyTur = "cek";
+    let portfoySecili = new Set();
+    let portfoyHam = [];
+    let portfoySira = { alan: "vade", yon: 1 };
+    let portfoyFiltre = {};
+    let portfoySecim = new Set();
+    let portfoyAralik = "";
+    let portfoyFiltreKapatma = 0;
+    let portfoyGorselSabit = false;
+    let portfoyIstek = 0;
+    let portfoyGorselIstek = 0;
+    const portfoyAd = { cek: "Çek", senet: "Senet", visa: "Visa" };
+
+    function portfoyTarih(input) {
+      const [yil, ay, gun] = String(input.value || "").split("-");
+      if (!yil || !ay || !gun) return "";
+      return gun + "." + ay + "." + yil;
+    }
+
+    function portfoyDurumYazi() {
+      const secili = [...portfoySecili];
+      document.getElementById("portfoyDurumBtn").textContent = secili.length ? "Durum: " + secili.join(", ") : "Durum: Tümü";
+    }
+
+    function portfoyDurumCiz(durumlar) {
+      const liste = document.getElementById("portfoyDurumListe");
+      const imza = (durumlar || []).join("|");
+      if (liste.dataset.imza === imza) {
+        portfoyDurumYazi();
+        return;
+      }
+      liste.dataset.imza = imza;
+      liste.replaceChildren();
+      for (const ad of durumlar || []) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = ad;
+        input.checked = portfoySecili.has(ad);
+        input.addEventListener("change", () => {
+          if (input.checked) portfoySecili.add(ad);
+          else portfoySecili.delete(ad);
+          portfoyDurumYazi();
+          portfoyUstKaydet();
+          portfoyYukle().catch((error) => {
+            document.getElementById("portfoyDurum").textContent = error.message;
+          });
+        });
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(ad));
+        liste.appendChild(label);
+      }
+      portfoyDurumYazi();
+    }
+
+    async function portfoyGorsel(id) {
+      const no = ++portfoyGorselIstek;
+      const kutu = document.getElementById("portfoyOnizleme");
+      kutu.hidden = false;
+      kutu.textContent = "Belge açılıyor…";
+      try {
+        let kayit = hareketOnbellek.get("gorsel:" + id);
+        if (!kayit) {
+          const blob = await hareketBelgeGetir("/api/dokuman?id=" + encodeURIComponent(id));
+          kayit = { url: URL.createObjectURL(blob), pdf: (blob.type || "").includes("pdf") };
+          hareketOnbellek.set("gorsel:" + id, kayit);
+        }
+        if (no !== portfoyGorselIstek) return;
+        kutu.textContent = "";
+        const gorunen = document.createElement(kayit.pdf ? "iframe" : "img");
+        gorunen.src = kayit.url;
+        if (!kayit.pdf) gorunen.alt = "Belge görseli";
+        kutu.appendChild(gorunen);
+      } catch {
+        if (no === portfoyGorselIstek) kutu.textContent = "Belge görseli açılamadı.";
+      }
+    }
+
+    async function portfoyYukle() {
+      const no = ++portfoyIstek;
+      const bas = portfoyTarih(document.getElementById("portfoyBas"));
+      const bit = portfoyTarih(document.getElementById("portfoyBit"));
+      document.getElementById("portfoyDurum").textContent = "Yükleniyor...";
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        tur: portfoyTur,
+        bas,
+        bit,
+      });
+      if (portfoySecili.size) params.set("durum", [...portfoySecili].join(","));
+      const body = await getir("/api/portfoy?" + params);
+      if (no !== portfoyIstek) return;
+      portfoyDurumCiz(body.durumlar || []);
+      portfoyAralik = bas + " – " + bit;
+      portfoyHam = (body.items || []).map((row, index) => ({ ...row, _id: String(index) }));
+      portfoySecim = new Set();
+      portfoyCiz();
+    }
+
+    function portfoyVadeSayi(yazi) {
+      const [gun, ay, yil] = String(yazi || "").split(".");
+      const n = Number(yil) * 10000 + Number(ay) * 100 + Number(gun);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function portfoyHucreDeger(row, alan) {
+      if (alan === "tutar") return para.format(Number(row.tutar || 0));
+      return String(row[alan] || "");
+    }
+
+    function portfoyAramaMetni(row) {
+      return [row.vade, row.belge, row.firma, row.keside, row.durum, row.banka, row.ciro, para.format(Number(row.tutar || 0))]
+        .join(" ")
+        .toLocaleLowerCase("tr");
+    }
+
+    function portfoyGecer(row) {
+      const arama = document.getElementById("portfoyAra").value.trim().toLocaleLowerCase("tr");
+      if (arama && !portfoyAramaMetni(row).includes(arama)) return false;
+      return Object.entries(portfoyFiltre).every(([alan, kume]) => !kume?.size || kume.has(portfoyHucreDeger(row, alan)));
+    }
+
+    function portfoyKarsilastir(a, b) {
+      const alan = portfoySira.alan;
+      let sonuc = alan === "tutar"
+        ? Number(a.tutar || 0) - Number(b.tutar || 0)
+        : alan === "vade"
+          ? portfoyVadeSayi(a.vade) - portfoyVadeSayi(b.vade)
+          : String(a[alan] || "").localeCompare(String(b[alan] || ""), "tr", { sensitivity: "base" });
+      if (!sonuc) sonuc = portfoyVadeSayi(a.vade) - portfoyVadeSayi(b.vade);
+      return sonuc * portfoySira.yon;
+    }
+
+    function portfoySiralaIsaret() {
+      document.querySelectorAll("#portfoy thead th[data-alan]").forEach((th) => {
+        const alan = th.dataset.alan;
+        const yon = th.querySelector(".yon");
+        if (yon) yon.textContent = alan === portfoySira.alan ? (portfoySira.yon > 0 ? "▲" : "▼") : "";
+        th.querySelector(".filtre-ok")?.classList.toggle("dolu", Boolean(portfoyFiltre[alan]?.size));
+      });
+    }
+
+    function portfoyCiz() {
+      const govde = document.getElementById("portfoySatir");
+      govde.replaceChildren();
+      const hucre = (yazi, sayi) => {
+        const td = document.createElement("td");
+        if (sayi) td.className = "num";
+        td.textContent = yazi;
+        if (yazi) td.title = yazi;
+        return td;
+      };
+      const liste = portfoyHam.filter(portfoyGecer).sort(portfoyKarsilastir);
+      let toplam = 0;
+      for (const row of liste) {
+        const tr = document.createElement("tr");
+        const gorseller = (row.gorseller || []).filter((gorsel) => gorsel.id);
+        if (gorseller.length) tr.dataset.gorsel = gorseller.map((gorsel) => gorsel.id).join(",");
+        const sec = document.createElement("td");
+        sec.className = "sec";
+        const kutu = document.createElement("input");
+        kutu.type = "checkbox";
+        kutu.className = "secim";
+        kutu.dataset.tutar = String(Number(row.tutar || 0));
+        kutu.dataset.anahtar = row._id;
+        kutu.checked = portfoySecim.has(row._id);
+        tr.classList.toggle("secili", kutu.checked);
+        kutu.addEventListener("change", () => {
+          if (kutu.checked) portfoySecim.add(row._id);
+          else portfoySecim.delete(row._id);
+          tr.classList.toggle("secili", kutu.checked);
+          portfoySecimTopla();
+        });
+        sec.appendChild(kutu);
+        tr.appendChild(sec);
+        const hucreSinif = (yazi, sinif, sayi) => {
+          const td = hucre(yazi, sayi);
+          if (sinif) td.classList.add(sinif);
+          return td;
+        };
+        tr.appendChild(hucre(row.vade || ""));
+        tr.appendChild(hucre(row.belge || ""));
+        tr.appendChild(hucre(row.firma || ""));
+        tr.appendChild(hucreSinif(row.keside || "", "keside"));
+        tr.appendChild(hucre(row.durum || ""));
+        tr.appendChild(hucre(row.banka || ""));
+        tr.appendChild(hucreSinif(row.ciro || "", "ciro"));
+        tr.appendChild(hucre(para.format(Number(row.tutar || 0)), true));
+        tr.title = row.basInd ? "Çift tıklayınca belge açılır" : "";
+        tr.ondblclick = (event) => {
+          if (event.target.closest("input")) return;
+          portfoyBelgeAc(row, tr);
+        };
+        toplam += Number(row.tutar || 0);
+        govde.appendChild(tr);
+      }
+      document.getElementById("portfoyToplam").textContent = para.format(toplam);
+      portfoySiralaIsaret();
+      portfoySecimTopla();
+      const filtreli = Object.values(portfoyFiltre).some((kume) => kume?.size);
+      document.getElementById("portfoyDurum").textContent = liste.length
+        ? portfoyAralik + " · " + liste.length + " kayıt" + (filtreli ? " · filtreli" : "")
+        : portfoyAralik + " · kayıt yok";
+    }
+
+    function portfoyUstAnahtar(alan) {
+      return "vegaPortfoy" + portfoyTur + alan;
+    }
+
+    function portfoyUstKaydet() {
+      localStorage.setItem(portfoyUstAnahtar("Bas"), document.getElementById("portfoyBas").value);
+      localStorage.setItem(portfoyUstAnahtar("Bit"), document.getElementById("portfoyBit").value);
+      localStorage.setItem(portfoyUstAnahtar("Durum"), [...portfoySecili].join("|"));
+      localStorage.setItem(portfoyUstAnahtar("Ara"), document.getElementById("portfoyAra").value);
+    }
+
+    function portfoyUstOku() {
+      const bas = localStorage.getItem(portfoyUstAnahtar("Bas"));
+      const bit = localStorage.getItem(portfoyUstAnahtar("Bit"));
+      document.getElementById("portfoyBas").value = /^\d{4}-\d{2}-\d{2}$/.test(bas || "") ? bas : "2025-12-31";
+      document.getElementById("portfoyBit").value = /^\d{4}-\d{2}-\d{2}$/.test(bit || "") ? bit : kasaIso(kasaTarihYazi(new Date()));
+      portfoySecili = new Set(String(localStorage.getItem(portfoyUstAnahtar("Durum")) || "").split("|").filter(Boolean));
+      document.getElementById("portfoyAra").value = localStorage.getItem(portfoyUstAnahtar("Ara")) || "";
+    }
+
+    function portfoyBelgeAc(row, tr) {
+      const bas = Number(row.basInd) || 0;
+      if (bas) {
+        const tip = Number(row.belgeTipi) || 13;
+        const cikis = tip === 11 || tip === 12 || tip === 19;
+        belgePenceresi({
+          izahat: cikis ? tip : (tip === 14 || tip === 18 ? tip : 13),
+          belgeNo: bas,
+          evrakNo: row.belge || "",
+          gorseller: (row.gorseller || []).filter((gorsel) => Number(gorsel.id)),
+        });
+      }
+    }
+
+    function portfoyAc(tur) {
+      portfoyTur = tur;
+      portfoySira = { alan: "vade", yon: 1 };
+      portfoyFiltre = {};
+      portfoySecim = new Set();
+      portfoyGorselSabit = false;
+      document.getElementById("portfoyFiltre").hidden = true;
+      const liste = document.getElementById("portfoyDurumListe");
+      liste.dataset.imza = "";
+      liste.hidden = true;
+      document.getElementById("portfoyBaslik").textContent = portfoyAd[tur] || "Çek";
+      document.getElementById("portfoy").classList.toggle("visa", tur === "visa");
+      document.querySelector("#portfoy thead th.banka .ad").textContent = tur === "visa" ? "Banka" : "Takas bankası";
+      portfoyUstOku();
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("portfoy").hidden = false;
+      portfoyYukle().catch((error) => {
+        document.getElementById("portfoyDurum").textContent = error.message;
+      });
+    }
+
+    document.getElementById("cekBtn").onclick = () => portfoyAc("cek");
+    document.getElementById("senetBtn").onclick = () => portfoyAc("senet");
+    document.getElementById("visaBtn").onclick = () => portfoyAc("visa");
+    document.getElementById("portfoyGeri").onclick = () => {
+      kasaEkraniKapat();
+      document.getElementById("menu").hidden = false;
+    };
+    const portfoyTarihDegisti = () => {
+      portfoyUstKaydet();
+      portfoyYukle().catch((error) => {
+        document.getElementById("portfoyDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("portfoyBas").onchange = portfoyTarihDegisti;
+    document.getElementById("portfoyBit").onchange = portfoyTarihDegisti;
+    document.getElementById("portfoyAra").oninput = () => {
+      portfoyUstKaydet();
+      portfoyCiz();
+    };
+    document.getElementById("portfoyDurumBtn").onclick = (event) => {
+      event.stopPropagation();
+      const liste = document.getElementById("portfoyDurumListe");
+      liste.hidden = !liste.hidden;
+    };
+    document.getElementById("portfoyDurumListe").onclick = (event) => event.stopPropagation();
+    document.addEventListener("click", () => {
+      document.getElementById("portfoyDurumListe").hidden = true;
+    });
+    function portfoySecimTopla() {
+      let toplam = 0;
+      let adet = 0;
+      const kutular = document.querySelectorAll("#portfoySatir input.secim");
+      for (const kutu of kutular) {
+        if (!kutu.checked) continue;
+        adet += 1;
+        toplam += Number(kutu.dataset.tutar) || 0;
+      }
+      document.getElementById("portfoySecilen").textContent = para.format(toplam);
+      document.getElementById("portfoySecilenKutu").hidden = adet === 0;
+      const tumu = document.getElementById("portfoyTumunuSec");
+      tumu.checked = kutular.length > 0 && adet === kutular.length;
+      tumu.indeterminate = adet > 0 && adet < kutular.length;
+    }
+    document.getElementById("portfoyTumunuSec").onchange = () => {
+      const acik = document.getElementById("portfoyTumunuSec").checked;
+      for (const row of portfoyHam.filter(portfoyGecer)) {
+        if (acik) portfoySecim.add(row._id);
+        else portfoySecim.delete(row._id);
+      }
+      portfoyCiz();
+    };
+    document.querySelectorAll("#portfoy thead .sirala").forEach((btn) => {
+      btn.onclick = () => {
+        const alan = btn.closest("th").dataset.alan;
+        if (portfoySira.alan === alan) portfoySira.yon *= -1;
+        else portfoySira = { alan, yon: 1 };
+        portfoyCiz();
+      };
+    });
+    function portfoyFiltreAc(btn) {
+      clearTimeout(portfoyFiltreKapatma);
+      const alan = btn.closest("th").dataset.alan;
+      const kutu = document.getElementById("portfoyFiltre");
+      const degerler = [...new Set(portfoyHam.map((row) => portfoyHucreDeger(row, alan)))]
+        .sort((a, b) => a.localeCompare(b, "tr", { sensitivity: "base" }));
+      const secili = portfoyFiltre[alan];
+      kutu.replaceChildren();
+      for (const deger of degerler) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = deger;
+        input.checked = !secili?.size || secili.has(deger);
+        input.addEventListener("change", () => {
+          const tumu = [...kutu.querySelectorAll("input")];
+          const acik = tumu.filter((kutuGirdi) => kutuGirdi.checked).map((kutuGirdi) => kutuGirdi.value);
+          if (!acik.length) portfoyFiltre[alan] = new Set(["\u0000"]);
+          else if (acik.length === tumu.length) delete portfoyFiltre[alan];
+          else portfoyFiltre[alan] = new Set(acik);
+          portfoyCiz();
+        });
+        label.appendChild(input);
+        const yazi = document.createElement("span");
+        yazi.textContent = deger || "(boş)";
+        label.appendChild(yazi);
+        kutu.appendChild(label);
+      }
+      const yer = btn.getBoundingClientRect();
+      kutu.hidden = false;
+      kutu.style.top = Math.round(yer.bottom + 4) + "px";
+      kutu.style.left = Math.max(8, Math.min(yer.left, window.innerWidth - 290)) + "px";
+    }
+    function portfoyFiltreGizle() {
+      clearTimeout(portfoyFiltreKapatma);
+      portfoyFiltreKapatma = setTimeout(() => {
+        document.getElementById("portfoyFiltre").hidden = true;
+      }, 280);
+    }
+    document.querySelectorAll("#portfoy thead .filtre-ok").forEach((btn) => {
+      btn.addEventListener("mouseenter", () => portfoyFiltreAc(btn));
+      btn.addEventListener("mouseleave", portfoyFiltreGizle);
+    });
+    const portfoyFiltreKutu = document.getElementById("portfoyFiltre");
+    portfoyFiltreKutu.addEventListener("mouseenter", () => clearTimeout(portfoyFiltreKapatma));
+    portfoyFiltreKutu.addEventListener("mouseleave", portfoyFiltreGizle);
+    document.getElementById("portfoySatir").addEventListener("mouseover", (event) => {
+      if (portfoyGorselSabit) return;
+      const satir = event.target.closest("tr");
+      if (!satir || !satir.dataset.gorsel) return;
+      const id = satir.dataset.gorsel.split(",")[0];
+      const kutu = document.getElementById("portfoyOnizleme");
+      if (!kutu.hidden && kutu.dataset.acik === id) return;
+      kutu.dataset.acik = id;
+      portfoyGorsel(id);
+    });
+    document.getElementById("portfoySatir").addEventListener("mouseout", (event) => {
+      if (portfoyGorselSabit) return;
+      const satir = event.target.closest("tr");
+      if (!satir || !satir.dataset.gorsel) return;
+      const hedef = event.relatedTarget;
+      const kutu = document.getElementById("portfoyOnizleme");
+      if (hedef && (satir.contains(hedef) || kutu.contains(hedef))) return;
+      portfoyGorselIstek += 1;
+      kutu.hidden = true;
+      kutu.dataset.acik = "";
+      kutu.replaceChildren();
+    });
+
+    function isoGunYazi(iso) {
+      const [yil, ay, gun] = String(iso || "").split("-");
+      if (!yil || !ay || !gun) return "";
+      return gun + "." + ay + "." + yil;
+    }
+
+    let maliyetSatirlari = [];
+    let maliyetAlan = "deger";
+    let maliyetYon = -1;
+    let maliyetIstek = 0;
+
+    function maliyetCiz() {
+      const rows = maliyetSatirlari.slice().sort((a, b) => {
+        const av = a[maliyetAlan];
+        const bv = b[maliyetAlan];
+        if (typeof av === "string" || typeof bv === "string") {
+          return String(av || "").localeCompare(String(bv || ""), "tr", { sensitivity: "base" }) * maliyetYon;
+        }
+        return ((Number(av) || 0) - (Number(bv) || 0)) * maliyetYon;
+      });
+      const govde = document.getElementById("maliyetSatir");
+      govde.replaceChildren();
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        const kod = hucre(row.kod || "");
+        kod.classList.add("kod");
+        kod.title = row.kod || "";
+        const ad = hucre(row.ad || "");
+        ad.classList.add("ad");
+        ad.title = row.ad || "";
+        tr.appendChild(kod);
+        tr.appendChild(ad);
+        tr.appendChild(hucre(miktarFmt.format(Number(row.miktar || 0)), true, Number(row.miktar) < 0));
+        tr.appendChild(hucre(para.format(Number(row.maliyet || 0)), true));
+        tr.appendChild(hucre(para.format(Number(row.deger || 0)), true, Number(row.deger) < 0));
+        tr.appendChild(hucre(para.format(Number(row.alis || 0)), true));
+        tr.title = "Sağ tık: stok ekstresi ve satış hızı";
+        tr.oncontextmenu = (event) => {
+          event.preventDefault();
+          maliyetDetayAc(row);
+        };
+        govde.appendChild(tr);
+      }
+      document.querySelectorAll("#maliyetDeger thead .ok").forEach((ok) => { ok.textContent = ""; });
+      const aktif = document.querySelector(`#maliyetDeger thead button[data-alan="${maliyetAlan}"] .ok`);
+      if (aktif) aktif.textContent = maliyetYon > 0 ? "▲" : "▼";
+      document.getElementById("maliyetMiktarTop").textContent = miktarFmt.format(rows.reduce((sum, row) => sum + Number(row.miktar || 0), 0));
+      document.getElementById("maliyetDegerTop").textContent = para.format(rows.reduce((sum, row) => sum + Number(row.deger || 0), 0));
+      document.getElementById("maliyetDurum").textContent = rows.length + " stok";
+    }
+
+    async function maliyetYukle() {
+      const no = ++maliyetIstek;
+      document.getElementById("maliyetDurum").textContent = "Hazırlanıyor…";
+      const bas = isoGunYazi(document.getElementById("maliyetBas").value);
+      const bit = isoGunYazi(document.getElementById("maliyetBit").value);
+      const ekstre = isoGunYazi(document.getElementById("maliyetEkstre").value);
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        bas,
+        bit,
+      });
+      if (ekstre) params.set("ekstre", ekstre);
+      const q = document.getElementById("maliyetAra").value.trim();
+      if (q) params.set("q", q);
+      document.querySelectorAll("#maliyetOzelKodlar select").forEach((select) => {
+        if (select.value) params.set("ok" + select.dataset.kod, select.value);
+      });
+      const body = await getir("/api/maliyet-deger?" + params);
+      if (no !== maliyetIstek) return;
+      maliyetSatirlari = body.items || [];
+      maliyetAlan = "deger";
+      maliyetYon = -1;
+      maliyetCiz();
+    }
+
+    async function maliyetOzelKodlariYukle() {
+      let gruplar = [];
+      try {
+        const body = await getir("/api/stok-ozel-kod?firma=" + oturum.firma);
+        gruplar = body.gruplar;
+      } catch { gruplar = []; }
+      ozelKodSelectleri(document.getElementById("maliyetOzelKodlar"), gruplar, () => {
+        maliyetYukle().catch((error) => {
+          document.getElementById("maliyetDurum").textContent = error.message;
+        });
+      });
+    }
+
+    async function maliyetDetayAc(row) {
+      const kutu = document.getElementById("maliyetDetay");
+      kutu.hidden = false;
+      document.getElementById("maliyetDetayBaslik").textContent = (row.kod || "") + " · " + (row.ad || "");
+      const ekstreGovde = document.getElementById("maliyetEkstreSatir");
+      const hizListe = document.getElementById("maliyetHizListe");
+      ekstreGovde.replaceChildren();
+      hizListe.replaceChildren();
+      ekstreGovde.appendChild(Object.assign(document.createElement("tr"), { innerHTML: "<td colspan=\"7\">Hazırlanıyor…</td>" }));
+      try {
+        const bas = isoGunYazi(document.getElementById("maliyetBas").value);
+        const bit = isoGunYazi(document.getElementById("maliyetBit").value);
+        const params = new URLSearchParams({
+          firma: String(oturum.firma),
+          donem: String(oturum.donem),
+          kod: row.kod || "",
+          bas,
+          bit,
+        });
+        const [ekstre, hiz] = await Promise.all([
+          getir("/api/stok-ekstre?" + params),
+          getir("/api/satis-hizi?" + new URLSearchParams({
+            firma: String(oturum.firma),
+            donem: String(oturum.donem),
+            kod: row.kod || "",
+          })),
+        ]);
+        ekstreGovde.replaceChildren();
+        for (const satir of ekstre.items || []) {
+          const tr = document.createElement("tr");
+          tr.appendChild(hucre(satir.tarih || ""));
+          tr.appendChild(hucre(IZAHAT[satir.izahat] || String(satir.izahat || "")));
+          tr.appendChild(hucre(satir.evrakNo || ""));
+          tr.appendChild(hucre(miktarFmt.format(Number(satir.giren || 0)), true));
+          tr.appendChild(hucre(miktarFmt.format(Number(satir.cikan || 0)), true));
+          tr.appendChild(hucre(miktarFmt.format(Number(satir.bakiye || 0)), true, Number(satir.bakiye) < 0));
+          tr.appendChild(hucre(para.format(Number(satir.birimMaliyet || 0)), true));
+          ekstreGovde.appendChild(tr);
+        }
+        if (!(ekstre.items || []).length) {
+          const tr = document.createElement("tr");
+          tr.appendChild(Object.assign(hucre("Seçilen tarih aralığında hareket yok."), { colSpan: 7 }));
+          ekstreGovde.appendChild(tr);
+        }
+        const aylar = hiz.aylar || [];
+        const baslik = document.createElement("h3");
+        baslik.className = "grafik-baslik";
+        baslik.textContent = "Yıl içi aylık satış hızı";
+        hizListe.appendChild(baslik);
+        const ozet = document.createElement("p");
+        ozet.className = "fiyat-not";
+        ozet.textContent = "Toplam: " + miktarFmt.format(Number(hiz.toplam || 0)) + " · Aylık ortalama: " + miktarFmt.format(Number(hiz.ortalama || 0));
+        hizListe.appendChild(ozet);
+        const tablo = document.createElement("table");
+        tablo.innerHTML = "<thead><tr><th>Ay</th><th class=\"num\">Miktar</th><th class=\"num\">Tutar</th></tr></thead>";
+        const govde = document.createElement("tbody");
+        for (const ay of aylar) {
+          const tr = document.createElement("tr");
+          tr.appendChild(hucre(ay.ad || String(ay.ay)));
+          tr.appendChild(hucre(miktarFmt.format(Number(ay.miktar || 0)), true));
+          tr.appendChild(hucre(para.format(Number(ay.tutar || 0)), true));
+          govde.appendChild(tr);
+        }
+        tablo.appendChild(govde);
+        hizListe.appendChild(tablo);
+      } catch (error) {
+        ekstreGovde.replaceChildren();
+        const tr = document.createElement("tr");
+        tr.appendChild(Object.assign(hucre(error.message), { colSpan: 7 }));
+        ekstreGovde.appendChild(tr);
+      }
+    }
+
+    async function maliyetEkraniAc() {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("maliyetDeger").hidden = false;
+      document.getElementById("maliyetDetay").hidden = true;
+      document.getElementById("maliyetBas").value = "2025-12-31";
+      document.getElementById("maliyetBit").value = kasaIso(kasaTarihYazi(new Date()));
+      document.getElementById("maliyetEkstre").value = "";
+      document.getElementById("maliyetAra").value = "";
+      try {
+        await maliyetOzelKodlariYukle();
+        await maliyetYukle();
+      } catch (error) {
+        document.getElementById("maliyetDurum").textContent = error.message;
+      }
+    }
+
     document.getElementById("karlilikBtn").onclick = async () => {
       document.getElementById("menu").hidden = true;
       document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
       document.getElementById("rapor").hidden = false;
       try {
         await ozelKodlariYukle();
@@ -2913,17 +4177,73 @@ ${"<" + "/script>"}</body></html>`);
         document.getElementById("durum").textContent = error.message;
       }
     };
+    document.getElementById("maliyetDegerBtn").onclick = () => maliyetEkraniAc();
+    document.getElementById("maliyetGeri").onclick = () => {
+      document.getElementById("maliyetDetay").hidden = true;
+      document.getElementById("maliyetDeger").hidden = true;
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("maliyetDetayKapat").onclick = () => {
+      document.getElementById("maliyetDetay").hidden = true;
+    };
+    document.getElementById("maliyetBas").onchange = () => maliyetYukle().catch((error) => {
+      document.getElementById("maliyetDurum").textContent = error.message;
+    });
+    document.getElementById("maliyetBit").onchange = () => maliyetYukle().catch((error) => {
+      document.getElementById("maliyetDurum").textContent = error.message;
+    });
+    document.getElementById("maliyetEkstre").onchange = () => maliyetYukle().catch((error) => {
+      document.getElementById("maliyetDurum").textContent = error.message;
+    });
+    let maliyetAramaZaman = 0;
+    document.getElementById("maliyetAra").addEventListener("input", () => {
+      clearTimeout(maliyetAramaZaman);
+      maliyetAramaZaman = setTimeout(() => {
+        maliyetYukle().catch((error) => {
+          document.getElementById("maliyetDurum").textContent = error.message;
+        });
+      }, 250);
+    });
+    document.querySelectorAll("#maliyetDeger thead button").forEach((btn) => {
+      btn.onclick = () => {
+        const alan = btn.dataset.alan;
+        if (maliyetAlan === alan) maliyetYon *= -1;
+        else {
+          maliyetAlan = alan;
+          maliyetYon = alan === "kod" || alan === "ad" ? 1 : -1;
+        }
+        maliyetCiz();
+      };
+    });
     document.getElementById("geri").onclick = () => {
       document.getElementById("rapor").hidden = true;
       document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
       document.getElementById("menu").hidden = false;
     };
     async function cariEkraniAc(hareketsiz) {
       cariHareketsiz = hareketsiz;
       document.getElementById("menu").hidden = true;
       document.getElementById("rapor").hidden = true;
+      kasaEkraniKapat();
       document.getElementById("cari").hidden = false;
       document.getElementById("cariBaslik").textContent = hareketsiz ? "Hareket Görmemiş Cariler" : "Cari Borç Alacak";
+      document.getElementById("cari").classList.toggle("hareketsiz", hareketsiz);
+      document.getElementById("cariKartDurumKutu").hidden = !hareketsiz;
+      document.getElementById("cariHicKutu").hidden = !hareketsiz;
+      document.getElementById("cariGunKutu").hidden = !hareketsiz;
+      document.getElementById("cariPasifBtn").hidden = !hareketsiz;
+      document.getElementById("cariAylik").hidden = true;
+      document.getElementById("cariFiltre").hidden = true;
+      document.getElementById("cariIpucu").textContent = hareketsiz
+        ? "Tüm cariler gelir. Gün ≥ ile eski hareketleri süzün. Sağ tık aylık hareketi açar."
+        : "Satıra çift tıklayınca cari hareketleri açılır.";
+      cariFiltre = {};
+      if (!hareketsiz) cariSecim = new Set();
+      const kartKayit = localStorage.getItem("vegaCariKartDurum") || "";
+      document.getElementById("cariKartDurum").value = kartKayit === "Aktif" || kartKayit === "Pasif" ? kartKayit : "";
+      document.getElementById("cariHicHareket").checked = localStorage.getItem("vegaCariHic") === "1";
+      document.getElementById("cariGunMin").value = localStorage.getItem("vegaCariGunMin") || "";
       document.getElementById("bakiyeVeren").checked = !hareketsiz;
       cariTipHatirla();
       try {
@@ -2937,6 +4257,7 @@ ${"<" + "/script>"}</body></html>`);
     document.getElementById("hareketsizBtn").onclick = () => cariEkraniAc(true);
     document.getElementById("cariGeri").onclick = () => {
       document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
       document.getElementById("menu").hidden = false;
     };
     let cariAramaZaman = 0;
@@ -2957,17 +4278,131 @@ ${"<" + "/script>"}</body></html>`);
       localStorage.setItem("vegaCariBakiyeYon", document.getElementById("cariBakiyeYon").value);
       cariCiz();
     };
-    document.querySelectorAll("#cari thead button").forEach((btn) => {
+    document.getElementById("cariKartDurum").onchange = () => {
+      localStorage.setItem("vegaCariKartDurum", document.getElementById("cariKartDurum").value);
+      cariCiz();
+    };
+    document.getElementById("cariHicHareket").onchange = () => {
+      localStorage.setItem("vegaCariHic", document.getElementById("cariHicHareket").checked ? "1" : "0");
+      cariCiz();
+    };
+    document.getElementById("cariGunMin").oninput = () => {
+      localStorage.setItem("vegaCariGunMin", document.getElementById("cariGunMin").value);
+      cariCiz();
+    };
+    document.getElementById("cariTumunuSec").onchange = () => {
+      const acik = document.getElementById("cariTumunuSec").checked;
+      for (const row of cariListe()) {
+        if (acik) cariSecim.add(row.kod);
+        else cariSecim.delete(row.kod);
+      }
+      cariCiz();
+    };
+    document.getElementById("cariPasifBtn").onclick = async () => {
+      const kodlar = [...cariSecim];
+      if (!kodlar.length) {
+        document.getElementById("cariDurum").textContent = "Önce cari seçin.";
+        return;
+      }
+      if (!confirm(kodlar.length + " cari pasif yapılsın mı?")) return;
+      document.getElementById("cariDurum").textContent = "Pasif yapılıyor…";
+      try {
+        const body = await getir("/api/cari-pasif", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kodlar }),
+        });
+        cariSecim = new Set();
+        await cariAc(document.getElementById("cariAra").value.trim());
+        document.getElementById("cariDurum").textContent = body.adet + " cari pasif yapıldı.";
+      } catch (error) {
+        document.getElementById("cariDurum").textContent = error.message;
+      }
+    };
+    document.addEventListener("mousedown", (event) => {
+      const kutu = document.getElementById("cariAylik");
+      if (!kutu || kutu.hidden || kutu.contains(event.target)) return;
+      kutu.hidden = true;
+    });
+    document.querySelectorAll("#cari thead button.sirala").forEach((btn) => {
       btn.onclick = () => {
         const alan = btn.dataset.alan;
         if (cariAlan === alan) cariYon *= -1;
         else {
           cariAlan = alan;
-          cariYon = alan === "kod" || alan === "ad" || alan === "pb" ? 1 : -1;
+          cariYon = alan === "kod" || alan === "ad" || alan === "pb" || alan === "tip" || alan === "kart" || alan === "sonHareket" ? 1 : -1;
         }
         cariCiz();
       };
     });
+    function cariFiltreAc(btn) {
+      if (!cariHareketsiz) return;
+      clearTimeout(cariFiltreKapatma);
+      const alan = btn.closest("th").dataset.alan;
+      const kutu = document.getElementById("cariFiltre");
+      const degerler = [...new Set(cariSatirlari.map((row) => cariHucreDeger(row, alan)))]
+        .sort((a, b) => a.localeCompare(b, "tr", { sensitivity: "base" }));
+      const secili = cariFiltre[alan];
+      kutu.replaceChildren();
+      const ust = document.createElement("div");
+      ust.className = "filtre-ust";
+      const tumuBtn = document.createElement("button");
+      tumuBtn.type = "button";
+      tumuBtn.textContent = "Tümünü seç";
+      tumuBtn.onclick = () => {
+        delete cariFiltre[alan];
+        kutu.querySelectorAll("input").forEach((girdi) => { girdi.checked = true; });
+        cariCiz();
+      };
+      const kaldirBtn = document.createElement("button");
+      kaldirBtn.type = "button";
+      kaldirBtn.textContent = "Seçimi kaldır";
+      kaldirBtn.onclick = () => {
+        cariFiltre[alan] = new Set(["\u0000"]);
+        kutu.querySelectorAll("input").forEach((girdi) => { girdi.checked = false; });
+        cariCiz();
+      };
+      ust.appendChild(tumuBtn);
+      ust.appendChild(kaldirBtn);
+      kutu.appendChild(ust);
+      for (const deger of degerler) {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.value = deger;
+        input.checked = !secili?.size || secili.has(deger);
+        input.addEventListener("change", () => {
+          const tumu = [...kutu.querySelectorAll("label input")];
+          const acik = tumu.filter((girdi) => girdi.checked).map((girdi) => girdi.value);
+          if (!acik.length) cariFiltre[alan] = new Set(["\u0000"]);
+          else if (acik.length === tumu.length) delete cariFiltre[alan];
+          else cariFiltre[alan] = new Set(acik);
+          cariCiz();
+        });
+        label.appendChild(input);
+        const yazi = document.createElement("span");
+        yazi.textContent = deger || "(boş)";
+        label.appendChild(yazi);
+        kutu.appendChild(label);
+      }
+      const yer = btn.getBoundingClientRect();
+      kutu.hidden = false;
+      kutu.style.top = Math.round(yer.bottom + 4) + "px";
+      kutu.style.left = Math.max(8, Math.min(yer.left, window.innerWidth - 290)) + "px";
+    }
+    function cariFiltreGizle() {
+      clearTimeout(cariFiltreKapatma);
+      cariFiltreKapatma = setTimeout(() => {
+        document.getElementById("cariFiltre").hidden = true;
+      }, 280);
+    }
+    document.querySelectorAll("#cari thead .filtre-ok").forEach((btn) => {
+      btn.addEventListener("mouseenter", () => cariFiltreAc(btn));
+      btn.addEventListener("mouseleave", cariFiltreGizle);
+    });
+    const cariFiltreKutu = document.getElementById("cariFiltre");
+    cariFiltreKutu.addEventListener("mouseenter", () => clearTimeout(cariFiltreKapatma));
+    cariFiltreKutu.addEventListener("mouseleave", cariFiltreGizle);
     let stokAramaZaman = 0;
     document.getElementById("ara").addEventListener("input", () => {
       clearTimeout(stokAramaZaman);
