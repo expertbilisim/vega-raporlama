@@ -8,6 +8,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
+const UYGULAMA_SURUM = "1.2.0";
 
 function ilkVarolan(adaylar) {
   return adaylar.find((yol) => yol && existsSync(yol)) || "";
@@ -542,6 +543,7 @@ ORDER BY DONEM;
     }
   } catch { /* şube yoksa merkez */ }
   const veri = {
+    surum: UYGULAMA_SURUM,
     server: link.server,
     database: link.database,
     kullanicilar,
@@ -1483,31 +1485,33 @@ function ikonYolu() {
 
 const GIRIS_PENCERE = { genislik: 460, yukseklik: 640 };
 
+function konsolAcikMi() {
+  return process.env.VEGA_KONSOL === "1";
+}
+
 function konsoluGizle() {
-  if (!paketMi()) return;
+  if (process.platform !== "win32" || konsolAcikMi()) return;
   try {
     const { execFileSync } = require("node:child_process");
     execFileSync("powershell.exe", [
       "-NoProfile",
       "-WindowStyle", "Hidden",
       "-Command",
-      `Add-Type -Namespace Vega -Name Konsol -MemberDefinition '[DllImport("kernel32.dll")] public static extern bool FreeConsole(); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; [Vega.Konsol]::FreeConsole() | Out-Null; $h = [Vega.Konsol]::GetConsoleWindow(); if ($h -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($h, 0) | Out-Null }; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
+      `Add-Type -Namespace Vega -Name Konsol -MemberDefinition '[DllImport("kernel32.dll")] public static extern bool FreeConsole(); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $h = [Vega.Konsol]::GetConsoleWindow(); if ($h -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($h, 0) | Out-Null }; [Vega.Konsol]::FreeConsole() | Out-Null; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
     ], { windowsHide: true, timeout: 4000 });
   } catch {
     execFile("powershell.exe", [
       "-NoProfile",
       "-WindowStyle", "Hidden",
       "-Command",
-      `Add-Type -Namespace Vega -Name Pencere -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
+      `Add-Type -Namespace Vega -Name Pencere -MemberDefinition '[DllImport("kernel32.dll")] public static extern bool FreeConsole(); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $h = [Vega.Pencere]::GetConsoleWindow(); if ($h -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($h, 0) | Out-Null }; [Vega.Pencere]::FreeConsole() | Out-Null; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
     ], { windowsHide: true });
   }
 }
 
-if (paketMi()) {
-  konsoluGizle();
-  setTimeout(konsoluGizle, 200);
-  setTimeout(konsoluGizle, 800);
-}
+konsoluGizle();
+setTimeout(konsoluGizle, 200);
+setTimeout(konsoluGizle, 800);
 
 function pencereOlcuDosya() {
   return join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere-olcu.json");
@@ -2095,7 +2099,7 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/baglanti") {
-      gonder(res, 200, { server: link.server, database: link.database });
+      gonder(res, 200, { surum: UYGULAMA_SURUM, server: link.server, database: link.database });
       return;
     }
 
@@ -4029,10 +4033,18 @@ WHERE ISNULL(Deleted, 0) = 0
       const kaynaklar = [
         { tur: "cek", yon: "tahsilat", view: "VARESALINANCEKLER", islem: "CEKISLEM" },
         { tur: "cek", yon: "odeme", view: "VARESVERILENCEKLER", islem: "VCEKISLEM" },
-        { tur: "senet", yon: "tahsilat", view: "VARESALINANSENETLER" },
-        { tur: "senet", yon: "odeme", view: "VARESVERILENSENETLER" },
-        { tur: "visa", yon: "tahsilat", view: "VARESALINANKREDIKARTI" },
+        { tur: "senet", yon: "tahsilat", view: "VARESALINANSENETLER", islem: "SENETISLEM" },
+        { tur: "senet", yon: "odeme", view: "VARESVERILENSENETLER", islem: "VSENETISLEM" },
+        { tur: "visa", yon: "tahsilat", view: "VARESALINANKREDIKARTI", islem: "KARTISLEM" },
       ];
+      const takvimKapaliMi = (durum) => {
+        const d = String(durum || "").toLocaleLowerCase("tr-TR");
+        if (!d) return false;
+        // "Kredi Kartı Tahsil" / "Bankadan Tahsil Edildi" kapalı; "Kredi Kartı Bankada" açık kalsın.
+        if (d.includes("tahsil") && !d.includes("bankada")) return true;
+        if (d.includes("iptal") || d.includes("iade") || d.includes("protesto")) return true;
+        return false;
+      };
       const gunler = {};
       await Promise.all(kaynaklar.map(async (kaynak) => {
         const view = await nesneVar(donemTablo(firma, donem, kaynak.view));
@@ -4052,6 +4064,16 @@ WHERE ISNULL(Deleted, 0) = 0
           if (ciroParca.length) kosul.push("(" + ciroParca.join(" AND ") + ")");
         }
         const islemAlan = kaynak.islem && kolon.has(kaynak.islem) ? kaynak.islem : "";
+        if (islemAlan) {
+          // Tahsil olmuş / iptal kayıtları takvimde bekleyen gibi görünmesin.
+          kosul.push(`NOT (
+            LOWER(RTRIM(ISNULL(k.${islemAlan}, N''))) LIKE N'%tahsil%'
+            AND LOWER(RTRIM(ISNULL(k.${islemAlan}, N''))) NOT LIKE N'%bankada%'
+          )`);
+          kosul.push(`LOWER(RTRIM(ISNULL(k.${islemAlan}, N''))) NOT LIKE N'%iptal%'`);
+          kosul.push(`LOWER(RTRIM(ISNULL(k.${islemAlan}, N''))) NOT LIKE N'%iade%'`);
+          kosul.push(`LOWER(RTRIM(ISNULL(k.${islemAlan}, N''))) NOT LIKE N'%protesto%'`);
+        }
         const lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT
@@ -4068,8 +4090,9 @@ ORDER BY k.${tarihAlan};
         for (const line of lines) {
           const [gun, firmaAd, keside, belge, tutar, durum] = line.split("|").map((part) => part.trim());
           if (!gun || gun.toUpperCase() === "NULL") continue;
-          const kim = firmaAd || keside || "—";
           const durumYazi = durum || "";
+          if (takvimKapaliMi(durumYazi)) continue;
+          const kim = firmaAd || keside || "—";
           if (!gunler[gun]) gunler[gun] = [];
           gunler[gun].push({
             tur: kaynak.tur,
@@ -4454,7 +4477,7 @@ server.on("error", (error) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   const adres = `http://127.0.0.1:${PORT}`;
-  if (!paketMi()) {
+  if (konsolAcikMi()) {
     console.log(`Vega Raporlama ${adres}`);
     for (const ag of Object.values(networkInterfaces()).flat()) {
       if (!ag || ag.internal) continue;
@@ -4478,5 +4501,6 @@ server.listen(PORT, "0.0.0.0", () => {
     });
   }
   konsoluGizle();
+  setTimeout(konsoluGizle, 300);
   uygulamaPenceresi(adres);
 });

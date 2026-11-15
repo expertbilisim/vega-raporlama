@@ -59,6 +59,7 @@
     }
     .ust .logo { text-align: left; font-size: 15px; letter-spacing: 0.08em; }
     .surum { text-align: center; color: #666; font-size: 13px; margin-top: 8px; }
+    .surum-no { text-align: center; color: #8a9099; font-size: 12px; margin-top: 4px; font-weight: 650; }
     h1 { margin: 16px 0 12px; text-align: center; font-size: 26px; font-weight: 500; }
     .alan { display: flex; align-items: center; border: 1px solid #bdbdbd; margin-top: 10px; background: #fff; }
     .alan span { width: 36px; text-align: center; color: #666; }
@@ -1208,6 +1209,7 @@
       <div class="ic">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.0</div>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
           <span aria-hidden="true">👤</span>
@@ -7106,6 +7108,9 @@ ${"<" + "/script>"}</body></html>`);
         .then((body) => {
           document.getElementById("baglanti").textContent =
             (body.database || "VEGADB") + " · " + (body.server || "");
+          if (body.surum) {
+            document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
+          }
           kullaniciSelect.innerHTML = "";
           for (const item of body.kullanicilar || []) {
             const option = document.createElement("option");

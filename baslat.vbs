@@ -8,8 +8,11 @@ If Not fso.FileExists(exe) Then
 End If
 If fso.FileExists(exe) Then
   sh.CurrentDirectory = klasor
-  ' 1 = normal pencere; 0 bazı sistemlerde Edge'i de gizleyebiliyor
-  sh.Run """" & exe & """", 1, False
+  ' 0 = arka plan / konsol penceresi yok
+  sh.Run """" & exe & """", 0, False
+ElseIf fso.FileExists(klasor & "\server.js") Then
+  sh.CurrentDirectory = klasor
+  sh.Run "node server.js", 0, False
 Else
   MsgBox "VegaRaporlama.exe bulunamadı.", vbExclamation, "Vega Raporlama"
 End If
