@@ -23,11 +23,12 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
 Source: "dist\VegaRaporlama.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "baslat.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\expert-bilisim.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"
-Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"
+Name: "{group}\Vega Raporlama"; Filename: "{app}\baslat.vbs"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
+Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\baslat.vbs"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
 
 [Run]
-Filename: "{app}\VegaRaporlama.exe"; Description: "Vega Raporlama'yı başlat"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\baslat.vbs"; Description: "Vega Raporlama'yı başlat"; Flags: nowait postinstall skipifsilent shellexec

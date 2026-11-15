@@ -29,9 +29,10 @@
     .giris {
       min-height: 100vh;
       display: grid;
-      place-items: start center;
-      padding: 28px 16px 40px;
+      place-items: center;
+      padding: 12px;
       background: #f3f3f3;
+      overflow: auto;
     }
     .kart {
       width: min(420px, 100%);
@@ -225,9 +226,114 @@
       background: #fff;
     }
     #portfoyAra { flex: 1 1 180px; max-width: 240px; min-width: 140px; }
-    #maliyetDeger .araclar input[type="date"] {
+    #maliyetDeger .araclar input[type="date"],
+    #ciroRapor .araclar input[type="date"] {
       flex: 0 0 150px; max-width: 160px;
       border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px; background: #fff;
+    }
+    #ciroRapor { gap: 8px; }
+    #ciroRapor .ciro-govde {
+      flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
+      gap: 12px;
+    }
+    @media (max-width: 1100px) {
+      #ciroRapor .ciro-govde { grid-template-columns: 1fr; }
+    }
+    .ciro-kartlar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .ciro-kart {
+      padding: 14px 16px; border-radius: 14px; color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 10px 18px rgba(20, 60, 70, .16);
+    }
+    .ciro-kart span { display: block; opacity: .9; font-size: 12px; font-weight: 650; }
+    .ciro-kart b { display: block; margin-top: 6px; font-size: 22px; letter-spacing: .02em; }
+    .ciro-kart.ciro { background: linear-gradient(145deg, #35b7c5 0%, #14727d 55%, #0d5560 100%); }
+    .ciro-kart.iade { background: linear-gradient(145deg, #f0a06a 0%, #c05612 55%, #8f3a0a 100%); }
+    .ciro-kart.net { background: linear-gradient(145deg, #6ec28d 0%, #2f8a55 55%, #1f6840 100%); }
+    .ciro-ipucu { margin: 0; color: #5c6b7a; font-size: 12px; }
+    .ciro-detay-bar {
+      display: flex; align-items: center; gap: 10px; margin: 0 0 6px;
+    }
+    .ciro-detay-bar[hidden] { display: none; }
+    .ciro-detay-bar button {
+      border: 0; border-radius: 8px; padding: 7px 12px; font-weight: 700; cursor: pointer;
+      color: #143e48; background: linear-gradient(180deg, #ffffff 0%, #d9eef2 100%);
+      border: 1px solid #b7c9d2;
+    }
+    .ciro-detay-bar strong { color: #16323a; }
+    .ciro-panel {
+      background: #fff; border: 1px solid #d5dee5; border-radius: 16px;
+      box-shadow: inset 0 1px 0 #fff, 0 12px 24px rgba(28, 52, 68, .08);
+      padding: 12px 14px; min-height: 0; display: flex; flex-direction: column;
+    }
+    .ciro-panel h3 { margin: 0 0 10px; font-size: 15px; color: #16323a; }
+    .ciro-grafik { flex: 1; min-height: 220px; display: flex; align-items: flex-end; gap: 6px; padding: 8px 4px 0; }
+    .ciro-grafik.pasta {
+      align-items: center; justify-content: center; gap: 18px; padding: 8px 10px;
+    }
+    .ciro-pasta-wrap {
+      flex: 0 0 auto; width: min(240px, 46%); aspect-ratio: 1; position: relative;
+    }
+    .ciro-pasta-wrap svg { width: 100%; height: 100%; display: block; }
+    .ciro-pasta-orta {
+      position: absolute; inset: 28%; border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #fff; box-shadow: inset 0 0 0 1px #e5eef2;
+      text-align: center; padding: 6px;
+    }
+    .ciro-pasta-orta span { font-size: 11px; color: #5c6b7a; font-weight: 650; }
+    .ciro-pasta-orta b { font-size: 15px; color: #16323a; line-height: 1.2; }
+    .ciro-pasta-legenda {
+      flex: 1; min-width: 0; max-height: 100%; overflow: auto;
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .ciro-pasta-legenda .satir {
+      display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center;
+      font-size: 12px; color: #1d2430;
+    }
+    .ciro-pasta-legenda i {
+      width: 12px; height: 12px; border-radius: 4px; display: block;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+    }
+    .ciro-pasta-legenda .ad { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+    .ciro-pasta-legenda .tutar { font-weight: 750; color: #16323a; white-space: nowrap; }
+    .ciro-pasta-legenda .oran { color: #5c6b7a; font-weight: 650; margin-left: 6px; }
+    .ciro-cubuk {
+      flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px;
+    }
+    .ciro-cubuk i {
+      display: block; width: 100%; max-width: 36px; border-radius: 10px 10px 4px 4px;
+      background: linear-gradient(180deg, #67d8e4 0%, #1b8795 55%, #0f5d69 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 12px rgba(20, 90, 100, .18);
+      min-height: 4px;
+    }
+    .ciro-cubuk span { font-size: 10px; color: #5c6b7a; white-space: nowrap; overflow: hidden; max-width: 100%; text-overflow: ellipsis; }
+    .ciro-cubuk b { font-size: 10px; color: #16323a; font-weight: 700; }
+    .ciro-yatay { display: flex; flex-direction: column; gap: 8px; overflow: auto; min-height: 0; }
+    .ciro-yatay-satir { display: grid; grid-template-columns: minmax(90px, 34%) minmax(0, 1fr) 84px; gap: 8px; align-items: center; }
+    .ciro-yatay-satir .ad { font-size: 12px; color: #1d2430; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ciro-yatay-satir .bar {
+      height: 10px; border-radius: 999px; background: #e7eef2; overflow: hidden;
+    }
+    .ciro-yatay-satir .bar i {
+      display: block; height: 100%; border-radius: inherit;
+      background: linear-gradient(90deg, #5ed0dc, #1f8f9c 60%, #c05612);
+    }
+    .ciro-yatay-satir .tutar { text-align: right; font-size: 12px; font-weight: 750; color: #16323a; }
+    #ciroRapor .tablo-wrap { flex: 1; min-height: 0; max-height: none; }
+    .ciro-alt {
+      flex: none; display: flex; justify-content: flex-end; align-items: center; gap: 28px;
+      margin-top: 0; padding: 12px 16px; border-radius: 12px; font-weight: 750;
+      background: linear-gradient(180deg, #f3fbf8 0%, #d7f0e6 100%);
+      border: 1px solid #b7dfcf;
+    }
+    .ciro-alt b { font-size: 22px; margin-left: 8px; }
+    #ciroRapor .kasa-gun.secili {
+      color: #fff;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 46%, #14616c 100%);
+    }
+    #ciroGrup {
+      border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px; font-weight: 650; color: #143e48;
+      background: linear-gradient(180deg, #ffffff 0%, #d9eef2 100%);
     }
     .maliyet-detay {
       position: fixed; z-index: 95; inset: 48px 24px 24px; background: #fff;
@@ -329,6 +435,362 @@
     .rapor-ekran th.kod, .rapor-ekran td.kod { width: 14ch; max-width: 14ch; }
     .rapor-ekran th.ad, .rapor-ekran td.ad { width: 50ch; max-width: 50ch; }
     .rapor-ekran td.kod, .rapor-ekran td.ad { overflow: hidden; text-overflow: ellipsis; }
+    #acikBorc th, #acikBorc td { overflow: hidden; text-overflow: ellipsis; max-width: 18ch; }
+    #acikBorc th.kod, #acikBorc td.kod { width: 12ch; max-width: 12ch; }
+    #acikBorc th.ad, #acikBorc td.ad { width: 28ch; max-width: 28ch; }
+    #acikBorc th.num, #acikBorc td.num { max-width: 11ch; }
+    #odemeTakvim { position: relative; gap: 8px; }
+    #odemeTakvim .araclar { align-items: center; gap: 8px; }
+    #odemeTakvimAyAd {
+      font-size: 22px; font-weight: 800; color: #0a4a52; letter-spacing: .3px;
+      margin: 0 6px; white-space: nowrap; text-shadow: 0 1px 0 #fff;
+    }
+    #odemeTakvim .takvim-nav {
+      width: 22px; height: 22px; border-radius: 6px; font-size: 12px; font-weight: 800;
+      border: 1px solid #0e5962; color: #fff; cursor: pointer;
+      background: linear-gradient(180deg, #67d4e0 0%, #1c8b98 46%, #125e69 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 1px 0 #0c4650, 0 2px 5px rgba(14, 70, 80, .2);
+    }
+    #odemeTakvim .takvim-nav:hover { filter: brightness(1.06); }
+    #odemeTakvim .takvim-nav:active {
+      transform: translateY(2px);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.22), 0 1px 0 #0c4650;
+    }
+    .takvim-legenda {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+      padding: 8px 12px; color: #3a4a56; font-size: 12px; font-weight: 650;
+      background: linear-gradient(180deg, #fff 0%, #eef4f7 100%);
+      border: 1px solid #c5d5de; border-radius: 12px;
+      box-shadow: inset 0 1px 0 #fff, 0 2px 0 #d5e0e6;
+    }
+    .takvim-legenda i {
+      display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: -1px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.18);
+    }
+    .takvim-legenda .tk-cek { background: #1f8f9c; }
+    .takvim-legenda .tk-takas { background: #1b7a4a; }
+    .takvim-legenda .tk-senet { background: #c05612; }
+    .takvim-legenda .tk-visa { background: #2f6fb0; }
+    .takvim-legenda .tk-karisik { background: #b8860b; }
+    .takvim-legenda .tk-not { font-weight: 500; color: #6a7a86; }
+    .takvim-uc {
+      flex: 1; min-height: 0; display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; overflow: hidden; padding: 2px 0 6px;
+    }
+    .takvim-ay {
+      min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 8px;
+      background: linear-gradient(180deg, #f7fbfd 0%, #e4eef3 100%);
+      border: 1px solid #b9ccd6; border-radius: 16px; padding: 10px;
+      box-shadow: inset 0 1px 0 #fff, 0 3px 0 #c5d4dc, 0 12px 22px rgba(28, 52, 68, .12);
+      overflow: hidden;
+    }
+    .takvim-ay-ad {
+      text-align: center; font-size: 17px; font-weight: 800; letter-spacing: .2px;
+      padding: 10px 12px; border-radius: 11px; color: #fff;
+      border: 1px solid #0e5962;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 55%, #14616c 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 2px 0 #0c4650, 0 4px 8px rgba(14, 70, 80, .18);
+    }
+    .takvim-grid {
+      flex: 0 0 auto; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-rows: 24px; grid-auto-rows: 44px; gap: 5px; align-content: start;
+    }
+    .takvim-ay-notlar {
+      flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column; gap: 4px;
+      padding: 6px; border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #eef4f7 100%);
+      border: 1px solid #c5d5de;
+      box-shadow: inset 0 1px 0 #fff;
+    }
+    .takvim-ay-notlar .not-bas {
+      font-size: 11px; font-weight: 800; color: #0e5962; padding: 2px 4px 4px;
+      border-bottom: 1px solid #d7e4ea; margin-bottom: 2px;
+    }
+    .takvim-ay-notlar .not-satir {
+      display: grid; grid-template-columns: 72px 40px minmax(0, 1fr); gap: 6px; align-items: start;
+      padding: 5px 6px; border-radius: 7px; cursor: pointer;
+      background: #f7fafb; border: 1px solid #e2ebf0;
+      font-size: 12px; color: #1d2430; line-height: 1.3;
+    }
+    .takvim-ay-notlar .not-satir:hover {
+      border-color: #0e5962; background: #eef8fa;
+    }
+    .takvim-ay-notlar .not-satir .gun {
+      font-weight: 800; color: #0e5962; white-space: nowrap;
+    }
+    .takvim-ay-notlar .not-satir .saat {
+      font-weight: 700; color: #5a6a76; white-space: nowrap;
+    }
+    .takvim-ay-notlar .not-satir .metin {
+      min-width: 0; overflow-wrap: anywhere; font-weight: 650;
+    }
+    .takvim-ay-notlar .not-bos {
+      padding: 10px 6px; text-align: center; color: #7a8a96; font-size: 12px; font-weight: 650;
+    }
+    .takvim-ay-notlar .not-gecmis-btn {
+      width: 100%; text-align: left; cursor: pointer; margin: 0 0 4px;
+      border: 1px solid #c9a36a; border-radius: 8px; padding: 7px 10px;
+      font-size: 12px; font-weight: 750; color: #7a4e12;
+      background: linear-gradient(180deg, #fff8ec 0%, #f3e0c2 100%);
+      box-shadow: inset 0 1px 0 #fffaf0, 0 1px 0 #e0c08a;
+    }
+    .takvim-ay-notlar .not-gecmis-btn:hover { border-color: #a8742a; background: #fbebcd; }
+    .takvim-ay-notlar .not-gecmis-liste {
+      display: flex; flex-direction: column; gap: 4px; margin: 0 0 6px;
+      padding: 6px; border-radius: 8px;
+      background: linear-gradient(180deg, #fff6e8 0%, #f5e6cc 100%);
+      border: 1px solid #e2c48a;
+    }
+    .takvim-ay-notlar .not-gecmis-liste[hidden] { display: none; }
+    .takvim-ay-notlar .not-satir.gecmis {
+      background: #fffaf2; border-color: #e6cfa0; color: #5c4318;
+    }
+    .takvim-ay-notlar .not-satir.gecmis:hover {
+      border-color: #b8842e; background: #fff1d6;
+    }
+    .takvim-ay-notlar .not-satir.gecmis .gun { color: #9a6418; }
+    .takvim-ay-notlar .not-satir.gecmis .saat { color: #8a6a3a; }
+    .takvim-ay-notlar .not-aktif-baslik {
+      margin-top: 2px;
+    }
+    .takvim-baslik {
+      text-align: center; font-size: 10px; font-weight: 800; color: #0e5962;
+      padding: 0; height: 24px; line-height: 24px;
+      background: linear-gradient(180deg, #eaf6f8 0%, #cfe6ea 100%);
+      border: 1px solid #a9c8cf; border-radius: 6px;
+      box-shadow: inset 0 1px 0 #fff;
+    }
+    .takvim-gun {
+      position: relative; height: 44px; min-height: 44px; max-height: 44px;
+      border: 1px solid #c5d3db; border-radius: 7px;
+      background: linear-gradient(180deg, #ffffff 0%, #f2f5f7 100%);
+      padding: 0 2px; display: flex; flex-direction: column; gap: 0;
+      justify-content: center; align-items: center;
+      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(28, 52, 68, .08);
+      transition: transform .08s ease, filter .08s ease;
+    }
+    .takvim-gun.baska {
+      opacity: .5; background: #f0f3f5;
+      box-shadow: none;
+    }
+    .takvim-gun.bugun {
+      box-shadow: inset 0 0 0 1.5px #0e5962, inset 0 1px 0 #fff;
+    }
+    .takvim-gun.dolu { cursor: pointer; }
+    .takvim-gun.dolu:hover { filter: brightness(1.05); transform: translateY(-1px); }
+    .takvim-gun.dolu:active {
+      transform: translateY(1px);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.18);
+    }
+    .takvim-gun.dolu.cek {
+      border-color: #0e5962;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 50%, #14616c 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 1px 0 #0c4650, 0 2px 4px rgba(14, 70, 80, .2);
+    }
+    .takvim-gun.dolu.takas {
+      border-color: #0f5a34;
+      background: linear-gradient(180deg, #62c98b 0%, #1b7a4a 50%, #0f5a34 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #0a4428, 0 2px 4px rgba(20, 80, 45, .2);
+    }
+    .takvim-gun.dolu.senet {
+      border-color: #8a3b08;
+      background: linear-gradient(180deg, #f2b06a 0%, #c05612 50%, #8a3b08 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #6a2c06, 0 2px 4px rgba(120, 60, 15, .2);
+    }
+    .takvim-gun.dolu.visa {
+      border-color: #1e4f86;
+      background: linear-gradient(180deg, #7eb0e0 0%, #2f6fb0 50%, #1e4f86 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #163a64, 0 2px 4px rgba(30, 70, 120, .2);
+    }
+    .takvim-gun.dolu.karisik {
+      border-color: #7a5a08;
+      background: linear-gradient(180deg, #ebcd6a 0%, #b8860b 50%, #7a5a08 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #5c4306, 0 2px 4px rgba(110, 80, 15, .2);
+    }
+    .takvim-gun.sabit { outline: 2px solid #08343a; outline-offset: 0; }
+    .takvim-gun .gun-no {
+      font-family: "Segoe UI", "Segoe UI Variable Display", system-ui, sans-serif;
+      font-size: 15px; font-weight: 800; line-height: 1; letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      color: #111827;
+      -webkit-font-smoothing: antialiased;
+    }
+    .takvim-gun.bugun .gun-no { color: #0a4a52; }
+    .takvim-gun.baska .gun-no { color: #6b7280; font-weight: 700; }
+    .takvim-gun.dolu .gun-no {
+      color: #ffffff;
+      font-weight: 800;
+      text-shadow: 0 1px 1px rgba(0, 20, 30, .5);
+    }
+    .takvim-gun .gun-adet {
+      font-family: "Segoe UI", system-ui, sans-serif;
+      font-size: 8px; font-weight: 700; line-height: 1; margin-top: 1px;
+      color: #374151;
+    }
+    .takvim-gun.dolu .gun-adet {
+      color: #ffffff;
+      text-shadow: 0 1px 1px rgba(0, 20, 30, .4);
+    }
+    @media (max-width: 1100px) {
+      .takvim-uc { grid-template-columns: 1fr; overflow: auto; }
+      .takvim-ay { min-height: 320px; }
+    }
+    .takvim-popup {
+      position: fixed; z-index: 90; width: min(400px, calc(100vw - 24px)); max-height: min(380px, 55vh);
+      overflow: auto; overscroll-behavior: contain;
+      background: linear-gradient(180deg, #ffffff 0%, #f4f8fa 100%);
+      border: 1px solid #a9c0cb; border-radius: 14px;
+      box-shadow: inset 0 1px 0 #fff, 0 4px 0 #c5d4dc, 0 18px 36px rgba(20, 40, 55, .24);
+      padding: 12px 14px; pointer-events: none;
+    }
+    .takvim-popup.sabit { pointer-events: auto; }
+    .takvim-popup b { display: block; margin-bottom: 8px; color: #0e5962; font-size: 14px; font-weight: 800; }
+    .takvim-popup .satir {
+      display: grid; grid-template-columns: minmax(70px, 88px) minmax(0, 1fr) auto; gap: 8px; align-items: start;
+      padding: 6px 0; border-top: 1px solid #e7eef2; font-size: 12px; color: #1d2430;
+    }
+    .takvim-popup .satir:first-of-type { border-top: 0; }
+    .takvim-popup .tur { font-weight: 750; white-space: normal; line-height: 1.25; }
+    .takvim-popup .tur.cek { color: #1f8f9c; }
+    .takvim-popup .tur.takas { color: #1b7a4a; }
+    .takvim-popup .tur.senet { color: #c05612; }
+    .takvim-popup .tur.visa { color: #2f6fb0; }
+    .takvim-popup .kim {
+      min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.3;
+    }
+    .takvim-popup .tutar { font-weight: 700; white-space: nowrap; }
+    .takvim-gun.hatirlatma::after {
+      content: ""; position: absolute; top: 3px; right: 3px; width: 7px; height: 7px; border-radius: 50%;
+      background: #c62828; box-shadow: 0 0 0 1px #fff;
+    }
+    #hatirlatmaKutu {
+      position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #hatirlatmaKutu[hidden] { display: none; }
+    .hatirlatma-panel {
+      width: min(420px, 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #f2f7f9 100%);
+      border: 1px solid #a9c0cb; border-radius: 16px;
+      box-shadow: inset 0 1px 0 #fff, 0 4px 0 #c5d4dc, 0 18px 40px rgba(20, 40, 55, .28);
+      padding: 16px 18px; display: grid; gap: 10px;
+    }
+    .hatirlatma-panel h3 { margin: 0; color: #0e5962; font-size: 17px; font-weight: 800; }
+    .hatirlatma-panel label { display: grid; gap: 4px; font-size: 12px; font-weight: 650; color: #3a4a56; }
+    .hatirlatma-panel input, .hatirlatma-panel textarea {
+      border: 1px solid #c5d5de; border-radius: 8px; padding: 8px 10px; font: inherit; color: #1d2430;
+    }
+    .hatirlatma-panel textarea { min-height: 96px; resize: vertical; }
+    .hatirlatma-panel .satir { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .hatirlatma-panel .butonlar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .hatirlatma-panel button {
+      border: 1px solid #0e5962; border-radius: 8px; padding: 8px 14px; font-weight: 700; cursor: pointer;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 100%); color: #fff;
+    }
+    .hatirlatma-panel button.soluk { background: #fff; color: #1a4e58; }
+    .hatirlatma-panel button.sil { background: #fff; color: #b42318; border-color: #d9a3a0; }
+    .hatirlatma-panel .liste { display: grid; gap: 6px; max-height: 140px; overflow: auto; }
+    .hatirlatma-panel .liste .item {
+      display: flex; justify-content: space-between; gap: 8px; align-items: start;
+      width: 100%; text-align: left; font-weight: 650; font-size: 13px; line-height: 1.35;
+      padding: 8px 10px; border-radius: 8px; cursor: pointer;
+      color: #1d2430; border: 1px solid #b7c9d2;
+      background: linear-gradient(180deg, #ffffff 0%, #eef4f7 100%);
+      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(28, 52, 68, .08);
+    }
+    .hatirlatma-panel .liste .item:hover {
+      border-color: #0e5962; color: #0a3d44;
+      background: linear-gradient(180deg, #ffffff 0%, #dff0f3 100%);
+    }
+    #odemeTakvim .takvim-toplu-btn {
+      border: 1px solid #0e5962; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+      font-weight: 700; font-size: 12px; color: #fff;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.4), 0 2px 0 #0c4650;
+    }
+    #odemeTakvim .takvim-toplu-btn:hover { filter: brightness(1.05); }
+    #odemeTakvim .takvim-google-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid #c5221f; border-radius: 8px; padding: 6px 10px; cursor: pointer;
+      font-weight: 700; font-size: 12px; color: #fff;
+      background: linear-gradient(180deg, #ea4335 0%, #c5221f 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 0 #8b1816;
+    }
+    #odemeTakvim .takvim-google-btn:hover { filter: brightness(1.06); }
+    #odemeTakvim .takvim-google-btn.bagli {
+      border-color: #188038; background: linear-gradient(180deg, #34a853 0%, #188038 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 0 #0f5c24;
+    }
+    #googleKutu {
+      position: fixed; inset: 0; z-index: 122; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #googleKutu[hidden] { display: none; }
+    .google-panel {
+      width: min(480px, 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #f2f7f9 100%);
+      border: 1px solid #a9c0cb; border-radius: 16px;
+      box-shadow: inset 0 1px 0 #fff, 0 4px 0 #c5d4dc, 0 18px 40px rgba(20, 40, 55, .28);
+      padding: 16px 18px; display: grid; gap: 10px;
+    }
+    .google-panel h3 { margin: 0; color: #0e5962; font-size: 17px; font-weight: 800; }
+    .google-panel label { display: grid; gap: 4px; font-size: 12px; font-weight: 650; color: #3a4a56; }
+    .google-panel input {
+      border: 1px solid #c5d5de; border-radius: 8px; padding: 8px 10px; font: inherit; color: #1d2430;
+    }
+    .google-panel .ipucu {
+      margin: 0; font-size: 12px; color: #5a6a76; line-height: 1.4;
+      padding: 8px 10px; border-radius: 8px; background: #eef6f8; border: 1px solid #c5d5de;
+    }
+    .google-panel .ipucu code {
+      display: inline-block; margin-top: 4px; padding: 2px 6px; border-radius: 4px;
+      background: #fff; border: 1px solid #c5d5de; font-size: 11px; color: #0e5962; word-break: break-all;
+    }
+    .google-panel .durum-satir {
+      font-size: 13px; font-weight: 700; color: #14616c; padding: 6px 0 0;
+    }
+    .google-panel .butonlar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+    .google-panel button {
+      border: 1px solid #0e5962; border-radius: 8px; padding: 8px 14px; font-weight: 700; cursor: pointer;
+      background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 100%); color: #fff;
+    }
+    .google-panel button.soluk { background: #fff; color: #1a4e58; }
+    .google-panel button.google {
+      border-color: #c5221f; background: linear-gradient(180deg, #ea4335 0%, #c5221f 100%);
+    }
+    .google-panel button.senkron {
+      border-color: #188038; background: linear-gradient(180deg, #34a853 0%, #188038 100%);
+    }
+    .google-panel button.kopar { background: #fff; color: #b42318; border-color: #d9a3a0; }
+    .google-panel select {
+      border: 1px solid #c5d5de; border-radius: 8px; padding: 8px 10px; font: inherit; color: #1d2430; background: #fff;
+    }
+    #hatirlatmaTopluKutu {
+      position: fixed; inset: 0; z-index: 121; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #hatirlatmaTopluKutu[hidden] { display: none; }
+    .hatirlatma-toplu { width: min(460px, 100%); }
+    .hatirlatma-toplu select {
+      border: 1px solid #c5d5de; border-radius: 8px; padding: 8px 10px; font: inherit; color: #1d2430;
+      background: #fff;
+    }
+    .hatirlatma-toplu-ozet {
+      margin: 0; padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 650; color: #14616c;
+      background: #eef6f8; border: 1px solid #c5d5de;
+    }
+    #hatirlatmaToast {
+      position: fixed; z-index: 130; right: 16px; bottom: 16px; width: min(360px, calc(100vw - 24px));
+      background: #16323a; color: #fff; border-radius: 12px; padding: 12px 14px;
+      box-shadow: 0 14px 32px rgba(0,0,0,.28); display: grid; gap: 6px;
+    }
+    #hatirlatmaToast[hidden] { display: none; }
+    #hatirlatmaToast b { font-size: 14px; }
+    #hatirlatmaToast p { margin: 0; font-size: 13px; white-space: pre-wrap; }
+    #hatirlatmaToast button {
+      justify-self: end; border: 0; border-radius: 6px; padding: 6px 10px; cursor: pointer;
+      background: #fff; color: #16323a; font-weight: 700;
+    }
     #cari th.kod, #cari td.kod { width: 24ch; max-width: 24ch; }
     .rapor-ekran th {
       position: sticky; top: 0; text-align: left; font-weight: 650; color: #fff;
@@ -802,13 +1264,16 @@
     </div>
     <div id="menu">
       <button class="rapor-btn" id="karlilikBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15l3-4 3 2 5-7" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="1.6" fill="currentColor"/></svg>Satış Karlılığı</button>
+      <button class="rapor-btn" id="ciroBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v2.2M12 14.8V17M9.2 9.2c.7-1 1.9-1.5 3.1-1.2 1.5.4 2.2 1.5 2.2 2.6 0 1.4-1 2.1-2.8 2.6-1.7.5-2.7 1.2-2.7 2.5 0 1.1.9 2.1 2.6 2.3 1.2.1 2.3-.3 3-.1.1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Ciro Raporu</button>
       <button class="rapor-btn" id="maliyetDegerBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16v12H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M8 7V5h8v2M9 12h6M9 15h4" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17" cy="16" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M17 14.7v2.6M15.7 16h2.6" stroke="currentColor" stroke-width="1.3"/></svg>Maliyet Değer Raporu</button>
       <button class="rapor-btn" id="cariBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M3.5 19c.8-3.2 2.9-5 5.5-5s4.7 1.8 5.5 5" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M16 8h5M18.5 5.5v5" stroke="currentColor" stroke-width="1.6"/></svg>Cari Borç Alacak</button>
+      <button class="rapor-btn" id="acikBorcBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9h6M7 12h10M7 15h8" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Açık Borç Alacak</button>
       <button class="rapor-btn" id="hareketsizBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 19l14-14" stroke="currentColor" stroke-width="1.5"/></svg>Hareket Görmemiş Cariler</button>
       <button class="rapor-btn" id="kasaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>İşlem Kasası</button>
       <button class="rapor-btn" id="cekBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 10h8M5 14h5" stroke="currentColor" stroke-width="1.4"/><path d="M13 15.5c1.2-2 4.2-2 5.4 0" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Çek</button>
       <button class="rapor-btn" id="senetBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 3v4h4M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>Senet</button>
       <button class="rapor-btn" id="visaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20M5 15h4" stroke="currentColor" stroke-width="1.6"/></svg>Visa</button>
+      <button class="rapor-btn" id="odemeTakvimBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" stroke-width="1.5"/></svg>Ödeme Takvimi</button>
     </div>
     <div class="rapor-ekran" id="islemKasa" hidden>
       <div class="araclar">
@@ -907,6 +1372,61 @@
       </div>
       <div id="portfoyOnizleme" class="gorsel-kutu" hidden></div>
       <div id="portfoyFiltre" hidden></div>
+    </div>
+    <div class="rapor-ekran" id="ciroRapor" hidden>
+      <div class="araclar">
+        <button class="geri" id="ciroGeri" type="button">‹</button>
+        <strong class="baslik">Ciro Raporu</strong>
+        <button class="kasa-gun" id="ciroGunluk" type="button" data-donem="gunluk">Günlük</button>
+        <button class="kasa-gun" id="ciroHaftalik" type="button" data-donem="haftalik">Haftalık</button>
+        <button class="kasa-gun" id="ciroAylik" type="button" data-donem="aylik">Aylık</button>
+        <button class="kasa-gun" id="ciroYillik" type="button" data-donem="yillik">Yıllık</button>
+        <button class="kasa-gun" id="ciroAralik" type="button" data-donem="aralik">Tarih aralığı</button>
+        <label class="bakiye-tik">Başlangıç</label>
+        <input id="ciroBas" type="date" aria-label="Başlangıç tarihi">
+        <label class="bakiye-tik">Bitiş</label>
+        <input id="ciroBit" type="date" aria-label="Bitiş tarihi">
+        <label class="bakiye-tik">Sınıflandır
+          <select id="ciroGrup" aria-label="Sınıflandırma"></select>
+        </label>
+        <span class="durum" id="ciroDurum"></span>
+      </div>
+      <div class="araclar ara-satir">
+        <input id="ciroAra" placeholder="Stok kodu veya adı" aria-label="Ara">
+        <div class="ozel-kodlar" id="ciroOzelKodlar"></div>
+      </div>
+      <div class="ciro-kartlar">
+        <div class="ciro-kart ciro"><span>Ciro</span><b id="ciroKartSatis">0,00 ₺</b></div>
+        <div class="ciro-kart iade"><span>İade ciro</span><b id="ciroKartIade">0,00 ₺</b></div>
+        <div class="ciro-kart net"><span>Net ciro</span><b id="ciroKartNet">0,00 ₺</b></div>
+      </div>
+      <div class="ciro-govde" id="ciroGrafikBolum">
+        <div class="ciro-panel">
+          <h3 id="ciroZamanBaslik">Ciro grafiği</h3>
+          <div class="ciro-grafik" id="ciroZamanGrafik"></div>
+        </div>
+        <div class="ciro-panel">
+          <h3 id="ciroDagilimBaslik">Dağılım</h3>
+          <div class="ciro-yatay" id="ciroDagilimGrafik"></div>
+        </div>
+      </div>
+      <div class="ciro-detay-bar" id="ciroDetayBar" hidden>
+        <button type="button" id="ciroDetayGeri">‹ Özet</button>
+        <strong id="ciroDetayBaslik">Detay</strong>
+        <span class="durum" id="ciroDetayDurum"></span>
+      </div>
+      <p class="ciro-ipucu" id="ciroIpucu">Satıra çift tıklayınca dönemin hareketleri açılır.</p>
+      <div class="tablo-wrap">
+        <table id="ciroTablo">
+          <thead id="ciroThead"></thead>
+          <tbody id="ciroSatir"></tbody>
+        </table>
+      </div>
+      <div class="ciro-alt">
+        <span>Ciro <b id="ciroSatisTop">0,00</b></span>
+        <span>İade <b id="ciroIadeTop">0,00</b></span>
+        <span>Net <b id="ciroNetTop">0,00</b></span>
+      </div>
     </div>
     <div class="rapor-ekran" id="maliyetDeger" hidden>
       <div class="araclar">
@@ -1095,6 +1615,190 @@
       <div id="cariAylik" hidden></div>
       <div id="cariFiltre" hidden></div>
     </div>
+    <div class="rapor-ekran" id="acikBorc" hidden>
+      <div class="araclar">
+        <button class="geri" id="acikBorcGeri" type="button">‹</button>
+        <strong class="baslik">Açık Borç Alacak</strong>
+        <label class="bakiye-tik"><input id="acikBorcKalan" type="checkbox" checked> Kalanı olanlar</label>
+        <span class="durum" id="acikBorcDurum"></span>
+      </div>
+      <div class="araclar ara-satir">
+        <input id="acikBorcAra" placeholder="Firma kodu, adı veya belge no" aria-label="Ara">
+      </div>
+      <div class="tablo-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="kod"><button type="button" data-alan="kod">Kod<span class="ok"></span></button></th>
+              <th class="ad"><button type="button" data-alan="ad">Firma<span class="ok"></span></button></th>
+              <th><button type="button" data-alan="tarih">Tarih<span class="ok"></span></button></th>
+              <th><button type="button" data-alan="vade">Vade<span class="ok"></span></button></th>
+              <th><button type="button" data-alan="evrakNo">Belge<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="tutar">Tutar<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="odenen">Ödenen<span class="ok"></span></button></th>
+              <th class="num"><button type="button" data-alan="kalan">Kalan<span class="ok"></span></button></th>
+              <th><button type="button" data-alan="pb">PB<span class="ok"></span></button></th>
+            </tr>
+          </thead>
+          <tbody id="acikBorcSatir"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5">Toplam</td>
+              <td class="num" id="acikBorcTutarTop"></td>
+              <td class="num" id="acikBorcOdenenTop"></td>
+              <td class="num" id="acikBorcKalanTop"></td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="ipucu">Satıra çift tıklayınca belge açılır.</p>
+    </div>
+    <div class="rapor-ekran" id="odemeTakvim" hidden>
+      <div class="araclar">
+        <button class="geri" id="odemeTakvimGeri" type="button">‹</button>
+        <strong class="baslik">Ödeme Takvimi</strong>
+        <button class="takvim-nav" id="odemeTakvimOnceki" type="button" title="Önceki ay">‹</button>
+        <strong id="odemeTakvimAyAd"></strong>
+        <button class="takvim-nav" id="odemeTakvimSonraki" type="button" title="Sonraki ay">›</button>
+        <label class="bakiye-tik"><input id="odemeTakvimCiro" type="checkbox"> Cirolu çekler</label>
+        <button type="button" class="takvim-toplu-btn" id="odemeTakvimTopluBtn" title="Rutin / toplu hatırlatma">Toplu hatırlatma</button>
+        <button type="button" class="takvim-google-btn" id="odemeTakvimGoogleBtn" title="Google Takvim">
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path fill="#fff" d="M12 10.2v3.6h5.1c-.2 1.2-1.5 3.5-5.1 3.5-3.1 0-5.6-2.5-5.6-5.6S8.9 6.1 12 6.1c1.7 0 2.9.7 3.6 1.4l2.4-2.4C16.7 3.8 14.6 3 12 3 7 3 3 7 3 12s4 9 9 9c5.2 0 8.6-3.6 8.6-8.7 0-.6-.1-1-.2-1.5H12z"/></svg>
+          Google
+        </button>
+        <span class="durum" id="odemeTakvimDurum"></span>
+      </div>
+      <div class="takvim-legenda">
+        <span><i class="tk-cek"></i>Çek</span>
+        <span><i class="tk-takas"></i>Takas</span>
+        <span><i class="tk-senet"></i>Senet</span>
+        <span><i class="tk-visa"></i>Visa</span>
+        <span><i class="tk-karisik"></i>Karışık</span>
+        <span class="tk-not">Ay görünümü · tıkla detay · çift tık hatırlatma</span>
+      </div>
+      <div class="takvim-uc" id="odemeTakvimGrid" aria-label="Üç aylık takvim"></div>
+      <div class="takvim-popup" id="odemeTakvimPopup" hidden></div>
+    </div>
+  </div>
+  <div id="hatirlatmaKutu" hidden>
+    <div class="hatirlatma-panel" role="dialog" aria-labelledby="hatirlatmaBaslik">
+      <h3 id="hatirlatmaBaslik">Hatırlatma</h3>
+      <div class="satir">
+        <label>Tarih<input id="hatirlatmaTarih" type="date"></label>
+        <label>Saat<input id="hatirlatmaSaat" type="time"></label>
+      </div>
+      <label>Not<textarea id="hatirlatmaMetin" placeholder="Hatırlatılacak notunuzu yazın"></textarea></label>
+      <label class="bakiye-tik" style="display:flex;align-items:center;gap:8px">
+        <input id="hatirlatmaOnceAktif" type="checkbox"> Gün önce de hatırlat
+      </label>
+      <label id="hatirlatmaOnceGunLbl" hidden>Kaç gün önce
+        <input id="hatirlatmaOnceGun" type="number" min="1" max="30" value="1">
+      </label>
+      <div class="liste" id="hatirlatmaListe"></div>
+      <div class="butonlar">
+        <button class="sil" id="hatirlatmaSil" type="button" hidden>Sil</button>
+        <button class="soluk" id="hatirlatmaIptal" type="button">Vazgeç</button>
+        <button id="hatirlatmaKaydet" type="button">Kaydet</button>
+      </div>
+    </div>
+  </div>
+  <div id="googleKutu" hidden>
+    <div class="google-panel" role="dialog" aria-labelledby="googleBaslik">
+      <h3 id="googleBaslik">Google Takvim</h3>
+      <p class="ipucu">
+        Hatırlatmaları Google Takvim ile senkronize eder (saatinde ve 10 dk önce bildirim).
+        Telefonda <b>Google Takvim</b> uygulaması açık, bildirimler açık ve aynı hesapla girişli olmalı.
+        Cloud Console’da Calendar API + Takvim izni gerekir. Yetkili yönlendirme URI:
+        <code id="googleRedirectUri">http://127.0.0.1:3850/api/google/callback</code>
+      </p>
+      <label>Google JSON dosyası (client_secret…)
+        <input id="googleJsonDosya" type="file" accept=".json,application/json">
+      </label>
+      <div class="butonlar" style="justify-content:flex-start;flex-wrap:wrap">
+        <button type="button" class="senkron" id="googleJsonYukle">JSON’dan yükle</button>
+        <button type="button" class="soluk" id="googleJsonIndirilen">Downloads’taki JSON’u kullan</button>
+      </div>
+      <label>Client ID<input id="googleClientId" type="text" autocomplete="off" placeholder="xxxx.apps.googleusercontent.com"></label>
+      <label>Client Secret<input id="googleClientSecret" type="password" autocomplete="off" placeholder="GOCSPX-…"></label>
+      <div class="butonlar" style="justify-content:flex-start">
+        <button type="button" class="soluk" id="googleAyarKaydet">Kimlik bilgilerini kaydet</button>
+      </div>
+      <div class="durum-satir" id="googleDurumYazi">Durum yükleniyor…</div>
+      <label class="bakiye-tik" style="display:flex;align-items:center;gap:8px">
+        <input id="googleAutoSync" type="checkbox" checked> Otomatik senkron
+      </label>
+      <label>Aralık
+        <select id="googleAutoSyncDk">
+          <option value="5">5 dakika</option>
+          <option value="15" selected>15 dakika</option>
+          <option value="30">30 dakika</option>
+          <option value="60">1 saat</option>
+          <option value="120">2 saat</option>
+        </select>
+      </label>
+      <div class="butonlar" style="justify-content:flex-start">
+        <button type="button" class="soluk" id="googleAutoKaydet">Otomatik ayarı kaydet</button>
+      </div>
+      <div class="butonlar">
+        <button type="button" class="kopar" id="googleKopar" hidden>Bağlantıyı kes</button>
+        <button type="button" class="soluk" id="googleIptal">Kapat</button>
+        <button type="button" class="google" id="googleBaglan">Google ile bağla</button>
+        <button type="button" class="senkron" id="googleSenkron" hidden>Senkronize et</button>
+      </div>
+    </div>
+  </div>
+  <div id="hatirlatmaTopluKutu" hidden>
+    <div class="hatirlatma-panel hatirlatma-toplu" role="dialog" aria-labelledby="hatirlatmaTopluBaslik">
+      <h3 id="hatirlatmaTopluBaslik">Toplu hatırlatma</h3>
+      <label>Not<textarea id="hatirlatmaTopluMetin" placeholder="Örn: Kira ödemesi, SGK, maaş…"></textarea></label>
+      <div class="satir">
+        <label>Saat<input id="hatirlatmaTopluSaat" type="time"></label>
+        <label>Periyot
+          <select id="hatirlatmaTopluPeriyot">
+            <option value="aylik">Aylık</option>
+            <option value="haftalik">Haftalık</option>
+            <option value="gunluk">Günlük</option>
+          </select>
+        </label>
+      </div>
+      <div class="satir" id="hatirlatmaTopluAySatir">
+        <label>Ayın günü
+          <select id="hatirlatmaTopluAyGunu"></select>
+        </label>
+        <label id="hatirlatmaTopluHaftaLbl" hidden>Haftanın günü
+          <select id="hatirlatmaTopluHaftaGunu">
+            <option value="1">Pazartesi</option>
+            <option value="2">Salı</option>
+            <option value="3">Çarşamba</option>
+            <option value="4">Perşembe</option>
+            <option value="5">Cuma</option>
+            <option value="6">Cumartesi</option>
+            <option value="0">Pazar</option>
+          </select>
+        </label>
+      </div>
+      <div class="satir">
+        <label>Başlangıç<input id="hatirlatmaTopluBas" type="date"></label>
+        <label>Bitiş
+          <select id="hatirlatmaTopluBitisMod">
+            <option value="yil">Yıl sonuna kadar</option>
+            <option value="tarih">Belirli tarihe kadar</option>
+          </select>
+        </label>
+      </div>
+      <label id="hatirlatmaTopluBitisLbl" hidden>Bitiş tarihi<input id="hatirlatmaTopluBitis" type="date"></label>
+      <p class="hatirlatma-toplu-ozet" id="hatirlatmaTopluOzet">Periyot ve tarih aralığını seçin.</p>
+      <div class="butonlar">
+        <button class="soluk" id="hatirlatmaTopluIptal" type="button">Vazgeç</button>
+        <button id="hatirlatmaTopluKaydet" type="button">Toplu kaydet</button>
+      </div>
+    </div>
+  </div>
+  <div id="hatirlatmaToast" hidden>
+    <b id="hatirlatmaToastBaslik">Hatırlatma</b>
+    <p id="hatirlatmaToastMetin"></p>
+    <button type="button" id="hatirlatmaToastKapat">Tamam</button>
   </div>
   <div id="panel" hidden>
     <div class="panel-kutu">
@@ -1464,7 +2168,24 @@
     function yazOzet() {
       const firma = seciliFirma();
       const donem = seciliDonem();
-      document.getElementById("ozetFirma").value = [firmaAd(firma), donem?.yil].filter(Boolean).join(" - ");
+      const ozet = [firmaAd(firma), donem?.yil].filter(Boolean).join(" - ");
+      document.getElementById("ozetFirma").value = ozet;
+      if (ozet) {
+        try {
+          localStorage.setItem("vegaGirisOzet", JSON.stringify({
+            ozet,
+            firma: firma?.no || 0,
+            donem: donem?.no || 0,
+          }));
+        } catch { /* depolama yok */ }
+      }
+    }
+
+    function girisOzetOnizle() {
+      try {
+        const kayit = JSON.parse(localStorage.getItem("vegaGirisOzet") || "null");
+        if (kayit?.ozet) document.getElementById("ozetFirma").value = kayit.ozet;
+      } catch { /* yok */ }
     }
 
     function doldurFirma() {
@@ -1484,11 +2205,8 @@
       }
     }
 
-    async function donemYukle(tercih) {
-      const firma = seciliFirma();
-      if (!firma) return;
-      const body = await getir("/api/donemler?firma=" + firma.no);
-      donemler = body.items || [];
+    function doldurDonem(liste, tercih, firma) {
+      donemler = liste || [];
       const select = document.getElementById("donem");
       select.innerHTML = "";
       for (const donem of donemler) {
@@ -1498,19 +2216,32 @@
         select.appendChild(option);
       }
       const hedef = donemler.find((item) => item.no === Number(tercih))
-        || donemler.find((item) => Number(item.yil) === Number(firma.aktifDonem))
+        || donemler.find((item) => Number(item.yil) === Number(firma?.aktifDonem))
         || donemler[donemler.length - 1];
       if (hedef) select.value = String(hedef.no);
-      const subeBody = await getir("/api/subeler?firma=" + firma.no);
+    }
+
+    function doldurSube(liste) {
       const sube = document.getElementById("sube");
       sube.innerHTML = "";
-      for (const item of subeBody.items || [{ ad: "MERKEZ" }]) {
+      for (const item of liste || [{ ad: "MERKEZ" }]) {
         const option = document.createElement("option");
         option.value = item.ad;
         option.textContent = item.ad;
         sube.appendChild(option);
       }
+    }
+
+    async function donemYukle(tercih) {
+      const firma = seciliFirma();
+      if (!firma) return;
+      const [body, subeBody] = await Promise.all([
+        getir("/api/donemler?firma=" + firma.no),
+        getir("/api/subeler?firma=" + firma.no).catch(() => ({ items: [{ ad: "MERKEZ" }] })),
+      ]);
+      doldurDonem(body.items || [], tercih, firma);
       yazOzet();
+      doldurSube(subeBody.items || [{ ad: "MERKEZ" }]);
     }
 
     function hucre(text, num, negatif) {
@@ -2293,6 +3024,7 @@
         document.getElementById("oturumSatir").textContent =
           oturum.ad + " · " + oturum.firmaYazi + " · Şube " + oturum.sube;
         hata("");
+        anaPencereBuyut().catch(() => {});
       } catch (error) {
         hata(error.message);
       }
@@ -3440,6 +4172,8 @@ ${"<" + "/script>"}</body></html>`);
 
     function kasaEkraniKapat() {
       document.getElementById("islemKasa").hidden = true;
+      const ciro = document.getElementById("ciroRapor");
+      if (ciro) ciro.hidden = true;
       const maliyet = document.getElementById("maliyetDeger");
       if (maliyet) {
         maliyet.hidden = true;
@@ -3447,6 +4181,10 @@ ${"<" + "/script>"}</body></html>`);
       }
       const portfoy = document.getElementById("portfoy");
       if (portfoy) portfoy.hidden = true;
+      const acikBorc = document.getElementById("acikBorc");
+      if (acikBorc) acikBorc.hidden = true;
+      const odemeTakvim = document.getElementById("odemeTakvim");
+      if (odemeTakvim) odemeTakvim.hidden = true;
       const liste = document.getElementById("portfoyDurumListe");
       if (liste) liste.hidden = true;
       const onizleme = document.getElementById("portfoyOnizleme");
@@ -4165,6 +4903,564 @@ ${"<" + "/script>"}</body></html>`);
       }
     }
 
+    let ciroSatirlari = [];
+    let ciroZaman = [];
+    let ciroDetaySatirlari = [];
+    let ciroAlan = "etiket";
+    let ciroYon = 1;
+    let ciroIstek = 0;
+    let ciroDonem = "aylik";
+    let ciroGruplar = [];
+    let ciroTarihKilit = false;
+    let ciroMod = "ozet";
+    let ciroDetayEtiket = "";
+
+    function ciroGunEkle(tarih, gun) {
+      const kopya = new Date(tarih.getFullYear(), tarih.getMonth(), tarih.getDate());
+      kopya.setDate(kopya.getDate() + gun);
+      return kopya;
+    }
+
+    function ciroAyEkle(tarih, ay) {
+      return new Date(tarih.getFullYear(), tarih.getMonth() + ay, 1);
+    }
+
+    function ciroDonemUygula(donem) {
+      ciroDonem = donem;
+      document.querySelectorAll("#ciroRapor .araclar .kasa-gun[data-donem]").forEach((btn) => {
+        btn.classList.toggle("secili", btn.dataset.donem === donem);
+      });
+      const bugun = new Date();
+      let bas = bugun;
+      let bit = bugun;
+      if (donem === "gunluk") {
+        bas = new Date(bugun.getFullYear(), bugun.getMonth(), 1);
+      } else if (donem === "haftalik") {
+        bas = ciroGunEkle(bugun, -84);
+      } else if (donem === "aylik") {
+        bas = ciroAyEkle(bugun, -11);
+      } else if (donem === "yillik") {
+        bas = new Date(bugun.getFullYear() - 4, 0, 1);
+      } else {
+        return;
+      }
+      ciroTarihKilit = true;
+      document.getElementById("ciroBas").value = kasaIso(kasaTarihYazi(bas));
+      document.getElementById("ciroBit").value = kasaIso(kasaTarihYazi(bit));
+      ciroTarihKilit = false;
+    }
+
+    function ciroSeriSec() {
+      if (ciroDonem === "yillik") return "yil";
+      if (ciroDonem === "aylik") return "ay";
+      if (ciroDonem === "haftalik") return "hafta";
+      if (ciroDonem === "gunluk") return "gun";
+      const bas = document.getElementById("ciroBas").value;
+      const bit = document.getElementById("ciroBit").value;
+      if (!bas || !bit) return "gun";
+      const gun = Math.max(0, Math.round((new Date(bit) - new Date(bas)) / 86400000));
+      if (gun > 400) return "yil";
+      if (gun > 45) return "ay";
+      if (gun > 14) return "hafta";
+      return "gun";
+    }
+
+    function ciroKisaEtiket(etiket) {
+      const yazi = String(etiket || "");
+      if (/^\d{4}-\d{2}$/.test(yazi)) {
+        const ayNo = Number(yazi.slice(5)) - 1;
+        return (AY_KISA && AY_KISA[ayNo]) || yazi.slice(5);
+      }
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(yazi)) return yazi.slice(0, 5);
+      if (/H\d{2}$/.test(yazi)) return yazi.replace(/^\d{4}-/, "");
+      return yazi;
+    }
+
+    function ciroEtiketCoz(etiket) {
+      const yazi = String(etiket || "");
+      if (/^\d{4}-\d{2}$/.test(yazi)) {
+        const yil = Number(yazi.slice(0, 4));
+        const ay = Number(yazi.slice(5, 7));
+        const bas = new Date(yil, ay - 1, 1);
+        const bit = new Date(yil, ay, 0);
+        return {
+          bas,
+          bit,
+          baslik: (AYLAR[ay - 1] || yazi) + " " + yil,
+        };
+      }
+      if (/^\d{4}$/.test(yazi)) {
+        const yil = Number(yazi);
+        return {
+          bas: new Date(yil, 0, 1),
+          bit: new Date(yil, 11, 31),
+          baslik: yil + " yılı",
+        };
+      }
+      if (/^\d{4}-H\d{2}$/.test(yazi)) {
+        const yil = Number(yazi.slice(0, 4));
+        const hafta = Number(yazi.slice(6));
+        const basit = new Date(yil, 0, 1 + (hafta - 1) * 7);
+        const gun = basit.getDay() || 7;
+        const bas = ciroGunEkle(basit, 1 - gun);
+        const bit = ciroGunEkle(bas, 6);
+        return { bas, bit, baslik: yil + " / Hafta " + hafta };
+      }
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(yazi)) {
+        const [gun, ay, yil] = yazi.split(".").map(Number);
+        const tarih = new Date(yil, ay - 1, gun);
+        return { bas: tarih, bit: tarih, baslik: yazi };
+      }
+      const basIso = document.getElementById("ciroBas").value;
+      const bitIso = document.getElementById("ciroBit").value;
+      return {
+        bas: new Date(basIso),
+        bit: new Date(bitIso),
+        baslik: yazi || "Detay",
+      };
+    }
+
+    function ciroOzetEtiket(row) {
+      const etiket = String(row.etiket || "");
+      if (/^\d{4}-\d{2}$/.test(etiket)) {
+        return {
+          yil: etiket.slice(0, 4),
+          ay: AYLAR[Number(etiket.slice(5, 7)) - 1] || etiket.slice(5),
+          etiket,
+        };
+      }
+      if (/^\d{4}$/.test(etiket)) return { yil: etiket, ay: "", etiket };
+      if (/H\d{2}$/.test(etiket)) return { yil: etiket.slice(0, 4), ay: "Hafta " + etiket.slice(6), etiket };
+      return { yil: "", ay: etiket, etiket };
+    }
+
+    function ciroBaslikKur() {
+      const thead = document.getElementById("ciroThead");
+      thead.replaceChildren();
+      const tr = document.createElement("tr");
+      const ekle = (alan, metin, num) => {
+        const th = document.createElement("th");
+        if (num) th.className = "num";
+        if (alan === "kod") th.className = (th.className + " kod").trim();
+        if (alan === "ad" || alan === "ay") th.className = (th.className + " ad").trim();
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.dataset.alan = alan;
+        btn.innerHTML = metin + '<span class="ok"></span>';
+        btn.onclick = () => {
+          if (ciroAlan === alan) ciroYon *= -1;
+          else {
+            ciroAlan = alan;
+            ciroYon = alan === "kod" || alan === "ad" || alan === "ay" || alan === "yil" || alan === "etiket" ? 1 : -1;
+          }
+          ciroCiz();
+        };
+        th.appendChild(btn);
+        tr.appendChild(th);
+      };
+      if (ciroMod === "detay") {
+        const ozel = document.getElementById("ciroGrup").value !== "stok";
+        ekle("kod", ozel ? "Özel Kod" : "Stok Kodu");
+        ekle("ad", ozel ? "Sınıf" : "Stok Adı");
+        ekle("miktar", "Miktar", true);
+        ekle("satis", "Ciro", true);
+        ekle("iade", "İade Ciro", true);
+        ekle("ciro", "Net Ciro", true);
+      } else {
+        const seri = ciroSeriSec();
+        if (seri === "ay" || seri === "yil" || seri === "hafta") {
+          ekle("yil", "Yıl");
+          ekle("ay", seri === "yil" ? "Dönem" : seri === "hafta" ? "Hafta" : "Ay");
+        } else {
+          ekle("etiket", "Tarih");
+        }
+        ekle("satis", "Ciro", true);
+        ekle("iade", "İade Ciro", true);
+        ekle("ciro", "Net Ciro", true);
+      }
+      thead.appendChild(tr);
+    }
+
+    function ciroKartGuncelle(satis, iade, net, durum) {
+      document.getElementById("ciroKartSatis").textContent = para.format(satis) + " ₺";
+      document.getElementById("ciroKartIade").textContent = para.format(iade) + " ₺";
+      document.getElementById("ciroKartNet").textContent = para.format(net) + " ₺";
+      document.getElementById("ciroSatisTop").textContent = para.format(satis);
+      document.getElementById("ciroIadeTop").textContent = para.format(iade);
+      document.getElementById("ciroNetTop").textContent = para.format(net);
+      if (durum != null) document.getElementById("ciroDurum").textContent = durum;
+    }
+
+    const CIRO_PASTA_RENK = ["#1f8f9c", "#c05612", "#2f8a55", "#4f6bed", "#b45309", "#0f766e", "#7c3aed", "#be123c"];
+
+    function ciroPastaCiz(hedef, kalemler, baslikNet) {
+      hedef.classList.add("pasta");
+      const pozitif = kalemler
+        .map((satir) => ({
+          ad: satir.ad,
+          tutar: Math.max(0, Number(satir.ciro || 0)),
+        }))
+        .filter((satir) => satir.tutar > 0.004);
+      if (!pozitif.length) {
+        hedef.textContent = "Pasta grafik için ciro yok.";
+        return;
+      }
+      const toplam = pozitif.reduce((sum, satir) => sum + satir.tutar, 0);
+      const cx = 100;
+      const cy = 100;
+      const rDis = 90;
+      const rIc = 54;
+      let aci = -Math.PI / 2;
+      const ns = "http://www.w3.org/2000/svg";
+      const wrap = document.createElement("div");
+      wrap.className = "ciro-pasta-wrap";
+      const svg = document.createElementNS(ns, "svg");
+      svg.setAttribute("viewBox", "0 0 200 200");
+      svg.setAttribute("aria-label", "Ciro pasta grafiği");
+      for (let i = 0; i < pozitif.length; i += 1) {
+        const dilim = pozitif[i];
+        const pay = dilim.tutar / toplam;
+        const dilimAci = Math.max(pay * Math.PI * 2, 0.0001);
+        const x1 = cx + rDis * Math.cos(aci);
+        const y1 = cy + rDis * Math.sin(aci);
+        const x2 = cx + rDis * Math.cos(aci + dilimAci);
+        const y2 = cy + rDis * Math.sin(aci + dilimAci);
+        const xi1 = cx + rIc * Math.cos(aci + dilimAci);
+        const yi1 = cy + rIc * Math.sin(aci + dilimAci);
+        const xi2 = cx + rIc * Math.cos(aci);
+        const yi2 = cy + rIc * Math.sin(aci);
+        const buyuk = dilimAci > Math.PI ? 1 : 0;
+        const path = document.createElementNS(ns, "path");
+        path.setAttribute(
+          "d",
+          `M ${x1} ${y1} A ${rDis} ${rDis} 0 ${buyuk} 1 ${x2} ${y2} L ${xi1} ${yi1} A ${rIc} ${rIc} 0 ${buyuk} 0 ${xi2} ${yi2} Z`
+        );
+        path.setAttribute("fill", CIRO_PASTA_RENK[i % CIRO_PASTA_RENK.length]);
+        path.setAttribute("stroke", "#fff");
+        path.setAttribute("stroke-width", "1.5");
+        const title = document.createElementNS(ns, "title");
+        title.textContent = dilim.ad + ": " + para.format(dilim.tutar) + " ₺ (" + Math.round(pay * 100) + "%)";
+        path.appendChild(title);
+        svg.appendChild(path);
+        aci += dilimAci;
+      }
+      wrap.appendChild(svg);
+      const orta = document.createElement("div");
+      orta.className = "ciro-pasta-orta";
+      const ortaEtiket = document.createElement("span");
+      ortaEtiket.textContent = "Net ciro";
+      const ortaDeger = document.createElement("b");
+      ortaDeger.textContent = para.format(baslikNet != null ? baslikNet : toplam);
+      orta.appendChild(ortaEtiket);
+      orta.appendChild(ortaDeger);
+      wrap.appendChild(orta);
+      const legenda = document.createElement("div");
+      legenda.className = "ciro-pasta-legenda";
+      for (let i = 0; i < pozitif.length; i += 1) {
+        const dilim = pozitif[i];
+        const satir = document.createElement("div");
+        satir.className = "satir";
+        const renk = document.createElement("i");
+        renk.style.background = CIRO_PASTA_RENK[i % CIRO_PASTA_RENK.length];
+        const ad = document.createElement("div");
+        ad.className = "ad";
+        ad.textContent = dilim.ad;
+        ad.title = dilim.ad;
+        const tutar = document.createElement("div");
+        tutar.className = "tutar";
+        tutar.textContent = para.format(dilim.tutar) + " ";
+        const oran = document.createElement("span");
+        oran.className = "oran";
+        oran.textContent = "%" + Math.round((dilim.tutar / toplam) * 100);
+        tutar.appendChild(oran);
+        satir.appendChild(renk);
+        satir.appendChild(ad);
+        satir.appendChild(tutar);
+        legenda.appendChild(satir);
+      }
+      hedef.appendChild(wrap);
+      hedef.appendChild(legenda);
+    }
+
+    function ciroGrafikCiz(zaman, dagilimKaynak) {
+      const grafik = document.getElementById("ciroZamanGrafik");
+      const dagilim = document.getElementById("ciroDagilimGrafik");
+      grafik.replaceChildren();
+      dagilim.replaceChildren();
+      grafik.classList.remove("pasta");
+      const seri = ciroSeriSec();
+      const grup = document.getElementById("ciroGrup").value;
+      document.getElementById("ciroDagilimBaslik").textContent =
+        ciroMod === "detay"
+          ? (grup === "stok" ? "En yüksek net ciro stoklar" : "Özel kod dağılımı")
+          : "Dönem dağılımı";
+      const kaynak = (dagilimKaynak || []).slice(0, 8);
+      if (ciroMod === "detay") {
+        document.getElementById("ciroZamanBaslik").textContent = "Ciro pasta grafiği";
+        const pastaKalem = kaynak.map((satir) => ({
+          ad: grup === "stok" ? (satir.ad || satir.kod || satir.etiket) : (satir.kod || satir.ad || satir.etiket || "(boş)"),
+          ciro: satir.ciro,
+        }));
+        const net = pastaKalem.reduce((sum, satir) => sum + Number(satir.ciro || 0), 0);
+        ciroPastaCiz(grafik, pastaKalem, net);
+      } else {
+        document.getElementById("ciroZamanBaslik").textContent =
+          seri === "ay" ? "Aylık net ciro" : seri === "hafta" ? "Haftalık net ciro" : seri === "yil" ? "Yıllık net ciro" : "Günlük net ciro";
+        const tavan = Math.max(1, ...zaman.map((satir) => Math.abs(Number(satir.ciro || 0))));
+        const goster = zaman.length > 24 ? zaman.slice(-24) : zaman;
+        for (const satir of goster) {
+          const kolon = document.createElement("div");
+          kolon.className = "ciro-cubuk";
+          const deger = document.createElement("b");
+          deger.textContent = Number(satir.ciro) ? para.format(Number(satir.ciro)) : "";
+          const cubuk = document.createElement("i");
+          const oran = Math.abs(Number(satir.ciro || 0)) / tavan;
+          cubuk.style.height = Math.max(oran * 100, Number(satir.ciro) ? 4 : 0) + "%";
+          if (Number(satir.ciro) < 0) cubuk.style.background = "linear-gradient(180deg, #f0a06a 0%, #c05612 55%, #8f3a0a 100%)";
+          cubuk.title = satir.etiket + " · Net " + para.format(Number(satir.ciro || 0)) + " ₺ · İade " + para.format(Number(satir.iade || 0)) + " ₺";
+          const etiket = document.createElement("span");
+          etiket.textContent = ciroKisaEtiket(satir.etiket);
+          kolon.appendChild(deger);
+          kolon.appendChild(cubuk);
+          kolon.appendChild(etiket);
+          grafik.appendChild(kolon);
+        }
+        if (!goster.length) grafik.textContent = "Seçilen aralıkta ciro yok.";
+      }
+      const tavanDagilim = Math.max(1, ...kaynak.map((satir) => Math.abs(Number(satir.ciro || 0))));
+      for (const satir of kaynak) {
+        const satirDiv = document.createElement("div");
+        satirDiv.className = "ciro-yatay-satir";
+        const ad = document.createElement("div");
+        ad.className = "ad";
+        if (ciroMod === "detay") ad.textContent = grup === "stok" ? (satir.ad || satir.kod) : (satir.kod || "(boş)");
+        else ad.textContent = ciroKisaEtiket(satir.etiket) || satir.etiket;
+        ad.title = ad.textContent;
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        const dolu = document.createElement("i");
+        dolu.style.width = (Math.abs(Number(satir.ciro || 0)) / tavanDagilim * 100) + "%";
+        bar.appendChild(dolu);
+        const tutar = document.createElement("div");
+        tutar.className = "tutar";
+        tutar.textContent = para.format(Number(satir.ciro || 0));
+        satirDiv.appendChild(ad);
+        satirDiv.appendChild(bar);
+        satirDiv.appendChild(tutar);
+        dagilim.appendChild(satirDiv);
+      }
+      if (!kaynak.length) dagilim.textContent = "Dağılım yok.";
+    }
+
+    function ciroSirala(rows) {
+      return rows.slice().sort((a, b) => {
+        const av = a[ciroAlan];
+        const bv = b[ciroAlan];
+        if (typeof av === "string" || typeof bv === "string") {
+          return String(av || "").localeCompare(String(bv || ""), "tr", { sensitivity: "base" }) * ciroYon;
+        }
+        return ((Number(av) || 0) - (Number(bv) || 0)) * ciroYon;
+      });
+    }
+
+    function ciroCiz() {
+      ciroBaslikKur();
+      const ozet = ciroMod !== "detay";
+      document.getElementById("ciroDetayBar").hidden = ozet;
+      document.getElementById("ciroIpucu").textContent = ozet
+        ? "Satıra çift tıklayınca dönemin hareketleri açılır."
+        : "Stok satırına çift tıklayınca ürün paneli açılır.";
+      document.getElementById("ciroGrafikBolum").hidden = false;
+      const ham = ozet
+        ? ciroZaman.map((row) => {
+          const parca = ciroOzetEtiket(row);
+          return {
+            ...row,
+            yil: parca.yil,
+            ay: parca.ay,
+            etiket: parca.etiket,
+          };
+        })
+        : ciroDetaySatirlari;
+      const rows = ciroSirala(ham);
+      const govde = document.getElementById("ciroSatir");
+      govde.replaceChildren();
+      const seri = ciroSeriSec();
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        if (ozet) {
+          if (seri === "ay" || seri === "yil" || seri === "hafta") {
+            tr.appendChild(hucre(row.yil || ""));
+            const ay = hucre(row.ay || (seri === "yil" ? "Yıllık" : ""));
+            ay.classList.add("ad");
+            tr.appendChild(ay);
+          } else {
+            tr.appendChild(hucre(row.etiket || ""));
+          }
+          tr.appendChild(hucre(para.format(Number(row.satis || 0)), true));
+          tr.appendChild(hucre(para.format(Number(row.iade || 0)), true));
+          tr.appendChild(hucre(para.format(Number(row.ciro || 0)), true, Number(row.ciro) < 0));
+          tr.title = "Çift tıklayınca hareketler açılır";
+          tr.style.cursor = "pointer";
+          tr.ondblclick = () => {
+            ciroDetayAc(row.etiket).catch((error) => {
+              document.getElementById("ciroDurum").textContent = error.message;
+            });
+          };
+        } else {
+          const ozel = document.getElementById("ciroGrup").value !== "stok";
+          const kod = hucre(row.kod || "");
+          kod.classList.add("kod");
+          kod.title = row.kod || "";
+          const ad = hucre(row.ad || "");
+          ad.classList.add("ad");
+          ad.title = row.ad || "";
+          tr.appendChild(kod);
+          tr.appendChild(ad);
+          tr.appendChild(hucre(miktarFmt.format(Number(row.miktar || 0)), true, Number(row.miktar) < 0));
+          tr.appendChild(hucre(para.format(Number(row.satis || 0)), true));
+          tr.appendChild(hucre(para.format(Number(row.iade || 0)), true));
+          tr.appendChild(hucre(para.format(Number(row.ciro || 0)), true, Number(row.ciro) < 0));
+          if (!ozel) {
+            tr.title = "Çift tıklayınca ürün paneli açılır";
+            tr.style.cursor = "pointer";
+            tr.ondblclick = () => urunPaneli(row, tr);
+          }
+        }
+        govde.appendChild(tr);
+      }
+      document.querySelectorAll("#ciroThead .ok").forEach((ok) => { ok.textContent = ""; });
+      const aktif = document.querySelector(`#ciroThead button[data-alan="${ciroAlan}"] .ok`);
+      if (aktif) aktif.textContent = ciroYon > 0 ? "▲" : "▼";
+      const satis = rows.reduce((sum, row) => sum + Number(row.satis || 0), 0);
+      const iade = rows.reduce((sum, row) => sum + Number(row.iade || 0), 0);
+      const net = rows.reduce((sum, row) => sum + Number(row.ciro || 0), 0);
+      ciroKartGuncelle(
+        satis,
+        iade,
+        net,
+        ozet ? (rows.length + " dönem") : (rows.length + (document.getElementById("ciroGrup").value === "stok" ? " stok" : " sınıf"))
+      );
+      ciroGrafikCiz(ozet ? ciroZaman : rows.map((row) => ({
+        etiket: row.kod || row.ad,
+        ciro: row.ciro,
+        iade: row.iade,
+        satis: row.satis,
+      })), ozet ? ciroZaman : rows);
+    }
+
+    function ciroParams(ek = {}) {
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        bas: ek.bas || isoGunYazi(document.getElementById("ciroBas").value),
+        bit: ek.bit || isoGunYazi(document.getElementById("ciroBit").value),
+        grup: document.getElementById("ciroGrup").value || "stok",
+        seri: ek.seri || ciroSeriSec(),
+      });
+      if (ek.ozet) params.set("ozet", "1");
+      const q = document.getElementById("ciroAra").value.trim();
+      if (q) params.set("q", q);
+      document.querySelectorAll("#ciroOzelKodlar select").forEach((select) => {
+        if (select.value) params.set("ok" + select.dataset.kod, select.value);
+      });
+      return params;
+    }
+
+    async function ciroYukle() {
+      const no = ++ciroIstek;
+      ciroMod = "ozet";
+      ciroDetayEtiket = "";
+      document.getElementById("ciroDurum").textContent = "Hazırlanıyor…";
+      const body = await getir("/api/ciro?" + ciroParams({ ozet: "1" }));
+      if (no !== ciroIstek) return;
+      ciroZaman = body.zaman || [];
+      ciroDetaySatirlari = [];
+      ciroAlan = "etiket";
+      ciroYon = 1;
+      ciroCiz();
+    }
+
+    async function ciroDetayAc(etiket) {
+      const coz = ciroEtiketCoz(etiket);
+      const no = ++ciroIstek;
+      document.getElementById("ciroDetayBaslik").textContent = coz.baslik + " hareketleri";
+      document.getElementById("ciroDetayDurum").textContent = "Hazırlanıyor…";
+      document.getElementById("ciroDetayBar").hidden = false;
+      const body = await getir("/api/ciro?" + ciroParams({
+        bas: kasaTarihYazi(coz.bas),
+        bit: kasaTarihYazi(coz.bit),
+        seri: "gun",
+      }));
+      if (no !== ciroIstek) return;
+      ciroMod = "detay";
+      ciroDetayEtiket = etiket;
+      ciroDetaySatirlari = body.items || [];
+      ciroAlan = "ciro";
+      ciroYon = -1;
+      document.getElementById("ciroDetayDurum").textContent = ciroDetaySatirlari.length + " kalem";
+      ciroCiz();
+    }
+
+    function ciroDetayKapat() {
+      ciroMod = "ozet";
+      ciroDetayEtiket = "";
+      ciroDetaySatirlari = [];
+      ciroAlan = "etiket";
+      ciroYon = 1;
+      ciroCiz();
+    }
+
+    function ciroGrupSelectKur(gruplar) {
+      const select = document.getElementById("ciroGrup");
+      const onceki = select.value || "stok";
+      select.replaceChildren();
+      const stok = document.createElement("option");
+      stok.value = "stok";
+      stok.textContent = "Stok";
+      select.appendChild(stok);
+      for (const grup of gruplar || []) {
+        const option = document.createElement("option");
+        option.value = String(grup.no);
+        option.textContent = grup.ad || ("Özel " + grup.no);
+        select.appendChild(option);
+      }
+      if ([...select.options].some((option) => option.value === onceki)) select.value = onceki;
+    }
+
+    async function ciroOzelKodlariYukle() {
+      let gruplar = [];
+      try {
+        const body = await getir("/api/stok-ozel-kod?firma=" + oturum.firma);
+        gruplar = body.gruplar;
+      } catch { gruplar = []; }
+      ciroGruplar = gruplar || [];
+      ciroGrupSelectKur(ciroGruplar);
+      const kutu = document.getElementById("ciroOzelKodlar");
+      kutu.replaceChildren();
+      ozelKodSelectleri(kutu, ciroGruplar, () => {
+        ciroYukle().catch((error) => {
+          document.getElementById("ciroDurum").textContent = error.message;
+        });
+      });
+    }
+
+    async function ciroEkraniAc() {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("ciroRapor").hidden = false;
+      document.getElementById("ciroAra").value = "";
+      ciroDonemUygula("aylik");
+      try {
+        await ciroOzelKodlariYukle();
+        await ciroYukle();
+      } catch (error) {
+        document.getElementById("ciroDurum").textContent = error.message;
+      }
+    }
+
     document.getElementById("karlilikBtn").onclick = async () => {
       document.getElementById("menu").hidden = true;
       document.getElementById("cari").hidden = true;
@@ -4177,6 +5473,76 @@ ${"<" + "/script>"}</body></html>`);
         document.getElementById("durum").textContent = error.message;
       }
     };
+    document.getElementById("ciroBtn").onclick = () => ciroEkraniAc();
+    document.getElementById("ciroGeri").onclick = () => {
+      document.getElementById("ciroRapor").hidden = true;
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("ciroDetayGeri").onclick = () => ciroDetayKapat();
+    document.getElementById("ciroAralik").onclick = () => {
+      ciroDonem = "aralik";
+      document.querySelectorAll("#ciroRapor .araclar .kasa-gun[data-donem]").forEach((btn) => {
+        btn.classList.toggle("secili", btn.dataset.donem === "aralik");
+      });
+      ciroYukle().catch((error) => {
+        document.getElementById("ciroDurum").textContent = error.message;
+      });
+    };
+    document.querySelectorAll("#ciroRapor .araclar .kasa-gun[data-donem]").forEach((btn) => {
+      if (btn.dataset.donem === "aralik") return;
+      btn.onclick = () => {
+        ciroDonemUygula(btn.dataset.donem);
+        ciroYukle().catch((error) => {
+          document.getElementById("ciroDurum").textContent = error.message;
+        });
+      };
+    });
+    document.getElementById("ciroBas").onchange = () => {
+      if (ciroTarihKilit) return;
+      ciroDonem = "aralik";
+      document.querySelectorAll("#ciroRapor .araclar .kasa-gun[data-donem]").forEach((btn) => {
+        btn.classList.toggle("secili", btn.dataset.donem === "aralik");
+      });
+      ciroYukle().catch((error) => {
+        document.getElementById("ciroDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("ciroBit").onchange = () => {
+      if (ciroTarihKilit) return;
+      ciroDonem = "aralik";
+      document.querySelectorAll("#ciroRapor .araclar .kasa-gun[data-donem]").forEach((btn) => {
+        btn.classList.toggle("secili", btn.dataset.donem === "aralik");
+      });
+      ciroYukle().catch((error) => {
+        document.getElementById("ciroDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("ciroGrup").onchange = () => {
+      if (ciroMod === "detay" && ciroDetayEtiket) {
+        ciroDetayAc(ciroDetayEtiket).catch((error) => {
+          document.getElementById("ciroDurum").textContent = error.message;
+        });
+      } else {
+        ciroYukle().catch((error) => {
+          document.getElementById("ciroDurum").textContent = error.message;
+        });
+      }
+    };
+    let ciroAramaZaman = 0;
+    document.getElementById("ciroAra").addEventListener("input", () => {
+      clearTimeout(ciroAramaZaman);
+      ciroAramaZaman = setTimeout(() => {
+        if (ciroMod === "detay" && ciroDetayEtiket) {
+          ciroDetayAc(ciroDetayEtiket).catch((error) => {
+            document.getElementById("ciroDurum").textContent = error.message;
+          });
+        } else {
+          ciroYukle().catch((error) => {
+            document.getElementById("ciroDurum").textContent = error.message;
+          });
+        }
+      }, 250);
+    });
     document.getElementById("maliyetDegerBtn").onclick = () => maliyetEkraniAc();
     document.getElementById("maliyetGeri").onclick = () => {
       document.getElementById("maliyetDetay").hidden = true;
@@ -4260,6 +5626,956 @@ ${"<" + "/script>"}</body></html>`);
       kasaEkraniKapat();
       document.getElementById("menu").hidden = false;
     };
+
+    let acikBorcHam = [];
+    let acikBorcAlan = "kod";
+    let acikBorcYon = 1;
+    let acikBorcIstek = 0;
+
+    function acikBorcTarihSayi(yazi) {
+      const [gun, ay, yil] = String(yazi || "").split(".");
+      const n = Number(yil) * 10000 + Number(ay) * 100 + Number(gun);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function acikBorcCiz() {
+      const rows = acikBorcHam.slice().sort((a, b) => {
+        const alan = acikBorcAlan;
+        let sonuc = 0;
+        if (alan === "tarih" || alan === "vade") sonuc = acikBorcTarihSayi(a[alan]) - acikBorcTarihSayi(b[alan]);
+        else if (typeof a[alan] === "number" || typeof b[alan] === "number") sonuc = (Number(a[alan]) || 0) - (Number(b[alan]) || 0);
+        else sonuc = String(a[alan] || "").localeCompare(String(b[alan] || ""), "tr", { sensitivity: "base" });
+        return sonuc * acikBorcYon;
+      });
+      const govde = document.getElementById("acikBorcSatir");
+      govde.replaceChildren();
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        const kodYazi = String(row.kod || "");
+        const kod = hucre(kodYazi.length > 14 ? kodYazi.slice(0, 14) : kodYazi);
+        kod.classList.add("kod");
+        kod.title = kodYazi;
+        tr.appendChild(kod);
+        const ad = hucre(row.ad || "");
+        ad.classList.add("ad");
+        ad.title = row.ad || "";
+        tr.appendChild(ad);
+        tr.appendChild(hucre(row.tarih || ""));
+        tr.appendChild(hucre(row.vade || ""));
+        tr.appendChild(hucre(row.evrakNo || ""));
+        tr.appendChild(hucre(para.format(Number(row.tutar || 0)), true));
+        tr.appendChild(hucre(para.format(Number(row.odenen || 0)), true));
+        tr.appendChild(hucre(para.format(Number(row.kalan || 0)), true, Number(row.kalan) < 0));
+        tr.appendChild(hucre(row.pb || "TL"));
+        tr.title = "Çift tıklayınca belge açılır";
+        tr.style.cursor = "pointer";
+        tr.ondblclick = () => belgePenceresi({
+          izahat: row.izahat,
+          belgeNo: row.belgeNo,
+          evrakNo: /\d+\s+belge/.test(String(row.evrakNo || "")) ? "" : row.evrakNo,
+        });
+        govde.appendChild(tr);
+      }
+      document.querySelectorAll("#acikBorc thead .ok").forEach((ok) => { ok.textContent = ""; });
+      const aktif = document.querySelector(`#acikBorc thead button[data-alan="${acikBorcAlan}"] .ok`);
+      if (aktif) aktif.textContent = acikBorcYon > 0 ? "▲" : "▼";
+      const tutar = rows.reduce((sum, row) => sum + Number(row.tutar || 0), 0);
+      const odenen = rows.reduce((sum, row) => sum + Number(row.odenen || 0), 0);
+      const kalan = rows.reduce((sum, row) => sum + Number(row.kalan || 0), 0);
+      document.getElementById("acikBorcTutarTop").textContent = para.format(tutar);
+      document.getElementById("acikBorcOdenenTop").textContent = para.format(odenen);
+      document.getElementById("acikBorcKalanTop").textContent = para.format(kalan);
+      document.getElementById("acikBorcDurum").textContent = rows.length + " belge";
+    }
+
+    async function acikBorcYukle() {
+      const no = ++acikBorcIstek;
+      document.getElementById("acikBorcDurum").textContent = "Hazırlanıyor…";
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        kalan: document.getElementById("acikBorcKalan").checked ? "1" : "0",
+      });
+      const q = document.getElementById("acikBorcAra").value.trim();
+      if (q) params.set("q", q);
+      const body = await getir("/api/acik-borc?" + params);
+      if (no !== acikBorcIstek) return;
+      acikBorcHam = (body.items || []).map((row) => ({
+        ...row,
+        izahatAd: IZAHAT[row.izahat] || String(row.izahat || ""),
+      }));
+      acikBorcCiz();
+    }
+
+    async function acikBorcEkraniAc() {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("acikBorc").hidden = false;
+      try {
+        await acikBorcYukle();
+      } catch (error) {
+        document.getElementById("acikBorcDurum").textContent = error.message;
+      }
+    }
+
+    document.getElementById("acikBorcBtn").onclick = () => acikBorcEkraniAc();
+    document.getElementById("acikBorcGeri").onclick = () => {
+      document.getElementById("acikBorc").hidden = true;
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("acikBorcKalan").onchange = () => {
+      acikBorcYukle().catch((error) => {
+        document.getElementById("acikBorcDurum").textContent = error.message;
+      });
+    };
+    let acikBorcAramaZaman = 0;
+    document.getElementById("acikBorcAra").addEventListener("input", () => {
+      clearTimeout(acikBorcAramaZaman);
+      acikBorcAramaZaman = setTimeout(() => {
+        acikBorcYukle().catch((error) => {
+          document.getElementById("acikBorcDurum").textContent = error.message;
+        });
+      }, 250);
+    });
+    document.querySelectorAll("#acikBorc thead button").forEach((btn) => {
+      btn.onclick = () => {
+        const alan = btn.dataset.alan;
+        if (acikBorcAlan === alan) acikBorcYon *= -1;
+        else {
+          acikBorcAlan = alan;
+          acikBorcYon = alan === "kod" || alan === "ad" || alan === "evrakNo" || alan === "pb" ? 1 : -1;
+        }
+        acikBorcCiz();
+      };
+    });
+
+    let odemeTakvimAy = new Date();
+    odemeTakvimAy.setDate(1);
+    let odemeTakvimIstek = 0;
+    let odemeTakvimPopupSabit = false;
+    let odemeTakvimPopupGun = "";
+    let hatirlatmaSeciliId = "";
+    let odemeTakvimSonGunler = {};
+    let hatirlatmaCache = [];
+    const TAKVIM_GUN = ["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"];
+    const TAKVIM_AY = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    const TAKVIM_TUR = { cek: "Çek", senet: "Senet", visa: "Visa" };
+    const TAKVIM_YON = { tahsilat: "Tahsilat", odeme: "Ödeme" };
+
+    function odemeTakvimAyKodu(tarih) {
+      return tarih.getFullYear() + "-" + String(tarih.getMonth() + 1).padStart(2, "0");
+    }
+
+    function hatirlatmalarOku() {
+      return hatirlatmaCache;
+    }
+
+    function hatirlatmaGunListe(gun) {
+      return hatirlatmalarOku().filter((item) => item.gun === gun && !item.gonderildi);
+    }
+
+    async function hatirlatmalariYukle() {
+      const body = await getir("/api/hatirlatma");
+      hatirlatmaCache = body.items || [];
+      try {
+        const eski = JSON.parse(localStorage.getItem("vegaHatirlatma") || "[]");
+        if (Array.isArray(eski) && eski.length && !hatirlatmaCache.length) {
+          for (const item of eski) {
+            if (!item?.gun || !item?.metin) continue;
+            await getir("/api/hatirlatma", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                gun: item.gun,
+                saat: item.saat || "09:00",
+                metin: item.metin,
+              }),
+            });
+          }
+          localStorage.removeItem("vegaHatirlatma");
+          const yenile = await getir("/api/hatirlatma");
+          hatirlatmaCache = yenile.items || [];
+        }
+      } catch { /* eski kayıt yok */ }
+      return hatirlatmaCache;
+    }
+
+    function hatirlatmaSimdiSaat() {
+      const t = new Date();
+      return String(t.getHours()).padStart(2, "0") + ":" + String(t.getMinutes()).padStart(2, "0");
+    }
+
+    function hatirlatmaOnceKur() {
+      const aktif = document.getElementById("hatirlatmaOnceAktif").checked;
+      document.getElementById("hatirlatmaOnceGunLbl").hidden = !aktif;
+      if (aktif && !Number(document.getElementById("hatirlatmaOnceGun").value)) {
+        document.getElementById("hatirlatmaOnceGun").value = "1";
+      }
+    }
+
+    function hatirlatmaOnceDeger() {
+      if (!document.getElementById("hatirlatmaOnceAktif").checked) return 0;
+      const n = Number(document.getElementById("hatirlatmaOnceGun").value);
+      if (!Number.isFinite(n) || n < 1) return 1;
+      return Math.min(30, Math.floor(n));
+    }
+
+    function hatirlatmaOnceYukle(item) {
+      const n = Number(item?.onceGun) || 0;
+      document.getElementById("hatirlatmaOnceAktif").checked = n > 0;
+      document.getElementById("hatirlatmaOnceGun").value = String(n > 0 ? n : 1);
+      hatirlatmaOnceKur();
+    }
+
+    function hatirlatmaAc(gun, seciliId) {
+      hatirlatmaSeciliId = "";
+      document.getElementById("hatirlatmaTarih").value = gun;
+      document.getElementById("hatirlatmaSaat").value = hatirlatmaSimdiSaat();
+      document.getElementById("hatirlatmaMetin").value = "";
+      document.getElementById("hatirlatmaSil").hidden = true;
+      hatirlatmaOnceYukle(null);
+      document.getElementById("hatirlatmaBaslik").textContent = "Hatırlatma · " + gun.split("-").reverse().join(".");
+      const liste = document.getElementById("hatirlatmaListe");
+      liste.replaceChildren();
+      for (const item of hatirlatmaGunListe(gun)) {
+        if (item.onceAnaId) continue;
+        const satir = document.createElement("button");
+        satir.type = "button";
+        satir.className = "item";
+        const onceYazi = item.onceGun ? (" · " + item.onceGun + "g önce") : "";
+        satir.textContent = (item.saat || "") + " · " + (item.metin || "") + onceYazi;
+        const sec = () => {
+          hatirlatmaSeciliId = item.id;
+          document.getElementById("hatirlatmaTarih").value = item.gun;
+          document.getElementById("hatirlatmaSaat").value = item.saat || hatirlatmaSimdiSaat();
+          document.getElementById("hatirlatmaMetin").value = item.metin || "";
+          document.getElementById("hatirlatmaSil").hidden = false;
+          hatirlatmaOnceYukle(item);
+        };
+        satir.onclick = sec;
+        if (seciliId && String(item.id) === String(seciliId)) sec();
+        liste.appendChild(satir);
+      }
+      document.getElementById("hatirlatmaKutu").hidden = false;
+      document.getElementById("hatirlatmaMetin").focus();
+    }
+
+    function hatirlatmaKapat() {
+      document.getElementById("hatirlatmaKutu").hidden = true;
+      hatirlatmaSeciliId = "";
+    }
+
+    async function hatirlatmaKaydet() {
+      const gun = document.getElementById("hatirlatmaTarih").value;
+      const saat = document.getElementById("hatirlatmaSaat").value || hatirlatmaSimdiSaat();
+      const metin = document.getElementById("hatirlatmaMetin").value.trim();
+      const onceGun = hatirlatmaOnceDeger();
+      if (!gun || !metin) {
+        document.getElementById("odemeTakvimDurum").textContent = "Tarih ve not gerekli.";
+        return;
+      }
+      try {
+        const body = await getir("/api/hatirlatma", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: hatirlatmaSeciliId || undefined,
+            gun,
+            saat,
+            metin,
+            onceGun,
+          }),
+        });
+        hatirlatmaCache = body.items || [];
+        hatirlatmaKapat();
+        odemeTakvimCiz(odemeTakvimSonGunler);
+        document.getElementById("odemeTakvimDurum").textContent = body.uyari
+          ? body.uyari
+          : (onceGun ? ("Hatırlatma kaydedildi · " + onceGun + " gün önce de uyaracak.") : "Hatırlatma Windows’a kaydedildi.");
+      } catch (error) {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      }
+    }
+
+    async function hatirlatmaSil() {
+      if (!hatirlatmaSeciliId) return;
+      try {
+        const body = await getir("/api/hatirlatma?id=" + encodeURIComponent(hatirlatmaSeciliId), {
+          method: "DELETE",
+        });
+        hatirlatmaCache = body.items || [];
+        hatirlatmaKapat();
+        odemeTakvimCiz(odemeTakvimSonGunler);
+        document.getElementById("odemeTakvimDurum").textContent = "Hatırlatma silindi.";
+      } catch (error) {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      }
+    }
+
+    (function hatirlatmaTopluGunDoldur() {
+      const sel = document.getElementById("hatirlatmaTopluAyGunu");
+      for (let i = 1; i <= 31; i += 1) {
+        const opt = document.createElement("option");
+        opt.value = String(i);
+        opt.textContent = String(i);
+        sel.appendChild(opt);
+      }
+      sel.value = "1";
+    })();
+
+    function hatirlatmaTopluPeriyotKur() {
+      const periyot = document.getElementById("hatirlatmaTopluPeriyot").value;
+      document.getElementById("hatirlatmaTopluAySatir").hidden = periyot === "gunluk";
+      document.getElementById("hatirlatmaTopluAyGunu").closest("label").hidden = periyot !== "aylik";
+      document.getElementById("hatirlatmaTopluHaftaLbl").hidden = periyot !== "haftalik";
+      hatirlatmaTopluOzetGuncelle();
+    }
+
+    function hatirlatmaTopluBitisKur() {
+      const tarihMi = document.getElementById("hatirlatmaTopluBitisMod").value === "tarih";
+      document.getElementById("hatirlatmaTopluBitisLbl").hidden = !tarihMi;
+      hatirlatmaTopluOzetGuncelle();
+    }
+
+    function hatirlatmaTopluOzetGuncelle() {
+      const periyot = document.getElementById("hatirlatmaTopluPeriyot").value;
+      const bas = document.getElementById("hatirlatmaTopluBas").value;
+      const yilBoyu = document.getElementById("hatirlatmaTopluBitisMod").value === "yil";
+      const bitis = document.getElementById("hatirlatmaTopluBitis").value;
+      const ayGunu = document.getElementById("hatirlatmaTopluAyGunu").value;
+      const hafta = document.getElementById("hatirlatmaTopluHaftaGunu");
+      const haftaAd = hafta.options[hafta.selectedIndex]?.textContent || "";
+      let yazi = "";
+      if (periyot === "aylik") yazi = "Her ayın " + ayGunu + ". günü";
+      else if (periyot === "haftalik") yazi = "Her " + haftaAd;
+      else yazi = "Her gün";
+      if (bas) {
+        yazi += " · " + bas.split("-").reverse().join(".") + " itibaren";
+        if (yilBoyu) yazi += ", yıl sonuna kadar";
+        else if (bitis) yazi += ", " + bitis.split("-").reverse().join(".") + " tarihine kadar";
+      }
+      document.getElementById("hatirlatmaTopluOzet").textContent = yazi || "Periyot ve tarih aralığını seçin.";
+    }
+
+    function hatirlatmaTopluAc() {
+      const bugun = new Date();
+      const gunKod = bugun.getFullYear() + "-" + String(bugun.getMonth() + 1).padStart(2, "0") + "-" + String(bugun.getDate()).padStart(2, "0");
+      document.getElementById("hatirlatmaTopluMetin").value = "";
+      document.getElementById("hatirlatmaTopluSaat").value = hatirlatmaSimdiSaat();
+      document.getElementById("hatirlatmaTopluPeriyot").value = "aylik";
+      document.getElementById("hatirlatmaTopluAyGunu").value = String(bugun.getDate());
+      document.getElementById("hatirlatmaTopluHaftaGunu").value = String(bugun.getDay());
+      document.getElementById("hatirlatmaTopluBas").value = gunKod;
+      document.getElementById("hatirlatmaTopluBitisMod").value = "yil";
+      document.getElementById("hatirlatmaTopluBitis").value = bugun.getFullYear() + "-12-31";
+      hatirlatmaTopluPeriyotKur();
+      hatirlatmaTopluBitisKur();
+      document.getElementById("hatirlatmaTopluKutu").hidden = false;
+      document.getElementById("hatirlatmaTopluMetin").focus();
+    }
+
+    function hatirlatmaTopluKapat() {
+      document.getElementById("hatirlatmaTopluKutu").hidden = true;
+    }
+
+    async function hatirlatmaTopluKaydet() {
+      const metin = document.getElementById("hatirlatmaTopluMetin").value.trim();
+      const saat = document.getElementById("hatirlatmaTopluSaat").value || hatirlatmaSimdiSaat();
+      const periyot = document.getElementById("hatirlatmaTopluPeriyot").value;
+      const baslangic = document.getElementById("hatirlatmaTopluBas").value;
+      const yilBoyu = document.getElementById("hatirlatmaTopluBitisMod").value === "yil";
+      const bitis = document.getElementById("hatirlatmaTopluBitis").value;
+      if (!metin || !baslangic) {
+        document.getElementById("odemeTakvimDurum").textContent = "Not ve başlangıç tarihi gerekli.";
+        return;
+      }
+      if (!yilBoyu && !bitis) {
+        document.getElementById("odemeTakvimDurum").textContent = "Bitiş tarihi seçin.";
+        return;
+      }
+      document.getElementById("odemeTakvimDurum").textContent = "Toplu hatırlatma kaydediliyor…";
+      try {
+        const body = await getir("/api/hatirlatma-toplu", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            metin,
+            saat,
+            periyot,
+            baslangic,
+            yilBoyu,
+            bitis: yilBoyu ? undefined : bitis,
+            ayGunu: Number(document.getElementById("hatirlatmaTopluAyGunu").value) || 1,
+            haftaGunu: Number(document.getElementById("hatirlatmaTopluHaftaGunu").value),
+          }),
+        });
+        hatirlatmaCache = body.items || [];
+        hatirlatmaTopluKapat();
+        odemeTakvimCiz(odemeTakvimSonGunler);
+        document.getElementById("odemeTakvimDurum").textContent = body.uyari
+          ? ((body.adet || 0) + " kayıt · " + body.uyari)
+          : ((body.adet || 0) + " hatırlatma oluşturuldu.");
+      } catch (error) {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      }
+    }
+
+    let googleDurumCache = { ayarli: false, bagli: false, email: "", redirectUri: "" };
+
+    function googleDurumYansit(durum) {
+      googleDurumCache = durum || googleDurumCache;
+      const btn = document.getElementById("odemeTakvimGoogleBtn");
+      btn.classList.toggle("bagli", Boolean(googleDurumCache.bagli));
+      document.getElementById("googleBaglan").hidden = Boolean(googleDurumCache.bagli);
+      document.getElementById("googleSenkron").hidden = !googleDurumCache.bagli;
+      document.getElementById("googleKopar").hidden = !googleDurumCache.bagli;
+      if (googleDurumCache.redirectUri) {
+        document.getElementById("googleRedirectUri").textContent = googleDurumCache.redirectUri;
+      }
+      document.getElementById("googleAutoSync").checked = googleDurumCache.autoSync !== false;
+      const dk = String(googleDurumCache.autoSyncDk || 15);
+      const sel = document.getElementById("googleAutoSyncDk");
+      if (![...sel.options].some((o) => o.value === dk)) {
+        const opt = document.createElement("option");
+        opt.value = dk;
+        opt.textContent = dk + " dakika";
+        sel.appendChild(opt);
+      }
+      sel.value = dk;
+      let yazi = "Google ayarları eksik.";
+      if (googleDurumCache.bagli) {
+        yazi = "Bağlı" + (googleDurumCache.email ? ": " + googleDurumCache.email : "");
+        if (googleDurumCache.autoSync !== false) {
+          yazi += " · Otomatik senkron: " + (googleDurumCache.autoSyncDk || 15) + " dk";
+        } else {
+          yazi += " · Otomatik senkron kapalı";
+        }
+        const son = googleDurumCache.sonSenkron;
+        if (son?.zaman) {
+          const t = new Date(son.zaman);
+          const p = (n) => String(n).padStart(2, "0");
+          yazi += " · Son: " + p(t.getHours()) + ":" + p(t.getMinutes());
+          if (son.hata) yazi += " (hata)";
+          else if (son.eklenen != null) yazi += " (+" + (son.eklenen || 0) + "/" + (son.guncellenen || 0) + ")";
+        }
+      } else if (googleDurumCache.ayarli) yazi = "Kimlik bilgileri kayıtlı. Google ile bağla’ya basın.";
+      document.getElementById("googleDurumYazi").textContent = yazi;
+    }
+
+    async function googleAutoAyarKaydet() {
+      const durum = await getir("/api/google/ayar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          autoSync: document.getElementById("googleAutoSync").checked,
+          autoSyncDk: Number(document.getElementById("googleAutoSyncDk").value) || 15,
+        }),
+      });
+      googleDurumYansit(durum);
+      document.getElementById("odemeTakvimDurum").textContent =
+        durum.autoSync === false
+          ? "Otomatik Google senkron kapalı."
+          : ("Otomatik Google senkron: " + (durum.autoSyncDk || 15) + " dk");
+    }
+
+    async function googleDurumYukle() {
+      const durum = await getir("/api/google/durum");
+      googleDurumYansit(durum);
+      return durum;
+    }
+
+    async function googlePanelAc() {
+      document.getElementById("googleKutu").hidden = false;
+      document.getElementById("googleDurumYazi").textContent = "Durum yükleniyor…";
+      try {
+        const durum = await googleDurumYukle();
+        if (durum.redirectUri) document.getElementById("googleRedirectUri").textContent = durum.redirectUri;
+      } catch (error) {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      }
+    }
+
+    function googlePanelKapat() {
+      document.getElementById("googleKutu").hidden = true;
+    }
+
+    async function googleAyarKaydet() {
+      const clientId = document.getElementById("googleClientId").value.trim();
+      const clientSecret = document.getElementById("googleClientSecret").value.trim();
+      if (!clientId || !clientSecret) {
+        document.getElementById("googleDurumYazi").textContent = "Client ID ve Client Secret gerekli.";
+        return;
+      }
+      const durum = await getir("/api/google/ayar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId, clientSecret }),
+      });
+      document.getElementById("googleClientSecret").value = "";
+      googleDurumYansit(durum);
+      document.getElementById("odemeTakvimDurum").textContent = "Google kimlik bilgileri kaydedildi.";
+    }
+
+    async function googleJsonIcerikYukle(jsonText) {
+      const durum = await getir("/api/google/ayar-json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ json: jsonText }),
+      });
+      if (durum.clientId) document.getElementById("googleClientId").value = durum.clientId;
+      document.getElementById("googleClientSecret").value = "";
+      googleDurumYansit(durum);
+      document.getElementById("googleDurumYazi").textContent =
+        (durum.uyari ? durum.uyari + " " : "") + "JSON yüklendi. Şimdi Google ile bağla’ya basın.";
+      document.getElementById("odemeTakvimDurum").textContent = "Google JSON kaydedildi.";
+    }
+
+    async function googleJsonDosyadanYukle() {
+      const input = document.getElementById("googleJsonDosya");
+      const dosya = input.files && input.files[0];
+      if (!dosya) {
+        document.getElementById("googleDurumYazi").textContent = "Önce client_secret JSON dosyasını seçin.";
+        return;
+      }
+      const text = await dosya.text();
+      await googleJsonIcerikYukle(text);
+    }
+
+    async function googleJsonIndirilenYukle() {
+      const durum = await getir("/api/google/ayar-json", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ indirilen: true }),
+      });
+      if (durum.clientId) document.getElementById("googleClientId").value = durum.clientId;
+      document.getElementById("googleClientSecret").value = "";
+      googleDurumYansit(durum);
+      document.getElementById("googleDurumYazi").textContent =
+        (durum.uyari ? durum.uyari + " " : "") + "Downloads JSON yüklendi. Google ile bağla’ya basın.";
+      document.getElementById("odemeTakvimDurum").textContent = "Google JSON kaydedildi.";
+    }
+
+    async function googleBaglan() {
+      document.getElementById("googleDurumYazi").textContent = "Tarayıcıda Google oturumu açılıyor…";
+      await getir("/api/google/baglan", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      document.getElementById("googleDurumYazi").textContent = "Google penceresinde izin verin; ardından buradan Senkronize edin.";
+      let deneme = 0;
+      const zaman = setInterval(() => {
+        deneme += 1;
+        googleDurumYukle().then((durum) => {
+          if (durum.bagli) {
+            clearInterval(zaman);
+            document.getElementById("odemeTakvimDurum").textContent = "Google bağlandı.";
+          }
+        }).catch(() => {});
+        if (deneme >= 40) clearInterval(zaman);
+      }, 2000);
+    }
+
+    async function googleSenkron() {
+      document.getElementById("googleDurumYazi").textContent = "Google Takvim’e aktarılıyor…";
+      document.getElementById("odemeTakvimDurum").textContent = "Google senkron…";
+      const body = await getir("/api/google/senkron", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      if (body.durum) googleDurumYansit(body.durum);
+      let ozet = "Google: +" + (body.eklenen || 0) + " yeni, " + (body.guncellenen || 0) + " güncellendi"
+        + (body.hata ? ", " + body.hata + " hata" : "");
+      if (body.hatalar && body.hatalar.length) {
+        ozet += " · " + body.hatalar[0];
+      }
+      document.getElementById("googleDurumYazi").textContent = ozet;
+      document.getElementById("odemeTakvimDurum").textContent = ozet;
+      odemeTakvimCiz(odemeTakvimSonGunler);
+    }
+
+    async function googleKopar() {
+      const durum = await getir("/api/google/kopar", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      googleDurumYansit(durum);
+      document.getElementById("odemeTakvimDurum").textContent = "Google bağlantısı kesildi.";
+    }
+
+    document.getElementById("odemeTakvimGoogleBtn").onclick = () => {
+      googlePanelAc().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("googleIptal").onclick = () => googlePanelKapat();
+    document.getElementById("googleAyarKaydet").onclick = () => {
+      googleAyarKaydet().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleJsonYukle").onclick = () => {
+      googleJsonDosyadanYukle().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleJsonIndirilen").onclick = () => {
+      googleJsonIndirilenYukle().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleJsonDosya").onchange = () => {
+      if (document.getElementById("googleJsonDosya").files?.length) {
+        googleJsonDosyadanYukle().catch((error) => {
+          document.getElementById("googleDurumYazi").textContent = error.message;
+        });
+      }
+    };
+    document.getElementById("googleBaglan").onclick = () => {
+      googleBaglan().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleSenkron").onclick = () => {
+      googleSenkron().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("googleKopar").onclick = () => {
+      googleKopar().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleAutoKaydet").onclick = () => {
+      googleAutoAyarKaydet().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+
+    document.getElementById("odemeTakvimTopluBtn").onclick = () => hatirlatmaTopluAc();
+    document.getElementById("hatirlatmaTopluIptal").onclick = () => hatirlatmaTopluKapat();
+    document.getElementById("hatirlatmaTopluKaydet").onclick = () => {
+      hatirlatmaTopluKaydet().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("hatirlatmaTopluPeriyot").onchange = () => hatirlatmaTopluPeriyotKur();
+    document.getElementById("hatirlatmaTopluBitisMod").onchange = () => hatirlatmaTopluBitisKur();
+    ["hatirlatmaTopluBas", "hatirlatmaTopluBitis", "hatirlatmaTopluAyGunu", "hatirlatmaTopluHaftaGunu"].forEach((id) => {
+      document.getElementById(id).addEventListener("change", hatirlatmaTopluOzetGuncelle);
+    });
+
+    document.getElementById("hatirlatmaOnceAktif").onchange = () => hatirlatmaOnceKur();
+    document.getElementById("hatirlatmaIptal").onclick = () => hatirlatmaKapat();
+    document.getElementById("hatirlatmaKaydet").onclick = () => {
+      hatirlatmaKaydet().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("hatirlatmaSil").onclick = () => {
+      hatirlatmaSil().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("hatirlatmaToastKapat").onclick = () => {
+      document.getElementById("hatirlatmaToast").hidden = true;
+    };
+    document.getElementById("hatirlatmaKutu").addEventListener("click", (event) => {
+      if (event.target.id === "hatirlatmaKutu") hatirlatmaKapat();
+    });
+
+    function odemeTakvimPopupKapat() {
+      odemeTakvimPopupSabit = false;
+      odemeTakvimPopupGun = "";
+      const popup = document.getElementById("odemeTakvimPopup");
+      popup.hidden = true;
+      popup.classList.remove("sabit");
+      document.querySelectorAll("#odemeTakvimGrid .takvim-gun.sabit").forEach((el) => el.classList.remove("sabit"));
+    }
+
+    function odemeTakvimPopupGoster(event, gunYazi, kayitlar, sabit) {
+      const popup = document.getElementById("odemeTakvimPopup");
+      if (!kayitlar?.length) {
+        odemeTakvimPopupKapat();
+        return;
+      }
+      if (odemeTakvimPopupSabit && !sabit && odemeTakvimPopupGun !== gunYazi) return;
+      const parca = document.createDocumentFragment();
+      const baslik = document.createElement("b");
+      baslik.textContent = gunYazi.split("-").reverse().join(".") + (sabit || odemeTakvimPopupSabit ? " · sabit" : "");
+      parca.appendChild(baslik);
+      for (const kayit of kayitlar) {
+        const satir = document.createElement("div");
+        satir.className = "satir";
+        const tur = document.createElement("span");
+        const turSinif = kayit.takas ? "takas" : kayit.tur;
+        tur.className = "tur " + turSinif;
+        tur.textContent = (kayit.takas ? "Takas" : (TAKVIM_TUR[kayit.tur] || kayit.tur)) + " " + (TAKVIM_YON[kayit.yon] || "");
+        const kim = document.createElement("span");
+        kim.className = "kim";
+        kim.textContent = kayit.firma || "—";
+        kim.title = [kayit.firma, kayit.keside, kayit.belge].filter(Boolean).join(" · ");
+        const tutar = document.createElement("span");
+        tutar.className = "tutar";
+        tutar.textContent = para.format(Number(kayit.tutar || 0)) + " ₺";
+        satir.appendChild(tur);
+        satir.appendChild(kim);
+        satir.appendChild(tutar);
+        parca.appendChild(satir);
+      }
+      popup.replaceChildren(parca);
+      popup.hidden = false;
+      popup.classList.toggle("sabit", Boolean(sabit || odemeTakvimPopupSabit));
+      const genislik = Math.min(380, window.innerWidth - 24);
+      let left = event.clientX + 14;
+      let top = event.clientY + 14;
+      if (left + genislik > window.innerWidth - 8) left = Math.max(8, event.clientX - genislik - 12);
+      if (top + 220 > window.innerHeight - 8) top = Math.max(8, window.innerHeight - 240);
+      popup.style.left = left + "px";
+      popup.style.top = top + "px";
+    }
+
+    function odemeTakvimRenkSinif(kayitlar) {
+      const siniflar = [...new Set(kayitlar.map((k) => (k.takas ? "takas" : (k.tur || "cek"))))];
+      if (siniflar.length > 1) return "karisik";
+      return siniflar[0] || "cek";
+    }
+
+    function odemeTakvimAyCiz(konteyner, tarih, gunler, sira) {
+      const yil = tarih.getFullYear();
+      const ay = tarih.getMonth();
+      const ayKutu = document.createElement("div");
+      ayKutu.className = "takvim-ay";
+      const ayAd = document.createElement("div");
+      ayAd.className = "takvim-ay-ad";
+      ayAd.textContent = TAKVIM_AY[ay] + " " + yil;
+      ayKutu.appendChild(ayAd);
+      const grid = document.createElement("div");
+      grid.className = "takvim-grid";
+      for (const ad of TAKVIM_GUN) {
+        const baslik = document.createElement("div");
+        baslik.className = "takvim-baslik";
+        baslik.textContent = ad;
+        grid.appendChild(baslik);
+      }
+      const baslangic = (new Date(yil, ay, 1).getDay() + 6) % 7;
+      const gunSayisi = new Date(yil, ay + 1, 0).getDate();
+      const bugun = new Date();
+      const bugunKod = bugun.getFullYear() + "-" + String(bugun.getMonth() + 1).padStart(2, "0") + "-" + String(bugun.getDate()).padStart(2, "0");
+      let adet = 0;
+      for (let i = 0; i < baslangic; i += 1) {
+        const bos = document.createElement("div");
+        bos.className = "takvim-gun baska";
+        grid.appendChild(bos);
+      }
+      for (let gun = 1; gun <= gunSayisi; gun += 1) {
+        const kod = yil + "-" + String(ay + 1).padStart(2, "0") + "-" + String(gun).padStart(2, "0");
+        const kayitlar = gunler[kod] || [];
+        adet += kayitlar.length;
+        const kutu = document.createElement("div");
+        const doluSinif = kayitlar.length ? " dolu " + odemeTakvimRenkSinif(kayitlar) : "";
+        const hatirlatmalar = hatirlatmaGunListe(kod);
+        kutu.className = "takvim-gun"
+          + (kod === bugunKod ? " bugun" : "")
+          + doluSinif
+          + (hatirlatmalar.length ? " hatirlatma" : "");
+        kutu.title = kayitlar.length
+          ? "Tıkla: işlemler · Çift tık: bu güne hatırlatma"
+          : "Tıkla: bu güne hatırlatma";
+        const no = document.createElement("span");
+        no.className = "gun-no";
+        no.textContent = String(gun);
+        kutu.appendChild(no);
+        kutu.ondblclick = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          odemeTakvimPopupKapat();
+          hatirlatmaAc(kod);
+        };
+        if (kayitlar.length) {
+          const sayac = document.createElement("span");
+          sayac.className = "gun-adet";
+          sayac.textContent = kayitlar.length + " işl.";
+          kutu.appendChild(sayac);
+          kutu.onmouseenter = (event) => {
+            if (!odemeTakvimPopupSabit) odemeTakvimPopupGoster(event, kod, kayitlar, false);
+          };
+          kutu.onmousemove = (event) => {
+            if (!odemeTakvimPopupSabit) odemeTakvimPopupGoster(event, kod, kayitlar, false);
+          };
+          kutu.onmouseleave = () => {
+            if (!odemeTakvimPopupSabit) document.getElementById("odemeTakvimPopup").hidden = true;
+          };
+          kutu.onclick = (event) => {
+            event.stopPropagation();
+            document.querySelectorAll("#odemeTakvimGrid .takvim-gun.sabit").forEach((el) => el.classList.remove("sabit"));
+            if (odemeTakvimPopupSabit && odemeTakvimPopupGun === kod) {
+              odemeTakvimPopupKapat();
+              return;
+            }
+            odemeTakvimPopupSabit = true;
+            odemeTakvimPopupGun = kod;
+            kutu.classList.add("sabit");
+            odemeTakvimPopupGoster(event, kod, kayitlar, true);
+          };
+        } else {
+          kutu.style.cursor = "pointer";
+          kutu.onclick = (event) => {
+            event.stopPropagation();
+            odemeTakvimPopupKapat();
+            hatirlatmaAc(kod);
+          };
+        }
+        grid.appendChild(kutu);
+      }
+      ayKutu.appendChild(grid);
+      const notlar = document.createElement("div");
+      notlar.className = "takvim-ay-notlar";
+      const ayOn = yil + "-" + String(ay + 1).padStart(2, "0");
+      const bugunStr = (() => {
+        const t = new Date();
+        return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+      })();
+      const ayTum = hatirlatmalarOku()
+        .filter((item) => item && String(item.gun || "").startsWith(ayOn))
+        .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
+      const ayAktif = ayTum.filter((item) => !item.gonderildi && String(item.gun) >= bugunStr);
+      const ayGecmis = ayTum.filter((item) => item.gonderildi || String(item.gun) < bugunStr);
+      const notSatirYap = (item, gecmisMi) => {
+        const satir = document.createElement("div");
+        satir.className = "not-satir" + (gecmisMi ? " gecmis" : "");
+        satir.title = "Düzenlemek için tıkla · Hatırlatma: " + String(item.gun || "").split("-").reverse().join(".");
+        const g = document.createElement("span");
+        g.className = "gun";
+        g.textContent = String(item.gun || "").split("-").reverse().join(".");
+        const s = document.createElement("span");
+        s.className = "saat";
+        s.textContent = item.saat || "";
+        const m = document.createElement("span");
+        m.className = "metin";
+        m.textContent = (item.gonderildi ? "✓ " : "") + (item.metin || "");
+        satir.appendChild(g);
+        satir.appendChild(s);
+        satir.appendChild(m);
+        satir.onclick = () => {
+          if (item.onceAnaId) {
+            const ana = hatirlatmalarOku().find((x) => x.id === item.onceAnaId);
+            if (ana) {
+              hatirlatmaAc(ana.gun, ana.id);
+              return;
+            }
+          }
+          hatirlatmaAc(item.gun, item.id);
+        };
+        return satir;
+      };
+      if (ayGecmis.length) {
+        const gecmisBtn = document.createElement("button");
+        gecmisBtn.type = "button";
+        gecmisBtn.className = "not-gecmis-btn";
+        gecmisBtn.textContent = "Geçmiş notlar · " + ayGecmis.length;
+        const gecmisListe = document.createElement("div");
+        gecmisListe.className = "not-gecmis-liste";
+        gecmisListe.hidden = true;
+        for (const item of ayGecmis.slice().reverse()) gecmisListe.appendChild(notSatirYap(item, true));
+        gecmisBtn.onclick = () => {
+          const acik = gecmisListe.hidden;
+          gecmisListe.hidden = !acik;
+          gecmisBtn.textContent = (acik ? "Geçmiş notları gizle · " : "Geçmiş notlar · ") + ayGecmis.length;
+        };
+        notlar.appendChild(gecmisBtn);
+        notlar.appendChild(gecmisListe);
+      }
+      const notBas = document.createElement("div");
+      notBas.className = "not-bas" + (ayGecmis.length ? " not-aktif-baslik" : "");
+      notBas.textContent = "Notlar" + (ayAktif.length ? " · " + ayAktif.length : "");
+      notlar.appendChild(notBas);
+      if (!ayAktif.length) {
+        const bos = document.createElement("div");
+        bos.className = "not-bos";
+        bos.textContent = "Bu ayda gelecek not yok.";
+        notlar.appendChild(bos);
+      } else {
+        for (const item of ayAktif) notlar.appendChild(notSatirYap(item, false));
+      }
+      ayKutu.appendChild(notlar);
+      konteyner.appendChild(ayKutu);
+      return adet;
+    }
+
+    function odemeTakvimCiz(gunler) {
+      odemeTakvimSonGunler = gunler || {};
+      const grid = document.getElementById("odemeTakvimGrid");
+      grid.replaceChildren();
+      let adetToplam = 0;
+      for (let i = 0; i < 3; i += 1) {
+        const tarih = new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() + i, 1);
+        adetToplam += odemeTakvimAyCiz(grid, tarih, odemeTakvimSonGunler, i);
+      }
+      const son = new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() + 2, 1);
+      document.getElementById("odemeTakvimAyAd").textContent =
+        TAKVIM_AY[odemeTakvimAy.getMonth()] + " " + odemeTakvimAy.getFullYear() +
+        " – " + TAKVIM_AY[son.getMonth()] + " " + son.getFullYear();
+      document.getElementById("odemeTakvimDurum").textContent = adetToplam + " kayıt";
+    }
+
+    async function odemeTakvimYukle() {
+      const no = ++odemeTakvimIstek;
+      document.getElementById("odemeTakvimDurum").textContent = "Hazırlanıyor…";
+      odemeTakvimPopupKapat();
+      const ciro = document.getElementById("odemeTakvimCiro").checked ? "1" : "0";
+      const aylar = [0, 1, 2].map((ek) => odemeTakvimAyKodu(new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() + ek, 1)));
+      const govdeler = await Promise.all(aylar.map((ay) => getir("/api/odeme-takvim?" + new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        ay,
+        ciro,
+      }))));
+      if (no !== odemeTakvimIstek) return;
+      const gunler = {};
+      for (const body of govdeler) Object.assign(gunler, body.gunler || {});
+      odemeTakvimSonGunler = gunler;
+      odemeTakvimCiz(gunler);
+    }
+
+    async function odemeTakvimEkraniAc() {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      document.getElementById("odemeTakvim").hidden = false;
+      try {
+        await hatirlatmalariYukle();
+        await odemeTakvimYukle();
+        googleDurumYukle().catch(() => {});
+      } catch (error) {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      }
+    }
+
+    document.getElementById("odemeTakvimBtn").onclick = () => odemeTakvimEkraniAc();
+    document.getElementById("odemeTakvimGeri").onclick = () => {
+      odemeTakvimPopupKapat();
+      document.getElementById("odemeTakvim").hidden = true;
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("odemeTakvimCiro").onchange = () => {
+      odemeTakvimYukle().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("odemeTakvim").addEventListener("click", (event) => {
+      if (!odemeTakvimPopupSabit) return;
+      const popup = document.getElementById("odemeTakvimPopup");
+      if (popup.contains(event.target) || event.target.closest(".takvim-gun.dolu")) return;
+      odemeTakvimPopupKapat();
+    });
+    document.getElementById("odemeTakvimOnceki").onclick = () => {
+      odemeTakvimAy = new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() - 1, 1);
+      odemeTakvimYukle().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+    document.getElementById("odemeTakvimSonraki").onclick = () => {
+      odemeTakvimAy = new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() + 1, 1);
+      odemeTakvimYukle().catch((error) => {
+        document.getElementById("odemeTakvimDurum").textContent = error.message;
+      });
+    };
+
     let cariAramaZaman = 0;
     document.getElementById("cariAra").addEventListener("input", () => {
       clearTimeout(cariAramaZaman);
@@ -4419,9 +6735,31 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("sifre").value = "";
     };
 
+    async function anaPencereBuyut() {
+      try {
+        const olcu = await getir("/api/pencere");
+        if (olcu?.tam) {
+          window.moveTo(0, 0);
+          window.resizeTo(screen.availWidth, screen.availHeight);
+          return;
+        }
+        const genislik = Math.round(Number(olcu?.genislik));
+        const yukseklik = Math.round(Number(olcu?.yukseklik));
+        if (genislik >= 900 && yukseklik >= 600) {
+          const left = Number.isFinite(Number(olcu.left)) ? Number(olcu.left) : Math.max(0, (screen.availWidth - genislik) / 2);
+          const top = Number.isFinite(Number(olcu.top)) ? Number(olcu.top) : Math.max(0, (screen.availHeight - yukseklik) / 2);
+          window.moveTo(left, top);
+          window.resizeTo(genislik, yukseklik);
+        } else {
+          window.resizeTo(Math.min(1280, screen.availWidth), Math.min(820, screen.availHeight));
+        }
+      } catch { /* pencere API yok */ }
+    }
+
     if (!urunModu && !belgeModu && !cariModu && !bordroModu) {
       let anaPencereZaman = 0;
       const anaPencereOlcusu = () => {
+        if (!document.getElementById("giris").hidden) return;
         const tam = window.outerWidth >= screen.availWidth - 16 && window.outerHeight >= screen.availHeight - 16;
         const govde = JSON.stringify({
           genislik: window.innerWidth,
@@ -4755,30 +7093,49 @@ ${"<" + "/script>"}</body></html>`);
       cariPenceresiniBaslat();
     } else if (bordroModu) {
       bordroPenceresiniBaslat();
-    } else Promise.all([getir("/api/baglanti"), getir("/api/kullanicilar"), getir("/api/firmalar")])
-      .then(async ([bag, kullaniciBody, firmaBody]) => {
-        document.getElementById("baglanti").textContent =
-          (bag.database || "VEGADB") + " · " + (bag.server || "");
-        const kullanici = document.getElementById("kullanici");
-        for (const item of kullaniciBody.items || []) {
-          const option = document.createElement("option");
-          option.value = item.kullanici;
-          const ad = [item.ad, item.soyad].filter(Boolean).join(" ");
-          option.textContent = item.kullanici + (ad ? " · " + ad : "");
-          option.dataset.firma = item.firma || "";
-          option.dataset.donem = item.donem || "";
-          kullanici.appendChild(option);
-        }
-        firmalar = firmaBody.items || [];
-        doldurFirma();
-        const expert = firmalar.find((item) => item.no === 101) || firmalar[0];
-        if (expert) {
-          document.getElementById("firmaKod").value = String(expert.no);
-          document.getElementById("firmaAd").value = String(expert.no);
-        }
-        await donemYukle();
-      })
-      .catch((error) => hata(error.message));
+    } else {
+      girisOzetOnizle();
+      const kullaniciSelect = document.getElementById("kullanici");
+      kullaniciSelect.innerHTML = "<option value=\"\">Yükleniyor…</option>";
+      kullaniciSelect.disabled = true;
+      let tercihFirma = 0;
+      try {
+        tercihFirma = Number(JSON.parse(localStorage.getItem("vegaGirisOzet") || "null")?.firma) || 0;
+      } catch { tercihFirma = 0; }
+      getir("/api/giris-onbilgi" + (tercihFirma ? ("?firma=" + tercihFirma) : ""))
+        .then((body) => {
+          document.getElementById("baglanti").textContent =
+            (body.database || "VEGADB") + " · " + (body.server || "");
+          kullaniciSelect.innerHTML = "";
+          for (const item of body.kullanicilar || []) {
+            const option = document.createElement("option");
+            option.value = item.kullanici;
+            const ad = [item.ad, item.soyad].filter(Boolean).join(" ");
+            option.textContent = item.kullanici + (ad ? " · " + ad : "");
+            option.dataset.firma = item.firma || "";
+            option.dataset.donem = item.donem || "";
+            kullaniciSelect.appendChild(option);
+          }
+          kullaniciSelect.disabled = false;
+          firmalar = body.firmalar || [];
+          doldurFirma();
+          const expert = firmalar.find((item) => item.no === Number(body.firma))
+            || firmalar.find((item) => item.no === 101)
+            || firmalar[0];
+          if (expert) {
+            document.getElementById("firmaKod").value = String(expert.no);
+            document.getElementById("firmaAd").value = String(expert.no);
+          }
+          doldurDonem(body.donemler || [], null, expert);
+          doldurSube(body.subeler || [{ ad: "MERKEZ" }]);
+          yazOzet();
+        })
+        .catch((error) => {
+          kullaniciSelect.disabled = false;
+          kullaniciSelect.innerHTML = "<option value=\"\">Kullanıcı alınamadı</option>";
+          hata(error.message);
+        });
+    }
   </script>
 </body>
 </html>

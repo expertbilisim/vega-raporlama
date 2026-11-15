@@ -323,9 +323,13 @@ function queryLines(sql) {
   }).catch(() => ps());
 }
 
+const semaOnbellek = new Map();
+
 async function nesneVar(ad) {
   const adlar = (Array.isArray(ad) ? ad : [ad]).map((item) => String(item).replace(/[^\w]/g, "")).filter(Boolean);
   if (!adlar.length) return "";
+  const anahtar = "n:" + adlar.map((item) => item.toUpperCase()).sort().join(",");
+  if (semaOnbellek.has(anahtar)) return semaOnbellek.get(anahtar);
   const liste = adlar.map((item) => `N'${item}'`).join(", ");
   const lines = await queryLines(`
 SET NOCOUNT ON;
@@ -334,19 +338,25 @@ FROM INFORMATION_SCHEMA.TABLES
 WHERE TABLE_NAME IN (${liste});
 `);
   const bulunan = new Set(lines.map((line) => (line.split("|")[1] || "").trim().toUpperCase()));
-  return adlar.find((item) => bulunan.has(item.toUpperCase())) || "";
+  const sonuc = adlar.find((item) => bulunan.has(item.toUpperCase())) || "";
+  semaOnbellek.set(anahtar, sonuc);
+  return sonuc;
 }
 
 async function kolonKumesi(tablo) {
   const ad = String(tablo).replace(/[^\w]/g, "");
   if (!ad) return new Set();
+  const anahtar = "k:" + ad.toUpperCase();
+  if (semaOnbellek.has(anahtar)) return semaOnbellek.get(anahtar);
   const lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT N'v', COLUMN_NAME
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = N'${ad}';
 `);
-  return new Set(lines.map((line) => (line.split("|")[1] || "").trim().toUpperCase()));
+  const sonuc = new Set(lines.map((line) => (line.split("|")[1] || "").trim().toUpperCase()));
+  semaOnbellek.set(anahtar, sonuc);
+  return sonuc;
 }
 
 function notIfadesi(kolonlar, takma, adaylar) {
@@ -426,6 +436,124 @@ function donemTablo(firma, donem, ad) {
 }
 
 const oturumlar = new Map();
+const girisOnbilgiOnbellek = new Map();
+
+async function girisOnbilgiGetir(tercihFirma) {
+  const anahtar = String(tercihFirma || 0);
+  const onceki = girisOnbilgiOnbellek.get(anahtar);
+  if (onceki && Date.now() - onceki.zaman < 120000) return onceki.veri;
+  const tercih = tercihFirma || 101;
+  const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+DECLARE @f int = ${tercih};
+IF NOT EXISTS (SELECT 1 FROM TBLFIRMA WHERE IND = @f)
+  SELECT TOP 1 @f = IND FROM TBLFIRMA ORDER BY CASE WHEN IND = 101 THEN 0 ELSE 1 END, IND;
+SELECT N'u',
+  ${temiz("USERNAME")},
+  ${temiz("AD")},
+  ${temiz("SOYAD")},
+  CAST(ISNULL(FIRMA, 0) AS varchar(12)),
+  CAST(ISNULL(DONEM, 0) AS varchar(12)),
+  CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(SIFRE, N''))), N'') IS NULL THEN N'0' ELSE N'1' END
+FROM TBLUSERS
+WHERE ISNULL(USERNAME, N'') <> N''
+ORDER BY USERNAME;
+SELECT N'f',
+  CAST(IND AS varchar(12)),
+  ${temiz("KOD")},
+  ${temiz("KISAAD")},
+  ${temiz("AD1")},
+  CAST(ISNULL(AKTIFDONEM, 0) AS varchar(12))
+FROM TBLFIRMA
+ORDER BY IND;
+SELECT N'd',
+  CAST(IND AS varchar(12)),
+  CAST(DONEM AS varchar(12))
+FROM TBLDONEM
+WHERE FIND = @f
+ORDER BY DONEM;
+SELECT N'x', CAST(@f AS varchar(12));
+`);
+  const kullanicilar = [];
+  const firmalar = [];
+  let donemler = [];
+  let firmaNo = tercih;
+  for (const line of lines) {
+    const p = line.split("|");
+    const tur = (p[0] || "").trim();
+    if (tur === "u") {
+      kullanicilar.push({
+        kullanici: (p[1] || "").trim(),
+        ad: (p[2] || "").trim(),
+        soyad: (p[3] || "").trim(),
+        firma: Number(p[4]) || 0,
+        donem: Number(p[5]) || 0,
+        sifreVar: (p[6] || "").trim() === "1" ? 1 : 0,
+      });
+    } else if (tur === "f") {
+      firmalar.push({
+        no: Number(p[1]) || 0,
+        kod: (p[2] || "").trim(),
+        kisaAd: (p[3] || "").trim(),
+        ad: (p[4] || "").trim(),
+        aktifDonem: Number(p[5]) || 0,
+      });
+    } else if (tur === "d") {
+      donemler.push({ no: Number(p[1]) || 0, yil: Number(p[2]) || 0 });
+    } else if (tur === "x") {
+      firmaNo = Number(p[1]) || firmaNo;
+    }
+  }
+  if (tercihFirma) firmaNo = tercihFirma;
+  else if (!firmalar.some((item) => item.no === firmaNo)) {
+    firmaNo = firmalar.find((item) => item.no === 101)?.no || firmalar[0]?.no || firmaNo;
+  }
+  let subeler = [{ no: 1, ad: "MERKEZ" }];
+  try {
+    const [subeSatir, donemSatir] = await Promise.all([
+      queryLines(`
+SET NOCOUNT ON;
+SELECT N's', CAST(IND AS varchar(12)), ${temiz("ISNULL(NULLIF(SUBEAD, N''), N'MERKEZ')")}
+FROM ${firmaTablo(firmaNo, "TBLSUBELER")}
+ORDER BY IND;
+`),
+      (!donemler.length || (!tercihFirma && firmaNo !== tercih))
+        ? queryLines(`
+SET NOCOUNT ON;
+SELECT N'd', CAST(IND AS varchar(12)), CAST(DONEM AS varchar(12))
+FROM TBLDONEM
+WHERE FIND = ${firmaNo}
+ORDER BY DONEM;
+`)
+        : Promise.resolve([]),
+    ]);
+    if (subeSatir.length) {
+      subeler = subeSatir.map((line) => {
+        const p = line.split("|");
+        return { no: Number(p[1]) || 0, ad: (p[2] || "").trim() || "MERKEZ" };
+      });
+    }
+    if (donemSatir.length) {
+      donemler = donemSatir.map((line) => {
+        const p = line.split("|");
+        return { no: Number(p[1]) || 0, yil: Number(p[2]) || 0 };
+      });
+    }
+  } catch { /* şube yoksa merkez */ }
+  const veri = {
+    server: link.server,
+    database: link.database,
+    kullanicilar,
+    firmalar,
+    firma: firmaNo,
+    donemler,
+    subeler,
+  };
+  girisOnbilgiOnbellek.set(anahtar, { zaman: Date.now(), veri });
+  if (anahtar !== "0" && !tercihFirma) girisOnbilgiOnbellek.set("0", { zaman: Date.now(), veri });
+  return veri;
+}
 
 function okuGovde(req) {
   return new Promise((resolve, reject) => {
@@ -475,6 +603,734 @@ function uygulamaKok() {
 
 function whatsappKlasor() {
   return join(uygulamaKok(), "whatsapp-oturum");
+}
+
+function hatirlatmaKok() {
+  const local = process.env.LOCALAPPDATA || uygulamaKok();
+  const yol = join(local, "Vega Raporlama", "hatirlatmalar");
+  if (!existsSync(yol)) mkdirSync(yol, { recursive: true });
+  return yol;
+}
+
+function hatirlatmaDosya() {
+  return join(hatirlatmaKok(), "hatirlatmalar.json");
+}
+
+function hatirlatmaGosterVbs() {
+  const yol = join(hatirlatmaKok(), "goster.vbs");
+  const govde = [
+    "If WScript.Arguments.Count < 1 Then WScript.Quit 1",
+    "Dim id, fso, kok, ps1, cmd, sh",
+    "id = WScript.Arguments(0)",
+    "Set fso = CreateObject(\"Scripting.FileSystemObject\")",
+    "kok = fso.GetParentFolderName(WScript.ScriptFullName)",
+    "ps1 = kok & \"\\goster.ps1\"",
+    "cmd = \"powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File \"\"\" & ps1 & \"\"\" -Id \"\"\" & id & \"\"\"\"",
+    "Set sh = CreateObject(\"WScript.Shell\")",
+    "sh.Run cmd, 0, True",
+  ].join("\r\n");
+  writeFileSync(yol, govde, "utf8");
+  return yol;
+}
+
+function hatirlatmaGorevArg(vbs, id) {
+  return `//B "${vbs}" "${id}"`;
+}
+
+function hatirlatmaGosterPs1() {
+  hatirlatmaGosterVbs();
+  const yol = join(hatirlatmaKok(), "goster.ps1");
+  const govde = [
+    "param([Parameter(Mandatory=$true)][string]$Id)",
+    "$ErrorActionPreference = 'Continue'",
+    "try {",
+    "  Add-Type -Name Z -Namespace H -MemberDefinition '[DllImport(\"user32.dll\")]public static extern bool ShowWindow(IntPtr h,int c);[DllImport(\"kernel32.dll\")]public static extern IntPtr GetConsoleWindow();' -ErrorAction Stop",
+    "  $cw = [H.Z]::GetConsoleWindow(); if ($cw -ne [IntPtr]::Zero) { [void][H.Z]::ShowWindow($cw, 0) }",
+    "} catch {}",
+    "$kok = Split-Path -Parent $MyInvocation.MyCommand.Path",
+    "$dosya = Join-Path $kok 'hatirlatmalar.json'",
+    "$log = Join-Path $kok 'goster.log'",
+    "function Yaz-Log([string]$m) { try { Add-Content -LiteralPath $log -Value ((Get-Date).ToString('s') + ' ' + $m) -Encoding UTF8 } catch {} }",
+    "Yaz-Log ('basla id=' + $Id + ' sta=' + [Threading.Thread]::CurrentThread.GetApartmentState())",
+    "if (-not (Test-Path $dosya)) { Yaz-Log 'json yok'; exit 0 }",
+    "$raw = [IO.File]::ReadAllText($dosya, [Text.Encoding]::UTF8)",
+    "$parsed = ConvertFrom-Json -InputObject $raw",
+    "$liste = New-Object System.Collections.ArrayList",
+    "if ($null -ne $parsed) {",
+    "  if ($parsed -is [System.Collections.IEnumerable] -and $parsed -isnot [string] -and $parsed -isnot [System.Collections.IDictionary]) {",
+    "    foreach ($x in $parsed) { if ($null -ne $x) { [void]$liste.Add($x) } }",
+    "  } else { [void]$liste.Add($parsed) }",
+    "}",
+    "Yaz-Log ('json adet=' + $liste.Count)",
+    "$item = $null",
+    "foreach ($x in $liste) { if ([string]$x.id -eq $Id) { $item = $x; break } }",
+    "if (-not $item) { Yaz-Log ('kayit yok id=' + $Id); exit 0 }",
+    "$metin = [string]$item.metin",
+    "$gunYazi = [string]$item.gun",
+    "$saatYazi = [string]$item.saat",
+    "if ($gunYazi -match '^(\\d{4})-(\\d{2})-(\\d{2})$') { $gunGoster = $Matches[3] + '.' + $Matches[2] + '.' + $Matches[1] } else { $gunGoster = $gunYazi }",
+    "$baslik = [string]::Concat('Vega ', [char]0x0048, [char]0x0061, [char]0x0074, [char]0x0131, [char]0x0072, [char]0x006C, [char]0x0061, [char]0x0074, [char]0x006D, [char]0x0061)",
+    "if ($gunGoster) { $baslik = $baslik + ' - ' + $gunGoster + ' ' + $saatYazi }",
+    "Add-Type -AssemblyName System.Windows.Forms | Out-Null",
+    "Add-Type -AssemblyName System.Drawing | Out-Null",
+    "[Windows.Forms.Application]::EnableVisualStyles()",
+    "function Kaydet-Liste($rows) {",
+    "  $arr = @($rows)",
+    "  if ($arr.Count -eq 0) { $json = '[]' }",
+    "  elseif ($arr.Count -eq 1) { $json = '[' + (ConvertTo-Json -InputObject $arr[0] -Depth 6 -Compress) + ']' }",
+    "  else { $json = ConvertTo-Json -InputObject $arr -Depth 6 -Compress }",
+    "  $utf8 = New-Object System.Text.UTF8Encoding $false",
+    "  [IO.File]::WriteAllText($dosya, $json, $utf8)",
+    "}",
+    "function Gorev-Kur([string]$hid, [datetime]$zaman) {",
+    "  $ad = 'VegaRaporlama\\H-' + $hid",
+    "  Unregister-ScheduledTask -TaskName $ad -Confirm:$false -ErrorAction SilentlyContinue",
+    "  if ($zaman -le (Get-Date).AddSeconds(-30)) { return }",
+    "  $vbs = Join-Path $kok 'goster.vbs'",
+    "  $arg = '//B \"' + $vbs + '\" \"' + $hid + '\"'",
+    "  $action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument $arg",
+    "  $trigger = New-ScheduledTaskTrigger -Once -At $zaman",
+    "  $trigger.EndBoundary = $zaman.AddHours(12).ToString('s')",
+    "  $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)",
+    "  $principal = New-ScheduledTaskPrincipal -UserId $env:USERNAME -LogonType Interactive -RunLevel Limited",
+    "  Register-ScheduledTask -TaskName $ad -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null",
+    "}",
+    "try {",
+    "  $n = New-Object System.Windows.Forms.NotifyIcon",
+    "  $n.Icon = [System.Drawing.SystemIcons]::Information",
+    "  $n.Visible = $true",
+    "  $n.BalloonTipTitle = $baslik",
+    "  $n.BalloonTipText = $metin",
+    "  $n.ShowBalloonTip(15000)",
+    "} catch { Yaz-Log ('balloon hata: ' + $_.Exception.Message) }",
+    "$form = New-Object System.Windows.Forms.Form",
+    "$form.Text = $baslik",
+    "$form.Width = 500",
+    "$form.Height = 340",
+    "$form.StartPosition = 'Manual'",
+    "$form.TopMost = $true",
+    "$form.ShowInTaskbar = $true",
+    "$form.FormBorderStyle = 'FixedDialog'",
+    "$form.MaximizeBox = $false",
+    "$form.MinimizeBox = $false",
+    "$form.BackColor = [Drawing.Color]::FromArgb(231, 238, 243)",
+    "$form.Font = New-Object System.Drawing.Font('Segoe UI', 10)",
+    "function Yerles-Form() {",
+    "  $wa = [Windows.Forms.Screen]::FromPoint([Windows.Forms.Cursor]::Position).WorkingArea",
+    "  if ($null -eq $wa) { $wa = [Windows.Forms.Screen]::PrimaryScreen.WorkingArea }",
+    "  $form.Left = [Math]::Max($wa.Left, $wa.Left + [int](($wa.Width - $form.Width) / 2))",
+    "  $form.Top = [Math]::Max($wa.Top, $wa.Top + [int](($wa.Height - $form.Height) / 2))",
+    "}",
+    "Yerles-Form",
+    "$ust = New-Object System.Windows.Forms.Panel",
+    "$ust.Left = 0; $ust.Top = 0; $ust.Width = 500; $ust.Height = 58",
+    "$ust.BackColor = [Drawing.Color]::FromArgb(21, 113, 124)",
+    "$form.Controls.Add($ust)",
+    "$ustBas = New-Object System.Windows.Forms.Label",
+    "$ustBas.Left = 16; $ustBas.Top = 8; $ustBas.Width = 460; $ustBas.Height = 22",
+    "$ustBas.ForeColor = [Drawing.Color]::White",
+    "$ustBas.Font = New-Object System.Drawing.Font('Segoe UI', 11, [Drawing.FontStyle]::Bold)",
+    "$ustBas.Text = $baslik",
+    "$ust.Controls.Add($ustBas)",
+    "$ustAlt = New-Object System.Windows.Forms.Label",
+    "$ustAlt.Left = 16; $ustAlt.Top = 30; $ustAlt.Width = 460; $ustAlt.Height = 20",
+    "$ustAlt.ForeColor = [Drawing.Color]::FromArgb(220, 245, 248)",
+    "$ustAlt.Text = $gunGoster + '  ' + $saatYazi",
+    "$ust.Controls.Add($ustAlt)",
+    "$kart = New-Object System.Windows.Forms.Panel",
+    "$kart.Left = 16; $kart.Top = 70; $kart.Width = 450; $kart.Height = 100",
+    "$kart.BackColor = [Drawing.Color]::White",
+    "$form.Controls.Add($kart)",
+    "$lbl = New-Object System.Windows.Forms.Label",
+    "$lbl.Left = 12; $lbl.Top = 12; $lbl.Width = 420; $lbl.Height = 76",
+    "$lbl.Text = $metin",
+    "$kart.Controls.Add($lbl)",
+    "$script:sonuc = 'tamam'",
+    "$erteleLbl = New-Object System.Windows.Forms.Label",
+    "$erteleLbl.Left = 16; $erteleLbl.Top = 182; $erteleLbl.Width = 300; $erteleLbl.Height = 20",
+    "$erteleLbl.Font = New-Object System.Drawing.Font('Segoe UI', 10, [Drawing.FontStyle]::Bold)",
+    "$erteleLbl.Text = [string]::Concat([char]0x0045, [char]0x0072, [char]0x0074, [char]0x0065, [char]0x006C, [char]0x0065, ':')",
+    "$form.Controls.Add($erteleLbl)",
+    "$butonlar = @(",
+    "  @{ Text='15 dk'; X=16; Kod='15' },",
+    "  @{ Text='1 saat'; X=128; Kod='60' },",
+    "  @{ Text='3 saat'; X=240; Kod='180' },",
+    "  @{ Text=([string]::Concat([char]0x0059,[char]0x0061,[char]0x0072,[char]0x0131,[char]0x006E)); X=352; Kod='yarin' }",
+    ")",
+    "foreach ($bilgi in $butonlar) {",
+    "  $b = New-Object System.Windows.Forms.Button",
+    "  $b.Text = $bilgi.Text",
+    "  $b.Width = 100; $b.Height = 28; $b.Left = $bilgi.X; $b.Top = 210",
+    "  $b.Tag = $bilgi.Kod",
+    "  $b.Font = New-Object System.Drawing.Font('Segoe UI', 9)",
+    "  $b.FlatStyle = 'System'",
+    "  $b.Add_Click({ $script:sonuc = [string]$this.Tag; $form.Close() })",
+    "  $form.Controls.Add($b)",
+    "}",
+    "$ok = New-Object System.Windows.Forms.Button",
+    "$ok.Text = 'Tamam'",
+    "$ok.Width = 100; $ok.Height = 28; $ok.Left = 352; $ok.Top = 250",
+    "$ok.Font = New-Object System.Drawing.Font('Segoe UI', 9)",
+    "$ok.Add_Click({ $script:sonuc = 'tamam'; $form.Close() })",
+    "$form.AcceptButton = $ok",
+    "$form.Controls.Add($ok)",
+    "$form.Add_Shown({",
+    "  Yerles-Form",
+    "  $form.TopMost = $true",
+    "  $form.Activate()",
+    "  $form.BringToFront()",
+    "  try {",
+    "    Add-Type -Name FG -Namespace W -MemberDefinition '[DllImport(\"user32.dll\")]public static extern bool SetForegroundWindow(IntPtr hWnd);[DllImport(\"user32.dll\")]public static extern bool ShowWindow(IntPtr hWnd,int nCmdShow);' -ErrorAction SilentlyContinue",
+    "    [void][W.FG]::ShowWindow($form.Handle, 5)",
+    "    [void][W.FG]::SetForegroundWindow($form.Handle)",
+    "  } catch {}",
+    "})",
+    "Yaz-Log ('form aciliyor x=' + $form.Left + ' y=' + $form.Top)",
+    "[void]$form.ShowDialog()",
+    "Yaz-Log ('form kapandi sonuc=' + $script:sonuc)",
+    "if ($script:sonuc -eq 'tamam') {",
+    "  foreach ($x in $liste) { if ([string]$x.id -eq $Id) { $x.gonderildi = $true } }",
+    "  Kaydet-Liste $liste",
+    "  Unregister-ScheduledTask -TaskName ('VegaRaporlama\\H-' + $Id) -Confirm:$false -ErrorAction SilentlyContinue",
+    "} else {",
+    "  $yeni = Get-Date",
+    "  if ($script:sonuc -eq 'yarin') { $yeni = $yeni.AddDays(1) }",
+    "  elseif ($script:sonuc -match '^\\d+$') { $yeni = $yeni.AddMinutes([int]$script:sonuc) }",
+    "  $yeniGun = $yeni.ToString('yyyy-MM-dd')",
+    "  $yeniSaat = $yeni.ToString('HH:mm')",
+    "  foreach ($x in $liste) {",
+    "    if ([string]$x.id -eq $Id) {",
+    "      $x.gun = $yeniGun; $x.saat = $yeniSaat; $x.gonderildi = $false",
+    "    }",
+    "  }",
+    "  Kaydet-Liste $liste",
+    "  Gorev-Kur $Id $yeni",
+    "}",
+  ].join("\r\n");
+  writeFileSync(yol, Buffer.from(`\uFEFF${govde}`, "utf16le"));
+  return yol;
+}
+
+function hatirlatmalariOku() {
+  try {
+    if (!existsSync(hatirlatmaDosya())) return [];
+    const ham = JSON.parse(readFileSync(hatirlatmaDosya(), "utf8"));
+    return Array.isArray(ham) ? ham : [];
+  } catch {
+    return [];
+  }
+}
+
+function hatirlatmalariYaz(liste) {
+  writeFileSync(hatirlatmaDosya(), JSON.stringify(liste, null, 2), "utf8");
+}
+
+function hatirlatmaGorevAd(id) {
+  return "VegaRaporlama\\H-" + String(id).replace(/[^\w.-]/g, "").slice(0, 64);
+}
+
+async function hatirlatmaGorevSil(id) {
+  const ad = hatirlatmaGorevAd(id);
+  try {
+    await execFileAsync("powershell.exe", [
+      "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+      `Unregister-ScheduledTask -TaskName '${ad.replace(/'/g, "''")}' -Confirm:$false -ErrorAction SilentlyContinue`,
+    ], { windowsHide: true });
+  } catch { /* görev yok */ }
+}
+
+async function hatirlatmaGorevKur(item, zorlaZaman) {
+  const id = String(item.id || "").trim();
+  if (!id || !item.gun || item.gonderildi) return;
+  const saat = String(item.saat || "09:00").trim() || "09:00";
+  let zaman = zorlaZaman || new Date(`${item.gun}T${saat}:00`);
+  if (!Number.isFinite(zaman.getTime())) return;
+  // Geçmiş saatli kayıtlar görünmeden kalmasın: 1 dk sonra tekrar dene
+  if (zaman.getTime() <= Date.now() - 15000) {
+    zaman = new Date(Date.now() + 60000);
+    item.gun = zaman.getFullYear() + "-" + String(zaman.getMonth() + 1).padStart(2, "0") + "-" + String(zaman.getDate()).padStart(2, "0");
+    item.saat = String(zaman.getHours()).padStart(2, "0") + ":" + String(zaman.getMinutes()).padStart(2, "0");
+  }
+  await hatirlatmaGorevSil(id);
+  hatirlatmaGosterPs1();
+  const vbs = join(hatirlatmaKok(), "goster.vbs");
+  const ad = hatirlatmaGorevAd(id);
+  const yil = zaman.getFullYear();
+  const ay = zaman.getMonth() + 1;
+  const gun = zaman.getDate();
+  const saatNo = zaman.getHours();
+  const dk = zaman.getMinutes();
+  const sn = zaman.getSeconds();
+  const arg = hatirlatmaGorevArg(vbs, id).replace(/'/g, "''");
+  const kullanici = String(process.env.USERNAME || "").replace(/'/g, "''");
+  const komut = [
+    `$t = Get-Date -Year ${yil} -Month ${ay} -Day ${gun} -Hour ${saatNo} -Minute ${dk} -Second ${sn}`,
+    `if ($t -le (Get-Date).AddSeconds(-30)) { $t = (Get-Date).AddMinutes(1) }`,
+    `$action = New-ScheduledTaskAction -Execute 'wscript.exe' -Argument '${arg}'`,
+    `$trigger = New-ScheduledTaskTrigger -Once -At $t`,
+    `try { $trigger.EndBoundary = $t.AddHours(12).ToString('s') } catch {}`,
+    `$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit (New-TimeSpan -Hours 1)`,
+    `$principal = New-ScheduledTaskPrincipal -UserId '${kullanici || "$env:USERNAME"}' -LogonType Interactive -RunLevel Limited`,
+    `Register-ScheduledTask -TaskName '${ad.replace(/'/g, "''")}' -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Force | Out-Null`,
+  ].join("; ");
+  await execFileAsync("powershell.exe", [
+    "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-Command", komut,
+  ], { windowsHide: true });
+}
+
+async function hatirlatmaGorevleriniSenkronize() {
+  hatirlatmaGosterPs1();
+  const liste = hatirlatmalariOku();
+  let degisti = false;
+  for (const item of liste) {
+    if (item.gonderildi) {
+      await hatirlatmaGorevSil(item.id);
+      continue;
+    }
+    try {
+      const onceGun = item.gun;
+      const onceSaat = item.saat;
+      await hatirlatmaGorevKur(item);
+      if (item.gun !== onceGun || item.saat !== onceSaat) degisti = true;
+    } catch { /* görev kurulamadı */ }
+  }
+  if (degisti) hatirlatmalariYaz(liste);
+}
+
+function googleKok() {
+  const local = process.env.LOCALAPPDATA || uygulamaKok();
+  const yol = join(local, "Vega Raporlama", "google");
+  if (!existsSync(yol)) mkdirSync(yol, { recursive: true });
+  return yol;
+}
+
+function googleAyarDosya() {
+  return join(googleKok(), "ayar.json");
+}
+
+function googleTokenDosya() {
+  return join(googleKok(), "token.json");
+}
+
+function googleAyarOku() {
+  try {
+    if (!existsSync(googleAyarDosya())) {
+      return {
+        clientId: String(process.env.GOOGLE_CLIENT_ID || "").trim(),
+        clientSecret: String(process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+        calendarId: "primary",
+        autoSync: true,
+        autoSyncDk: 15,
+      };
+    }
+    const ham = JSON.parse(readFileSync(googleAyarDosya(), "utf8"));
+    const dk = Number(ham.autoSyncDk);
+    return {
+      clientId: String(ham.clientId || process.env.GOOGLE_CLIENT_ID || "").trim(),
+      clientSecret: String(ham.clientSecret || process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+      calendarId: String(ham.calendarId || "primary").trim() || "primary",
+      autoSync: ham.autoSync !== false,
+      autoSyncDk: Number.isFinite(dk) && dk >= 5 ? Math.min(240, Math.floor(dk)) : 15,
+    };
+  } catch {
+    return { clientId: "", clientSecret: "", calendarId: "primary", autoSync: true, autoSyncDk: 15 };
+  }
+}
+
+function googleAyarYaz(ayar) {
+  const once = googleAyarOku();
+  const dkHam = ayar.autoSyncDk != null ? Number(ayar.autoSyncDk) : once.autoSyncDk;
+  const yeni = {
+    clientId: String(ayar.clientId != null ? ayar.clientId : once.clientId || "").trim(),
+    clientSecret: String(ayar.clientSecret != null ? ayar.clientSecret : once.clientSecret || "").trim(),
+    calendarId: String(ayar.calendarId != null ? ayar.calendarId : once.calendarId || "primary").trim() || "primary",
+    autoSync: ayar.autoSync != null ? Boolean(ayar.autoSync) : once.autoSync !== false,
+    autoSyncDk: Number.isFinite(dkHam) && dkHam >= 5 ? Math.min(240, Math.floor(dkHam)) : 15,
+  };
+  writeFileSync(googleAyarDosya(), JSON.stringify(yeni, null, 2), "utf8");
+  googleOtomatikSenkronKur();
+  return yeni;
+}
+
+let googleOtomatikZaman = null;
+let googleOtomatikCalisiyor = false;
+let googleSonSenkron = null;
+
+function googleSonSenkronDosya() {
+  return join(googleKok(), "son-senkron.json");
+}
+
+function googleSonSenkronOku() {
+  try {
+    if (googleSonSenkron) return googleSonSenkron;
+    if (!existsSync(googleSonSenkronDosya())) return null;
+    googleSonSenkron = JSON.parse(readFileSync(googleSonSenkronDosya(), "utf8"));
+    return googleSonSenkron;
+  } catch {
+    return null;
+  }
+}
+
+function googleSonSenkronYaz(kayit) {
+  googleSonSenkron = kayit;
+  try { writeFileSync(googleSonSenkronDosya(), JSON.stringify(kayit, null, 2), "utf8"); } catch { /* ok */ }
+}
+
+async function googleOtomatikSenkronCalistir(kaynak = "otomatik") {
+  if (googleOtomatikCalisiyor) return null;
+  if (!googleDurum().bagli) return null;
+  const ayar = googleAyarOku();
+  if (kaynak === "otomatik" && ayar.autoSync === false) return null;
+  googleOtomatikCalisiyor = true;
+  try {
+    const sonuc = await googleHatirlatmalariSenkronize();
+    googleSonSenkronYaz({
+      zaman: new Date().toISOString(),
+      kaynak,
+      ...sonuc,
+    });
+    return sonuc;
+  } catch (error) {
+    googleSonSenkronYaz({
+      zaman: new Date().toISOString(),
+      kaynak,
+      hata: error.message || "Senkron hatası",
+    });
+    return null;
+  } finally {
+    googleOtomatikCalisiyor = false;
+  }
+}
+
+function googleOtomatikSenkronKur() {
+  if (googleOtomatikZaman) {
+    clearInterval(googleOtomatikZaman);
+    googleOtomatikZaman = null;
+  }
+  const ayar = googleAyarOku();
+  if (!ayar.autoSync) return;
+  const ms = Math.max(5, Number(ayar.autoSyncDk) || 15) * 60 * 1000;
+  googleOtomatikZaman = setInterval(() => {
+    googleOtomatikSenkronCalistir("otomatik").catch(() => {});
+  }, ms);
+  if (googleOtomatikZaman.unref) googleOtomatikZaman.unref();
+}
+
+function googleClientSecretParse(ham) {
+  const obj = typeof ham === "string" ? JSON.parse(ham) : ham;
+  const blok = obj.web || obj.installed || obj;
+  const clientId = String(blok.client_id || blok.clientId || "").trim();
+  const clientSecret = String(blok.client_secret || blok.clientSecret || "").trim();
+  if (!clientId || !clientSecret) throw new Error("JSON içinde client_id / client_secret bulunamadı.");
+  return { clientId, clientSecret, tip: obj.web ? "web" : (obj.installed ? "installed" : "diger") };
+}
+
+function googleIndirilenSecretYollari() {
+  const home = process.env.USERPROFILE || process.env.HOME || "";
+  const downloads = join(home, "Downloads");
+  const adaylar = [];
+  if (existsSync(downloads)) {
+    try {
+      for (const ad of readdirSync(downloads)) {
+        if (/^client_secret_.*\.apps\.googleusercontent\.com\.json$/i.test(ad) || /^client_secret_.*\.json$/i.test(ad)) {
+          adaylar.push(join(downloads, ad));
+        }
+      }
+    } catch { /* okunamadı */ }
+  }
+  return adaylar.sort((a, b) => {
+    try { return statSync(b).mtimeMs - statSync(a).mtimeMs; } catch { return 0; }
+  });
+}
+
+function googleTokenOku() {
+  try {
+    if (!existsSync(googleTokenDosya())) return null;
+    return JSON.parse(readFileSync(googleTokenDosya(), "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function googleTokenYaz(token) {
+  writeFileSync(googleTokenDosya(), JSON.stringify(token, null, 2), "utf8");
+}
+
+function googleTokenSil() {
+  try { if (existsSync(googleTokenDosya())) unlinkSync(googleTokenDosya()); } catch { /* yok */ }
+}
+
+function googleRedirectUri() {
+  return `http://127.0.0.1:${PORT}/api/google/callback`;
+}
+
+let googleOAuthState = "";
+
+function googleDurum() {
+  const ayar = googleAyarOku();
+  const token = googleTokenOku();
+  const son = googleSonSenkronOku();
+  return {
+    ayarli: Boolean(ayar.clientId && ayar.clientSecret),
+    bagli: Boolean(token && token.refresh_token),
+    email: token?.email || "",
+    calendarId: ayar.calendarId || "primary",
+    redirectUri: googleRedirectUri(),
+    autoSync: ayar.autoSync !== false,
+    autoSyncDk: ayar.autoSyncDk || 15,
+    sonSenkron: son,
+  };
+}
+
+async function googleTokenYenile() {
+  const ayar = googleAyarOku();
+  const token = googleTokenOku();
+  if (!ayar.clientId || !ayar.clientSecret) throw new Error("Google Client ID / Secret gerekli.");
+  if (!token?.refresh_token) throw new Error("Google bağlı değil. Önce bağlanın.");
+  if (token.expiry && Date.now() < Number(token.expiry) - 60000 && token.access_token) {
+    return token.access_token;
+  }
+  const govde = new URLSearchParams({
+    client_id: ayar.clientId,
+    client_secret: ayar.clientSecret,
+    refresh_token: token.refresh_token,
+    grant_type: "refresh_token",
+  });
+  const yanit = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: govde.toString(),
+  });
+  const data = await yanit.json();
+  if (!yanit.ok) throw new Error(data.error_description || data.error || "Google token yenilenemedi.");
+  const yeni = {
+    ...token,
+    access_token: data.access_token,
+    expiry: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+  };
+  if (data.refresh_token) yeni.refresh_token = data.refresh_token;
+  googleTokenYaz(yeni);
+  return yeni.access_token;
+}
+
+async function googleApi(yol, secenek = {}) {
+  const access = await googleTokenYenile();
+  const yanit = await fetch("https://www.googleapis.com/calendar/v3" + yol, {
+    ...secenek,
+    headers: {
+      Authorization: "Bearer " + access,
+      "Content-Type": "application/json",
+      ...(secenek.headers || {}),
+    },
+  });
+  if (yanit.status === 204) return null;
+  const text = await yanit.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = { raw: text }; }
+  if (!yanit.ok) {
+    const msg = (data && (data.error?.message || data.error_description || (typeof data.error === "string" ? data.error : ""))) || ("Google API " + yanit.status);
+    const err = new Error(msg);
+    err.status = yanit.status;
+    err.details = data;
+    throw err;
+  }
+  return data;
+}
+
+async function googleEmailGetir(accessToken) {
+  try {
+    const yanit = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+      headers: { Authorization: "Bearer " + accessToken },
+    });
+    const data = await yanit.json();
+    return data.email || "";
+  } catch {
+    return "";
+  }
+}
+
+function googleOlayGovde(item) {
+  const saatHam = String(item.saat || "09:00").trim();
+  const saat = /^\d{2}:\d{2}$/.test(saatHam) ? saatHam : "09:00";
+  const gun = String(item.gun || "").trim();
+  const [y, m, d] = gun.split("-").map((x) => Number(x));
+  const [sa, dk] = saat.split(":").map((x) => Number(x));
+  // Saat Istanbul saati; dateTime'ı olduğu gibi yaz (+30 dk bitiş)
+  const basStr = gun + "T" + saat + ":00";
+  let bitSa = sa || 0;
+  let bitDk = (dk || 0) + 30;
+  let bitGun = gun;
+  if (bitDk >= 60) { bitSa += Math.floor(bitDk / 60); bitDk = bitDk % 60; }
+  if (bitSa >= 24) {
+    bitSa -= 24;
+    const nd = new Date(y, (m || 1) - 1, (d || 1) + 1);
+    bitGun = nd.getFullYear() + "-" + String(nd.getMonth() + 1).padStart(2, "0") + "-" + String(nd.getDate()).padStart(2, "0");
+  }
+  const bitStr = bitGun + "T" + String(bitSa).padStart(2, "0") + ":" + String(bitDk).padStart(2, "0") + ":00";
+  return {
+    summary: String(item.metin || "Vega hatirlatma").slice(0, 200),
+    description: "Vega Raporlama hatirlatmasi\nTarih: " + gun + " " + saat,
+    start: { dateTime: basStr, timeZone: "Europe/Istanbul" },
+    end: { dateTime: bitStr, timeZone: "Europe/Istanbul" },
+    // popup = telefonda Google Takvim bildirimi (varsayılan hatırlatmaya güvenme)
+    reminders: {
+      useDefault: false,
+      overrides: (() => {
+        const liste = [
+          { method: "popup", minutes: 0 },
+          { method: "popup", minutes: 10 },
+          { method: "email", minutes: 10 },
+        ];
+        const once = Math.min(30, Math.max(0, Number(item.onceGun) || 0));
+        if (once > 0) {
+          const dk = once * 24 * 60;
+          liste.push({ method: "popup", minutes: dk });
+          liste.push({ method: "email", minutes: dk });
+        }
+        return liste;
+      })(),
+    },
+    extendedProperties: { private: { vegaId: String(item.id) } },
+  };
+}
+
+function hatirlatmaGunKaydir(gun, gunSayisi) {
+  const [y, m, d] = String(gun).split("-").map((x) => Number(x));
+  const t = new Date(y, (m || 1) - 1, (d || 1) + Number(gunSayisi || 0));
+  return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
+}
+
+async function hatirlatmaOnceBagliSenkron(liste, item) {
+  const onceGun = Math.min(30, Math.max(0, Number(item.onceGun) || 0));
+  item.onceGun = onceGun;
+  let bagli = null;
+  if (item.onceBagliId) bagli = liste.find((row) => row.id === item.onceBagliId) || null;
+  if (!bagli) bagli = liste.find((row) => row.onceAnaId === item.id) || null;
+  if (!onceGun) {
+    if (bagli) {
+      await hatirlatmaGorevSil(bagli.id);
+      const ix = liste.findIndex((row) => row.id === bagli.id);
+      if (ix >= 0) liste.splice(ix, 1);
+    }
+    delete item.onceBagliId;
+    return;
+  }
+  const onceTarih = hatirlatmaGunKaydir(item.gun, -onceGun);
+  const metinOnce = String(item.metin || "") + " (" + onceGun + " gün önce)";
+  if (bagli) {
+    await hatirlatmaGorevSil(bagli.id);
+    bagli.gun = onceTarih;
+    bagli.saat = item.saat;
+    bagli.metin = metinOnce;
+    bagli.gonderildi = false;
+    bagli.onceAnaId = item.id;
+    bagli.onceGun = 0;
+  } else {
+    bagli = {
+      id: randomBytes(6).toString("hex"),
+      gun: onceTarih,
+      saat: item.saat,
+      metin: metinOnce,
+      gonderildi: false,
+      olusturma: new Date().toISOString(),
+      onceAnaId: item.id,
+      onceGun: 0,
+    };
+    liste.push(bagli);
+  }
+  item.onceBagliId = bagli.id;
+  try {
+    await hatirlatmaGorevKur(bagli);
+  } catch { /* ana kayıt yine de kalır */ }
+}
+
+async function googleHatirlatmalariSenkronize() {
+  const ayar = googleAyarOku();
+  const calendarId = encodeURIComponent(ayar.calendarId || "primary");
+  // Önce API erişimini doğrula
+  try {
+    await googleApi("/calendars/" + calendarId);
+  } catch (error) {
+    const msg = String(error.message || "");
+    if (/insufficient|PERMISSION_DENIED|Insufficient/i.test(msg)) {
+      throw new Error(
+        "Takvim izni yok. Google panelinde Bağlantıyı kes → Google ile bağla deyip Takvim iznini onaylayın. "
+        + "Cloud Console’da Google Calendar API açık olmalı."
+      );
+    }
+    if (/not been used|disabled|has not been used/i.test(msg) || error.status === 403) {
+      throw new Error(
+        "Google Calendar API kapalı veya yetkisiz. Cloud Console → API’ler → \"Google Calendar API\" etkinleştirin. "
+        + "Ardından tekrar bağlanıp senkronize edin. (" + msg + ")"
+      );
+    }
+    throw error;
+  }
+  const liste = hatirlatmalariOku();
+  let eklenen = 0;
+  let guncellenen = 0;
+  let silinen = 0;
+  let hata = 0;
+  const hatalar = [];
+  for (const item of liste) {
+    try {
+      if (item.gonderildi) {
+        if (item.googleEventId) {
+          try {
+            await googleApi("/calendars/" + calendarId + "/events/" + encodeURIComponent(item.googleEventId), { method: "DELETE" });
+            silinen += 1;
+          } catch { /* zaten yok */ }
+          delete item.googleEventId;
+        }
+        continue;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(item.gun || ""))) {
+        throw new Error("Gecersiz tarih: " + item.gun);
+      }
+      const govde = googleOlayGovde(item);
+      if (item.googleEventId) {
+        try {
+          await googleApi("/calendars/" + calendarId + "/events/" + encodeURIComponent(item.googleEventId), {
+            method: "PUT",
+            body: JSON.stringify(govde),
+          });
+          guncellenen += 1;
+        } catch (error) {
+          // Eski olay silinmişse yeniden oluştur
+          if (error.status === 404 || /Not Found/i.test(String(error.message || ""))) {
+            delete item.googleEventId;
+            const olusan = await googleApi("/calendars/" + calendarId + "/events", {
+              method: "POST",
+              body: JSON.stringify(govde),
+            });
+            item.googleEventId = olusan.id;
+            eklenen += 1;
+          } else throw error;
+        }
+      } else {
+        const olusan = await googleApi("/calendars/" + calendarId + "/events", {
+          method: "POST",
+          body: JSON.stringify(govde),
+        });
+        item.googleEventId = olusan.id;
+        eklenen += 1;
+      }
+    } catch (error) {
+      hata += 1;
+      if (hatalar.length < 5) {
+        hatalar.push((item.gun || "?") + ": " + (error.message || "bilinmeyen hata"));
+      }
+    }
+  }
+  hatirlatmalariYaz(liste);
+  return {
+    eklenen,
+    guncellenen,
+    silinen,
+    hata,
+    hatalar,
+    toplam: liste.filter((x) => !x.gonderildi).length,
+  };
 }
 
 const wa = {
@@ -603,12 +1459,14 @@ function edgeBul() {
   const pf = process.env.ProgramFiles || "C:\\Program Files";
   const pf86 = process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)";
   const local = process.env.LOCALAPPDATA || "";
+  // Chrome öncelikli: --app penceresi Windows uygulaması gibi açılır.
   return ilkVarolan([
+    join(pf, "Google", "Chrome", "Application", "chrome.exe"),
+    join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
+    join(local, "Google", "Chrome", "Application", "chrome.exe"),
     join(pf, "Microsoft", "Edge", "Application", "msedge.exe"),
     join(pf86, "Microsoft", "Edge", "Application", "msedge.exe"),
     join(local, "Microsoft", "Edge", "Application", "msedge.exe"),
-    join(pf, "Google", "Chrome", "Application", "chrome.exe"),
-    join(pf86, "Google", "Chrome", "Application", "chrome.exe"),
   ]);
 }
 
@@ -623,18 +1481,44 @@ function ikonYolu() {
   ]);
 }
 
+const GIRIS_PENCERE = { genislik: 460, yukseklik: 640 };
+
 function konsoluGizle() {
   if (!paketMi()) return;
-  execFile("powershell.exe", [
-    "-NoProfile",
-    "-WindowStyle", "Hidden",
-    "-Command",
-    `Add-Type -Namespace Vega -Name Pencere -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
-  ], { windowsHide: true });
+  try {
+    const { execFileSync } = require("node:child_process");
+    execFileSync("powershell.exe", [
+      "-NoProfile",
+      "-WindowStyle", "Hidden",
+      "-Command",
+      `Add-Type -Namespace Vega -Name Konsol -MemberDefinition '[DllImport("kernel32.dll")] public static extern bool FreeConsole(); [DllImport("kernel32.dll")] public static extern IntPtr GetConsoleWindow(); [DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; [Vega.Konsol]::FreeConsole() | Out-Null; $h = [Vega.Konsol]::GetConsoleWindow(); if ($h -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($h, 0) | Out-Null }; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Konsol]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
+    ], { windowsHide: true, timeout: 4000 });
+  } catch {
+    execFile("powershell.exe", [
+      "-NoProfile",
+      "-WindowStyle", "Hidden",
+      "-Command",
+      `Add-Type -Namespace Vega -Name Pencere -MemberDefinition '[DllImport("user32.dll")] public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);'; $p = Get-Process -Id ${process.pid} -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne [IntPtr]::Zero) { [Vega.Pencere]::ShowWindow($p.MainWindowHandle, 0) | Out-Null }`,
+    ], { windowsHide: true });
+  }
+}
+
+if (paketMi()) {
+  konsoluGizle();
+  setTimeout(konsoluGizle, 200);
+  setTimeout(konsoluGizle, 800);
 }
 
 function pencereOlcuDosya() {
   return join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere-olcu.json");
+}
+
+function pencereOlcuOku() {
+  try {
+    return JSON.parse(readFileSync(pencereOlcuDosya(), "utf8"));
+  } catch {
+    return null;
+  }
 }
 
 function pencereArguman(adres, profil) {
@@ -646,20 +1530,16 @@ function pencereArguman(adres, profil) {
     "--disable-extensions",
     "--disable-sync",
   ];
-  try {
-    const olcu = JSON.parse(readFileSync(pencereOlcuDosya(), "utf8"));
-    const genislik = Math.round(Number(olcu.genislik));
-    const yukseklik = Math.round(Number(olcu.yukseklik));
+  // İlk ekran login kartı: her zaman kompakt pencere.
+  arguman.push("--window-size=" + GIRIS_PENCERE.genislik + "," + GIRIS_PENCERE.yukseklik);
+  const olcu = pencereOlcuOku();
+  if (olcu) {
     const left = Math.round(Number(olcu.left));
     const top = Math.round(Number(olcu.top));
-    if (olcu.tam === true) arguman.push("--start-maximized");
-    else if (genislik >= 480 && genislik <= 8000 && yukseklik >= 320 && yukseklik <= 8000) {
-      arguman.push("--window-size=" + genislik + "," + yukseklik);
-      if (left >= -4000 && left <= 8000 && top >= -4000 && top <= 8000) {
-        arguman.push("--window-position=" + left + "," + top);
-      }
+    if (left >= -4000 && left <= 8000 && top >= -4000 && top <= 8000) {
+      arguman.push("--window-position=" + left + "," + top);
     }
-  } catch { /* ilk açılış */ }
+  }
   return arguman;
 }
 
@@ -672,7 +1552,13 @@ function uygulamaPenceresi(adres, izle = true) {
   }
   const profil = join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "pencere");
   mkdirSync(profil, { recursive: true });
-  const child = spawn(tarayici, pencereArguman(adres, profil), { windowsHide: true, stdio: "ignore" });
+  // windowsHide:false — aksi halde bazı sistemlerde Chrome uygulama penceresi hiç görünmüyor.
+  const child = spawn(tarayici, pencereArguman(adres, profil), {
+    detached: true,
+    windowsHide: false,
+    stdio: "ignore",
+  });
+  child.unref();
   child.on("error", () => {
     execFile("cmd.exe", ["/c", "start", "", adres], { windowsHide: true });
   });
@@ -1168,6 +2054,11 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/pencere") {
+      gonder(res, 200, pencereOlcuOku() || { ...GIRIS_PENCERE, left: 0, top: 0, tam: false });
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/pencere") {
       const body = await okuGovde(req);
       const genislik = Math.round(Number(body.genislik));
@@ -1185,6 +2076,13 @@ const server = createServer(async (req, res) => {
         tam: body.tam === true,
       }));
       gonder(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/giris-onbilgi") {
+      const tercihFirma = tamSayi(url.searchParams.get("firma"));
+      const onbilgi = await girisOnbilgiGetir(tercihFirma);
+      gonder(res, 200, onbilgi);
       return;
     }
 
@@ -1333,6 +2231,141 @@ ${parcalar.join("\nUNION ALL\n")};
       }
       for (const grup of gruplar.values()) grup.degerler.sort((a, b) => a.localeCompare(b, "tr"));
       gonder(res, 200, { gruplar: [...gruplar.values()] });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/ciro") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const q = ara(url.searchParams.get("q"));
+      const bas = sqlTarihIfade(url.searchParams.get("bas"));
+      const bit = sqlTarihIfade(url.searchParams.get("bit"));
+      if (!firma || !donem || !bas || !bit) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
+      const like = q ? `%${q}%` : "";
+      const ozelFiltre = [];
+      for (let no = 1; no <= 10; no += 1) {
+        const deger = metin(url.searchParams.get("ok" + no), 80).trim();
+        if (deger) ozelFiltre.push(`AND RTRIM(ISNULL(s.KOD${no}, N'')) = N'${deger}'`);
+      }
+      const grupHam = String(url.searchParams.get("grup") || "stok").trim().toLowerCase();
+      const grupNo = Number(grupHam);
+      const ozelGrup = Number.isInteger(grupNo) && grupNo >= 1 && grupNo <= 10;
+      const seriHam = String(url.searchParams.get("seri") || "gun").trim().toLowerCase();
+      const seri = seriHam === "ay" || seriHam === "hafta" || seriHam === "yil" ? seriHam : "gun";
+      const sadeceOzet = String(url.searchParams.get("ozet") || "") === "1";
+      const hareket = donemTablo(firma, donem, "TBLSTOKHAREKETLERI");
+      const stok = firmaTablo(firma, "TBLSTOKLAR");
+      const arama = like
+        ? `AND (s.STOKKODU COLLATE Latin1_General_CI_AI LIKE N'${like}' OR s.MALINCINSI COLLATE Latin1_General_CI_AI LIKE N'${like}')`
+        : "";
+      const miktarIfade = `SUM(CASE WHEN h.IZAHAT IN (23, 87, 102) THEN -ISNULL(h.CIKAN, 0) ELSE ISNULL(h.CIKAN, 0) END)`;
+      const satisIfade = `SUM(CASE WHEN h.IZAHAT IN (21, 33, 85, 89) THEN ISNULL(h.TUTAR, 0) ELSE 0 END)`;
+      const iadeIfade = `SUM(CASE WHEN h.IZAHAT IN (23, 87, 102) THEN ISNULL(h.TUTAR, 0) ELSE 0 END)`;
+      const netIfade = `(${satisIfade} - ${iadeIfade})`;
+      const ortakWhere = `
+WHERE ISNULL(s.DELETED, 0) = 0
+  AND h.IZAHAT IN (21, 23, 33, 85, 87, 89, 102)
+  AND h.TARIH >= ${bas}
+  AND h.TARIH < DATEADD(day, 1, ${bit})
+  ${arama}
+  ${ozelFiltre.join("\n  ")}`;
+      const ozelIfade = ozelGrup
+        ? `CASE WHEN RTRIM(ISNULL(s.KOD${grupNo}, N'')) = N'' THEN N'(boş)' ELSE REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(s.KOD${grupNo}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ') END`
+        : "";
+      const kodAlan = ozelGrup
+        ? ozelIfade
+        : `REPLACE(REPLACE(REPLACE(s.STOKKODU, N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const adAlan = ozelGrup
+        ? ozelIfade
+        : `REPLACE(REPLACE(REPLACE(ISNULL(s.MALINCINSI, N''), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const grupSql = ozelGrup ? ozelIfade : `${kodAlan}, ${adAlan}`;
+      let items = [];
+      if (!sadeceOzet) {
+        const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${kodAlan},
+  ${adAlan},
+  CAST(${miktarIfade} AS decimal(18, 2)),
+  CAST(${satisIfade} AS decimal(18, 2)),
+  CAST(${iadeIfade} AS decimal(18, 2)),
+  CAST(${netIfade} AS decimal(18, 2))
+FROM ${hareket} h
+JOIN ${stok} s ON s.IND = h.STOKNO
+${ortakWhere}
+GROUP BY ${grupSql}
+HAVING ABS(${netIfade}) > 0.004 OR ABS(${miktarIfade}) > 0.004 OR ABS(${satisIfade}) > 0.004 OR ABS(${iadeIfade}) > 0.004
+ORDER BY ${netIfade} DESC, 1;
+`);
+        items = lines.map((line) => {
+          const [kod, ad, miktar, satis, iade, net] = line.split("|").map((part) => part.trim());
+          const miktarSayi = Number(miktar) || 0;
+          const satisSayi = Number(satis) || 0;
+          const iadeSayi = Number(iade) || 0;
+          const netSayi = Number(net) || 0;
+          return {
+            kod: ozelGrup && !kod ? "(boş)" : kod,
+            ad: ad || (ozelGrup ? "(boş)" : ""),
+            miktar: miktarSayi,
+            satis: satisSayi,
+            iade: iadeSayi,
+            ciro: netSayi,
+            birim: miktarSayi ? netSayi / miktarSayi : 0,
+          };
+        });
+      }
+      let zamanIfade = "CONVERT(varchar(10), h.TARIH, 104)";
+      let zamanSira = "MIN(h.TARIH)";
+      if (seri === "ay") {
+        zamanIfade = "CONVERT(varchar(7), h.TARIH, 126)";
+        zamanSira = "MIN(DATEADD(month, DATEDIFF(month, 0, h.TARIH), 0))";
+      } else if (seri === "hafta") {
+        zamanIfade = `CAST(DATEPART(year, h.TARIH) AS varchar(4)) + N'-H' + RIGHT(N'0' + CAST(DATEPART(iso_week, h.TARIH) AS varchar(2)), 2)`;
+        zamanSira = "MIN(DATEADD(day, 1 - DATEPART(weekday, h.TARIH), h.TARIH))";
+      } else if (seri === "yil") {
+        zamanIfade = "CAST(DATEPART(year, h.TARIH) AS varchar(4))";
+        zamanSira = "MIN(DATEADD(year, DATEDIFF(year, 0, h.TARIH), 0))";
+      }
+      const zamanSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${zamanIfade},
+  CAST(${miktarIfade} AS decimal(18, 2)),
+  CAST(${satisIfade} AS decimal(18, 2)),
+  CAST(${iadeIfade} AS decimal(18, 2)),
+  CAST(${netIfade} AS decimal(18, 2))
+FROM ${hareket} h
+JOIN ${stok} s ON s.IND = h.STOKNO
+${ortakWhere}
+GROUP BY ${zamanIfade}
+ORDER BY ${zamanSira};
+`);
+      const zaman = zamanSatir.map((line) => {
+        const [etiket, miktar, satis, iade, net] = line.split("|").map((part) => part.trim());
+        return {
+          etiket,
+          miktar: Number(miktar) || 0,
+          satis: Number(satis) || 0,
+          iade: Number(iade) || 0,
+          ciro: Number(net) || 0,
+        };
+      });
+      const kaynak = items.length ? items : zaman;
+      const toplamSatis = kaynak.reduce((sum, row) => sum + Number(row.satis || 0), 0);
+      const toplamIade = kaynak.reduce((sum, row) => sum + Number(row.iade || 0), 0);
+      const toplamCiro = kaynak.reduce((sum, row) => sum + Number(row.ciro || 0), 0);
+      const toplamMiktar = kaynak.reduce((sum, row) => sum + Number(row.miktar || 0), 0);
+      gonder(res, 200, {
+        items,
+        zaman,
+        miktar: toplamMiktar,
+        satis: toplamSatis,
+        iade: toplamIade,
+        ciro: toplamCiro,
+        grup: ozelGrup ? String(grupNo) : "stok",
+        seri,
+      });
       return;
     }
 
@@ -1636,6 +2669,113 @@ GROUP BY MONTH(h.TARIH);
         aylar.push({ ay, borc: bulunan.borc, alacak: bulunan.alacak });
       }
       gonder(res, 200, { yil, kod, aylar });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/acik-borc") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const q = ara(url.searchParams.get("q"));
+      const ok3 = metin(url.searchParams.get("ok3"), 80).trim();
+      const kalanZorunlu = url.searchParams.get("kalan") === "0" ? 0 : 1;
+      const ozet = url.searchParams.get("ozet") === "1" ? 1 : 0;
+      if (!firma || !donem) return gonder(res, 400, { error: "Firma ve dönem seçin." });
+      const sp = donemTablo(firma, donem, "ACIKBORCALACAKYASLANDIRMA");
+      const spVar = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'v', ROUTINE_NAME
+FROM INFORMATION_SCHEMA.ROUTINES
+WHERE ROUTINE_TYPE = N'PROCEDURE' AND ROUTINE_NAME = N'${sp.replace(/[^\w]/g, "")}';
+`);
+      if (!spVar.length) return gonder(res, 404, { error: "Açık borç alacak prosedürü bulunamadı." });
+      const tarihYazi = (ham) => {
+        const yazi = String(ham || "").trim();
+        if (!yazi || yazi.toUpperCase() === "NULL") return "";
+        const iso = yazi.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (iso) return iso[3] + "." + iso[2] + "." + iso[1];
+        const tr = yazi.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+        if (tr) return tr[0];
+        return yazi.slice(0, 10);
+      };
+      const sayi = (ham) => {
+        const n = Number(String(ham || "").replace(",", "."));
+        return Number.isFinite(n) ? n : 0;
+      };
+      const lines = await queryLines(`
+SET NOCOUNT ON;
+EXEC ${sp} @XAYLIKFAIZ=0, @XRT=${ozet}, @XKALAN=${kalanZorunlu}, @XOZELKOD3=N'${ok3.replace(/'/g, "''")}';
+`);
+      const like = q ? q.toLocaleLowerCase("tr") : "";
+      const ham = [];
+      for (const line of lines) {
+        const p = line.split("|");
+        if (p.length < 18) continue;
+        const kod = (p[4] || "").trim();
+        const ad = (p[5] || "").trim();
+        if (like && !(`${kod} ${ad} ${p[8] || ""}`).toLocaleLowerCase("tr").includes(like)) continue;
+        ham.push({
+          kod,
+          ad,
+          tarih: tarihYazi(p[6]),
+          belgeNo: Number(p[7]) || 0,
+          evrakNo: (p[8] || "").trim(),
+          izahat: Number(p[9]) || 0,
+          vade: tarihYazi(p[10]),
+          tutar: sayi(p[11]),
+          odenen: sayi(p[12]),
+          kalan: sayi(p[13]),
+          odm: sayi(p[14]),
+          gec: sayi(p[15]),
+          pb: (p[17] || "").trim() || "TL",
+          g10: sayi(p[26]),
+          g30: sayi(p[27]),
+          g45: sayi(p[28]),
+          g60: sayi(p[29]),
+          g90: sayi(p[30]),
+        });
+      }
+      const birlestir = new Map();
+      for (const row of ham) {
+        const anahtar = `${row.kod}|${row.pb}`;
+        const onceki = birlestir.get(anahtar);
+        if (!onceki) {
+          birlestir.set(anahtar, { ...row, adet: 1, secKalan: Math.abs(row.kalan), evrakAsil: row.evrakNo });
+          continue;
+        }
+        onceki.tutar += row.tutar;
+        onceki.odenen += row.odenen;
+        onceki.kalan += row.kalan;
+        onceki.g10 += row.g10;
+        onceki.g30 += row.g30;
+        onceki.g45 += row.g45;
+        onceki.g60 += row.g60;
+        onceki.g90 += row.g90;
+        onceki.odm = (onceki.odm * onceki.adet + row.odm) / (onceki.adet + 1);
+        onceki.gec = (onceki.gec * onceki.adet + row.gec) / (onceki.adet + 1);
+        onceki.adet += 1;
+        if (Math.abs(row.kalan) >= onceki.secKalan) {
+          onceki.belgeNo = row.belgeNo;
+          onceki.evrakAsil = row.evrakNo;
+          onceki.izahat = row.izahat;
+          onceki.tarih = row.tarih;
+          onceki.vade = row.vade;
+          onceki.secKalan = Math.abs(row.kalan);
+        }
+      }
+      const items = [...birlestir.values()].map((row) => {
+        const { adet, secKalan, evrakAsil, ...rest } = row;
+        return {
+          ...rest,
+          evrakNo: adet > 1 ? `${adet} belge` : evrakAsil,
+        };
+      });
+      gonder(res, 200, {
+        items,
+        tutar: items.reduce((sum, row) => sum + row.tutar, 0),
+        odenen: items.reduce((sum, row) => sum + row.odenen, 0),
+        kalan: items.reduce((sum, row) => sum + row.kalan, 0),
+      });
       return;
     }
 
@@ -2403,6 +3543,52 @@ ORDER BY h.IND;
           tutar: Number(tutar),
         };
       });
+      const faturaKok = ({ 20: "TBLALFAT", 21: "TBLSATFAT", 22: "TBLALFAT", 23: "TBLSATFAT", 26: "TBLALIRS", 27: "TBLSATIRS", 28: "TBLALIRS", 29: "TBLSATIRS" })[izahat];
+      if (!items.length && faturaKok && belgeNo) {
+        const fatBaslik = donemTablo(firma, donem, faturaKok + "BASLIK");
+        const fatHareket = donemTablo(firma, donem, faturaKok + "HAREKET");
+        const fatSatir = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  ${temiz("h.STOKKODU")},
+  ${temiz("CASE WHEN RTRIM(ISNULL(h.MALINCINSI, N'')) <> N'' THEN h.MALINCINSI ELSE s.MALINCINSI END")},
+  ${temiz("h.ACIKLAMA")},
+  CAST(ISNULL(h.MIKTAR, 0) AS decimal(18, 4)),
+  ${temiz("b.BIRIMADI")},
+  CAST(ISNULL(h.KDV, 0) AS decimal(18, 2)),
+  CAST(ISNULL(h.KUR, 0) AS decimal(18, 4)),
+  ${temiz("h.PARABIRIMI")},
+  CAST(ISNULL(h.FIYATI, 0) AS decimal(18, 4)),
+  CAST(ISNULL(h.GERCEKTOPLAM, 0) AS decimal(18, 4)),
+  ${temiz("bas.BELGENO")},
+  CONVERT(varchar(10), ISNULL(h.TARIH, bas.TARIH), 104),
+  ${temiz("c.FIRMAKODU")},
+  ${temiz("c.FIRMAADI")},
+  ${temiz("d.DEPOADI")},
+  ${temiz("ISNULL(sb.SUBEAD, (SELECT TOP 1 sb2.SUBEAD FROM " + sube + " sb2 ORDER BY sb2.IND))")},
+  ${temiz("(SELECT TOP 1 ks.KASAADI FROM " + kasa + " ks ORDER BY ks.IND)")}
+FROM ${fatHareket} h
+JOIN ${fatBaslik} bas ON bas.IND = ${belgeNo}
+LEFT JOIN ${stok} s ON s.IND = h.STOKNO
+LEFT JOIN ${cari} c ON c.IND = ISNULL(NULLIF(h.FIRMANO, 0), bas.FIRMANO)
+LEFT JOIN ${birim} b ON b.IND = h.BIRIMEX
+LEFT JOIN ${depo} d ON d.IND = ISNULL(NULLIF(h.DEPO, 0), bas.HAREKETDEPOSU)
+LEFT JOIN ${sube} sb ON sb.IND = d.SUBE
+WHERE RTRIM(ISNULL(h.EVRAKNO, N'')) = N'${belgeNo}'
+ORDER BY h.IND;
+`);
+        items = fatSatir.map((line) => {
+          const [kod, ad, aciklama, miktar, birimAd, kdv, kur, pb, fiyat, tutar, evrakNo, tarih, firmaKod, firmaAd, depoAd, subeAd, kasaAd] = line.split("|").map((part) => part.trim());
+          return {
+            kod, ad, aciklama, birimAd, pb, evrakNo, tarih, firmaKod, firmaAd, depoAd, subeAd, kasaAd,
+            miktar: Number(miktar),
+            kdv: Number(kdv),
+            kur: Number(kur),
+            fiyat: Number(fiyat),
+            tutar: Number(tutar),
+          };
+        });
+      }
       if (!items.length) {
         const cariHareket = donemTablo(firma, donem, "TBLCARIHAREKETLERI");
         const bag = belgeNo
@@ -2427,8 +3613,8 @@ ORDER BY h.IND;
           const [firmaKod, firmaAd, tutar, pb, kur, evrakNo, tarih] = line.split("|").map((part) => part.trim());
           return {
             kod: "",
-            ad: firmaAd,
-            aciklama: "",
+            ad: "",
+            aciklama: firmaAd,
             birimAd: "",
             pb,
             evrakNo,
@@ -2700,7 +3886,10 @@ WHERE ${where} AND ${sinir};
       if (!firma || !donem || !bas || !bit || !tanim) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
       const view = await nesneVar(donemTablo(firma, donem, tanim.view));
       if (!view) return gonder(res, 200, { items: [], toplam: 0, durumlar: [] });
-      const kolon = await kolonKumesi(view);
+      const [kolon, girisBaslikAd] = await Promise.all([
+        kolonKumesi(view),
+        nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK")),
+      ]);
       const filtreTarih = kolon.has("TARIH") ? "TARIH" : "VADE";
       const listeTarih = kolon.has("VADE") ? "VADE" : filtreTarih;
       const durumAlan = kolon.has(tanim.islem) ? tanim.islem : "";
@@ -2712,11 +3901,13 @@ WHERE ${where} AND ${sinir};
       const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
       const yaziKolon = (ad) => kolon.has(ad) ? temiz(`k.${ad}`) : "N''";
       const sayiKolon = (ad) => kolon.has(ad) ? `CAST(ISNULL(k.${ad}, 0) AS decimal(18, 2))` : "CAST(0 AS decimal(18, 2))";
-      const girisBaslik = kolon.has("BASIND") ? await nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK")) : "";
+      const belgeKaynak = kolon.has("BELGENO") ? yaziKolon("BELGENO") : "N''";
+      const girisBaslik = kolon.has("BASIND") ? girisBaslikAd : "";
       const belgeIfade = girisBaslik
-        ? `CASE WHEN ${yaziKolon("BELGENO")} <> N'' THEN ${yaziKolon("BELGENO")} ELSE ${temiz("g.BELGENO")} END`
-        : yaziKolon("BELGENO");
-      const lines = await queryLines(`
+        ? `CASE WHEN ${belgeKaynak} <> N'' THEN ${belgeKaynak} ELSE ${temiz("g.BELGENO")} END`
+        : belgeKaynak;
+      const [lines, durumSatir] = await Promise.all([
+        queryLines(`
 SET NOCOUNT ON;
 SELECT
   CONVERT(varchar(10), k.${listeTarih}, 104),
@@ -2735,15 +3926,18 @@ FROM ${view} k
 ${girisBaslik ? `LEFT JOIN ${girisBaslik} g ON g.IND = k.BASIND` : ""}
 WHERE ${kosullar.join(" AND ")}
 ORDER BY k.${listeTarih} ASC${kolon.has("BELGENO") ? ", k.BELGENO" : ""};
-`);
-      const durumSatir = durumAlan
-        ? await queryLines(`
+`),
+        durumAlan
+          ? queryLines(`
 SET NOCOUNT ON;
 SELECT DISTINCT N'd', ${temiz(`k.${durumAlan}`)}
 FROM ${view} k
-WHERE RTRIM(ISNULL(k.${durumAlan}, N'')) <> N'';
+WHERE k.${filtreTarih} >= ${bas}
+  AND k.${filtreTarih} < DATEADD(day, 1, ${bit})
+  AND RTRIM(ISNULL(k.${durumAlan}, N'')) <> N'';
 `)
-        : [];
+          : Promise.resolve([]),
+      ]);
       const durumlar = durumSatir.map((line) => (line.split("|")[1] || "").trim()).filter(Boolean).sort((a, b) => a.localeCompare(b, "tr"));
       const items = lines.map((line) => {
         const [vade, belge, firmaAdi, keside, durum, takasBanka, kartBanka, ciro, tutar, basInd, portNoDeger, belgeTipi] = line.split("|");
@@ -2763,45 +3957,49 @@ WHERE RTRIM(ISNULL(k.${durumAlan}, N'')) <> N'';
         };
       });
       try {
-        const baslik = await nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK"));
-        const guidEsle = `UPPER(REPLACE(REPLACE(RTRIM(CAST(b.UID AS nvarchar(40))), N'{', N''), N'}', N'')) = UPPER(REPLACE(REPLACE(RTRIM(d.OwnerGuid), N'{', N''), N'}', N''))`;
+        const baslik = girisBaslikAd;
         if (baslik && items.some((item) => item.basInd)) {
           const nolar = [...new Set(items.map((item) => item.basInd).filter((no) => no > 0))].slice(0, 400);
-          const dokuman = await queryLines(`
+          const uidSatir = await queryLines(`
 SET NOCOUNT ON;
-SELECT CAST(b.IND AS varchar(12)), CAST(d.Id AS varchar(12)), RTRIM(REPLACE(ISNULL(d.Name, N''), N'|', N'/'))
+SELECT
+  CAST(b.IND AS varchar(12)),
+  UPPER(REPLACE(REPLACE(RTRIM(CAST(b.UID AS nvarchar(40))), N'{', N''), N'}', N''))
 FROM ${baslik} b
-JOIN VegaDocuments.dbo.Documents d ON ${guidEsle}
-WHERE ISNULL(d.Deleted, 0) = 0 AND b.IND IN (${nolar.join(", ")});
+WHERE b.IND IN (${nolar.join(", ")}) AND b.UID IS NOT NULL;
 `);
-          const harita = new Map();
-          for (const line of dokuman) {
-            const [ind, id, ad] = line.split("|").map((part) => part.trim());
-            const liste = harita.get(Number(ind)) || [];
-            liste.push({ id: Number(id) || 0, ad });
-            harita.set(Number(ind), liste);
+          const indGuid = new Map();
+          const guidler = [];
+          for (const line of uidSatir) {
+            const [ind, guid] = line.split("|").map((part) => part.trim());
+            if (!guid) continue;
+            indGuid.set(Number(ind), guid);
+            guidler.push(guid);
           }
-          for (const item of items) item.gorseller = harita.get(item.basInd) || [];
-        } else if (baslik && items.some((item) => item.portNo)) {
-          const detay = await nesneVar(donemTablo(firma, donem, "TBLCARGIRHAREKET"));
-          const nolar = [...new Set(items.map((item) => item.portNo).filter((no) => no > 0))].slice(0, 400);
-          if (detay && nolar.length) {
+          if (guidler.length) {
+            const tekil = [...new Set(guidler)].slice(0, 400);
+            const liste = tekil.map((guid) => `N'${guid.replace(/'/g, "''")}'`).join(", ");
             const dokuman = await queryLines(`
 SET NOCOUNT ON;
-SELECT CAST(h.PORTNO AS varchar(12)), CAST(d.Id AS varchar(12)), RTRIM(REPLACE(ISNULL(d.Name, N''), N'|', N'/'))
-FROM ${detay} h
-JOIN ${baslik} b ON RTRIM(ISNULL(CAST(h.EVRAKNO AS nvarchar(20)), N'')) = CAST(b.IND AS nvarchar(20))
-JOIN VegaDocuments.dbo.Documents d ON ${guidEsle}
-WHERE ISNULL(d.Deleted, 0) = 0 AND ISNULL(h.IZAHAT, 0) = ${tanim.izahat} AND h.PORTNO IN (${nolar.join(", ")});
+SELECT
+  UPPER(REPLACE(REPLACE(RTRIM(OwnerGuid), N'{', N''), N'}', N'')),
+  CAST(Id AS varchar(12)),
+  RTRIM(REPLACE(ISNULL(Name, N''), N'|', N'/'))
+FROM VegaDocuments.dbo.Documents
+WHERE ISNULL(Deleted, 0) = 0
+  AND UPPER(REPLACE(REPLACE(RTRIM(OwnerGuid), N'{', N''), N'}', N'')) IN (${liste});
 `);
-            const harita = new Map();
+            const guidGorsel = new Map();
             for (const line of dokuman) {
-              const [port, id, ad] = line.split("|").map((part) => part.trim());
-              const liste = harita.get(Number(port)) || [];
-              liste.push({ id: Number(id) || 0, ad });
-              harita.set(Number(port), liste);
+              const [guid, id, ad] = line.split("|").map((part) => part.trim());
+              const kayit = guidGorsel.get(guid) || [];
+              kayit.push({ id: Number(id) || 0, ad });
+              guidGorsel.set(guid, kayit);
             }
-            for (const item of items) if (!item.gorseller.length) item.gorseller = harita.get(item.portNo) || [];
+            for (const item of items) {
+              const guid = indGuid.get(item.basInd);
+              if (guid) item.gorseller = guidGorsel.get(guid) || [];
+            }
           }
         }
       } catch { /* taranmış belge yok */ }
@@ -2814,6 +4012,429 @@ WHERE ISNULL(d.Deleted, 0) = 0 AND ISNULL(h.IZAHAT, 0) = ${tanim.izahat} AND h.P
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/odeme-takvim") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const firma = tamSayi(url.searchParams.get("firma"));
+      const donem = tamSayi(url.searchParams.get("donem"));
+      const ayYazi = String(url.searchParams.get("ay") || "").trim();
+      const ayEsles = ayYazi.match(/^(\d{4})-(\d{2})$/);
+      if (!firma || !donem || !ayEsles) return gonder(res, 400, { error: "Firma, dönem ve ay seçin." });
+      const yil = Number(ayEsles[1]);
+      const ay = Number(ayEsles[2]);
+      if (ay < 1 || ay > 12) return gonder(res, 400, { error: "Geçersiz ay." });
+      const bas = `CONVERT(datetime, N'01.${String(ay).padStart(2, "0")}.${yil}', 104)`;
+      const bit = `DATEADD(month, 1, ${bas})`;
+      const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const ciroDahil = url.searchParams.get("ciro") === "1";
+      const kaynaklar = [
+        { tur: "cek", yon: "tahsilat", view: "VARESALINANCEKLER", islem: "CEKISLEM" },
+        { tur: "cek", yon: "odeme", view: "VARESVERILENCEKLER", islem: "VCEKISLEM" },
+        { tur: "senet", yon: "tahsilat", view: "VARESALINANSENETLER" },
+        { tur: "senet", yon: "odeme", view: "VARESVERILENSENETLER" },
+        { tur: "visa", yon: "tahsilat", view: "VARESALINANKREDIKARTI" },
+      ];
+      const gunler = {};
+      await Promise.all(kaynaklar.map(async (kaynak) => {
+        const view = await nesneVar(donemTablo(firma, donem, kaynak.view));
+        if (!view) return;
+        const kolon = await kolonKumesi(view);
+        if (!kolon.has("VADE") && !kolon.has("TARIH")) return;
+        const tarihAlan = kolon.has("VADE") ? "VADE" : "TARIH";
+        const kosul = [`k.${tarihAlan} >= ${bas}`, `k.${tarihAlan} < ${bit}`];
+        if (!ciroDahil && kaynak.tur === "cek") {
+          const ciroParca = [];
+          if (kaynak.islem && kolon.has(kaynak.islem)) {
+            ciroParca.push(`RTRIM(ISNULL(k.${kaynak.islem}, N'')) NOT LIKE N'%Ciro%'`);
+          }
+          if (kolon.has("CIROEDILENFIRMAADI")) {
+            ciroParca.push(`RTRIM(ISNULL(k.CIROEDILENFIRMAADI, N'')) = N''`);
+          }
+          if (ciroParca.length) kosul.push("(" + ciroParca.join(" AND ") + ")");
+        }
+        const islemAlan = kaynak.islem && kolon.has(kaynak.islem) ? kaynak.islem : "";
+        const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), k.${tarihAlan}, 23),
+  ${kolon.has("FIRMAADI") ? temiz("k.FIRMAADI") : "N''"},
+  ${kolon.has("KESIDEEDEN") ? temiz("k.KESIDEEDEN") : "N''"},
+  ${kolon.has("BELGENO") ? temiz("k.BELGENO") : "N''"},
+  ${kolon.has("TUTAR") ? "CAST(ISNULL(k.TUTAR, 0) AS decimal(18, 2))" : "CAST(0 AS decimal(18, 2))"},
+  ${islemAlan ? temiz(`k.${islemAlan}`) : "N''"}
+FROM ${view} k
+WHERE ${kosul.join(" AND ")}
+ORDER BY k.${tarihAlan};
+`);
+        for (const line of lines) {
+          const [gun, firmaAd, keside, belge, tutar, durum] = line.split("|").map((part) => part.trim());
+          if (!gun || gun.toUpperCase() === "NULL") continue;
+          const kim = firmaAd || keside || "—";
+          const durumYazi = durum || "";
+          if (!gunler[gun]) gunler[gun] = [];
+          gunler[gun].push({
+            tur: kaynak.tur,
+            yon: kaynak.yon,
+            firma: kim,
+            keside: keside && keside !== kim ? keside : "",
+            belge,
+            tutar: Number(tutar) || 0,
+            durum: durumYazi,
+            takas: kaynak.tur === "cek" && /takas/i.test(durumYazi),
+          });
+        }
+      }));
+      gonder(res, 200, { ay: ayYazi, gunler });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/hatirlatma") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, { items: hatirlatmalariOku() });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/hatirlatma") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const gun = String(body.gun || "").trim();
+      const saat = String(body.saat || "09:00").trim() || "09:00";
+      const metin = String(body.metin || "").trim().slice(0, 500);
+      const idGelen = String(body.id || "").trim();
+      const onceGun = Math.min(30, Math.max(0, Number(body.onceGun) || 0));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(gun) || !metin) {
+        return gonder(res, 400, { error: "Tarih ve not gerekli." });
+      }
+      if (!/^\d{2}:\d{2}$/.test(saat)) return gonder(res, 400, { error: "Saat geçersiz." });
+      const liste = hatirlatmalariOku();
+      let item = idGelen ? liste.find((row) => row.id === idGelen) : null;
+      if (item && item.onceAnaId) {
+        return gonder(res, 400, { error: "Bu kayıt gün-önce uyarısıdır; ana hatırlatmayı düzenleyin." });
+      }
+      if (item) {
+        await hatirlatmaGorevSil(item.id);
+        item.gun = gun;
+        item.saat = saat;
+        item.metin = metin;
+        item.onceGun = onceGun;
+        item.gonderildi = false;
+      } else {
+        item = {
+          id: randomBytes(6).toString("hex"),
+          gun,
+          saat,
+          metin,
+          onceGun,
+          gonderildi: false,
+          olusturma: new Date().toISOString(),
+        };
+        liste.push(item);
+      }
+      await hatirlatmaOnceBagliSenkron(liste, item);
+      hatirlatmalariYaz(liste);
+      try {
+        await hatirlatmaGorevKur(item);
+      } catch (error) {
+        return gonder(res, 200, {
+          item,
+          items: liste,
+          uyari: "Kayıt edildi ama Windows görevi kurulamadı: " + (error.message || ""),
+        });
+      }
+      gonder(res, 200, { item, items: liste });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/hatirlatma-toplu") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const saat = String(body.saat || "09:00").trim() || "09:00";
+      const metin = String(body.metin || "").trim().slice(0, 500);
+      const baslangic = String(body.baslangic || "").trim();
+      const periyot = String(body.periyot || "aylik").trim();
+      const yilBoyu = Boolean(body.yilBoyu);
+      let bitis = String(body.bitis || "").trim();
+      const ayGunu = Math.min(31, Math.max(1, Number(body.ayGunu) || 1));
+      const haftaGunu = Math.min(6, Math.max(0, Number(body.haftaGunu) || 1)); // 0=Paz .. 6=Cmt, default 1=Pzt
+      if (!metin) return gonder(res, 400, { error: "Not gerekli." });
+      if (!/^\d{2}:\d{2}$/.test(saat)) return gonder(res, 400, { error: "Saat geçersiz." });
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(baslangic)) return gonder(res, 400, { error: "Başlangıç tarihi gerekli." });
+      if (!["aylik", "haftalik", "gunluk"].includes(periyot)) {
+        return gonder(res, 400, { error: "Periyot aylık, haftalık veya günlük olmalı." });
+      }
+      const bas = new Date(baslangic + "T00:00:00");
+      if (!Number.isFinite(bas.getTime())) return gonder(res, 400, { error: "Başlangıç tarihi geçersiz." });
+      if (yilBoyu || !/^\d{4}-\d{2}-\d{2}$/.test(bitis)) {
+        bitis = bas.getFullYear() + "-12-31";
+      }
+      const son = new Date(bitis + "T00:00:00");
+      if (!Number.isFinite(son.getTime()) || son < bas) {
+        return gonder(res, 400, { error: "Bitiş tarihi geçersiz." });
+      }
+      const tarihler = [];
+      const yazi = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+      const maxAdet = periyot === "gunluk" ? 366 : 120;
+      if (periyot === "gunluk") {
+        for (let d = new Date(bas); d <= son && tarihler.length < maxAdet; d.setDate(d.getDate() + 1)) {
+          tarihler.push(yazi(d));
+        }
+      } else if (periyot === "haftalik") {
+        let d = new Date(bas);
+        while (d.getDay() !== haftaGunu) d.setDate(d.getDate() + 1);
+        for (; d <= son && tarihler.length < maxAdet; d.setDate(d.getDate() + 7)) {
+          tarihler.push(yazi(d));
+        }
+      } else {
+        let yil = bas.getFullYear();
+        let ay = bas.getMonth();
+        for (; tarihler.length < maxAdet; ) {
+          const sonGun = new Date(yil, ay + 1, 0).getDate();
+          const gun = Math.min(ayGunu, sonGun);
+          const d = new Date(yil, ay, gun);
+          if (d >= bas && d <= son) tarihler.push(yazi(d));
+          ay += 1;
+          if (ay > 11) { ay = 0; yil += 1; }
+          if (new Date(yil, ay, 1) > son) break;
+        }
+      }
+      if (!tarihler.length) return gonder(res, 400, { error: "Seçilen aralıkta tarih oluşmadı." });
+      const liste = hatirlatmalariOku();
+      const grup = randomBytes(4).toString("hex");
+      const eklenen = [];
+      const uyarilar = [];
+      for (const gun of tarihler) {
+        const item = {
+          id: randomBytes(6).toString("hex"),
+          gun,
+          saat,
+          metin,
+          gonderildi: false,
+          olusturma: new Date().toISOString(),
+          grup,
+          periyot,
+        };
+        liste.push(item);
+        eklenen.push(item);
+      }
+      hatirlatmalariYaz(liste);
+      for (const item of eklenen) {
+        try {
+          await hatirlatmaGorevKur(item);
+        } catch (error) {
+          uyarilar.push(item.gun + ": " + (error.message || "gorev kurulamadi"));
+        }
+      }
+      gonder(res, 200, {
+        adet: eklenen.length,
+        items: liste,
+        eklenen,
+        uyari: uyarilar.length ? ("Bazı Windows görevleri kurulamadı (" + uyarilar.length + ")") : "",
+      });
+      return;
+    }
+
+    if (req.method === "DELETE" && url.pathname === "/api/hatirlatma") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const id = String(url.searchParams.get("id") || "").trim();
+      if (!id) return gonder(res, 400, { error: "Hatırlatma seçin." });
+      const ham = hatirlatmalariOku();
+      const hedef = ham.find((row) => row.id === id);
+      const silinecek = new Set([id]);
+      if (hedef?.onceBagliId) silinecek.add(hedef.onceBagliId);
+      for (const row of ham) {
+        if (row.onceAnaId === id) silinecek.add(row.id);
+      }
+      for (const sid of silinecek) await hatirlatmaGorevSil(sid);
+      const liste = ham.filter((row) => !silinecek.has(row.id)).map((row) => {
+        if (row.onceBagliId && silinecek.has(row.onceBagliId)) {
+          const kopya = { ...row };
+          delete kopya.onceBagliId;
+          return kopya;
+        }
+        return row;
+      });
+      hatirlatmalariYaz(liste);
+      gonder(res, 200, { items: liste });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/google/durum") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, googleDurum());
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/ayar") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const ayar = googleAyarYaz({
+        clientId: body.clientId,
+        clientSecret: body.clientSecret,
+        calendarId: body.calendarId,
+        autoSync: body.autoSync,
+        autoSyncDk: body.autoSyncDk,
+      });
+      gonder(res, 200, { ...googleDurum(), kaydedildi: Boolean(ayar.clientId && ayar.clientSecret) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/ayar-json") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      let ham = body.json;
+      const yol = String(body.yol || "").trim();
+      if (!ham && yol) {
+        if (!existsSync(yol)) return gonder(res, 400, { error: "JSON dosyası bulunamadı." });
+        ham = readFileSync(yol, "utf8");
+      }
+      if (!ham && body.indirilen) {
+        const adaylar = googleIndirilenSecretYollari();
+        if (!adaylar.length) return gonder(res, 400, { error: "Downloads klasöründe client_secret JSON bulunamadı." });
+        ham = readFileSync(adaylar[0], "utf8");
+      }
+      if (!ham) return gonder(res, 400, { error: "JSON içeriği veya dosya yolu gerekli." });
+      let parsed;
+      try {
+        parsed = googleClientSecretParse(ham);
+      } catch (error) {
+        return gonder(res, 400, { error: error.message || "JSON okunamadı." });
+      }
+      googleAyarYaz({
+        clientId: parsed.clientId,
+        clientSecret: parsed.clientSecret,
+        calendarId: body.calendarId,
+      });
+      // Yerel kopya (senkron için)
+      try {
+        writeFileSync(join(googleKok(), "client_secret.json"), typeof ham === "string" ? ham : JSON.stringify(ham, null, 2), "utf8");
+      } catch { /* kopyalanamadı */ }
+      gonder(res, 200, {
+        ...googleDurum(),
+        kaydedildi: true,
+        tip: parsed.tip,
+        clientId: parsed.clientId,
+        uyari: parsed.tip === "web"
+          ? "Web istemcisi: Google Console’da yönlendirme URI’sini eklediğinizden emin olun."
+          : "",
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/baglan") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const ayar = googleAyarOku();
+      if (!ayar.clientId || !ayar.clientSecret) {
+        return gonder(res, 400, { error: "Önce Google Client ID ve Client Secret kaydedin." });
+      }
+      // Eski dar kapsamlı token'ı temizle; yeniden izin alınacak
+      googleTokenSil();
+      googleOAuthState = randomBytes(16).toString("hex");
+      const params = new URLSearchParams({
+        client_id: ayar.clientId,
+        redirect_uri: googleRedirectUri(),
+        response_type: "code",
+        scope: [
+          "https://www.googleapis.com/auth/calendar",
+          "https://www.googleapis.com/auth/calendar.events",
+          "https://www.googleapis.com/auth/userinfo.email",
+        ].join(" "),
+        access_type: "offline",
+        prompt: "consent",
+        include_granted_scopes: "true",
+        state: googleOAuthState,
+      });
+      const authUrl = "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString();
+      try {
+        // cmd start URL'deki & karakterlerini keser → response_type kaybolur; rundll32 ile aç
+        execFile("rundll32", ["url.dll,FileProtocolHandler", authUrl], { windowsHide: true }, () => {});
+      } catch {
+        const guvenli = authUrl.replace(/'/g, "''");
+        execFile("powershell.exe", [
+          "-NoProfile", "-WindowStyle", "Hidden", "-Command",
+          "Start-Process '" + guvenli + "'",
+        ], { windowsHide: true }, () => {});
+      }
+      gonder(res, 200, { ok: true, authUrl });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/google/callback") {
+      const kod = String(url.searchParams.get("code") || "").trim();
+      const state = String(url.searchParams.get("state") || "").trim();
+      const hata = String(url.searchParams.get("error") || "").trim();
+      const htmlSonuc = (basarili, mesaj) => `<!doctype html><html lang="tr"><meta charset="utf-8"><title>Google</title>
+<body style="font-family:Segoe UI,sans-serif;background:#e7eef3;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0">
+<div style="background:#fff;border:1px solid #b7c8d2;border-radius:14px;padding:24px 28px;max-width:420px;box-shadow:0 12px 28px rgba(20,40,55,.18)">
+<h2 style="margin:0 0 8px;color:${basarili ? "#0e5962" : "#b42318"}">${basarili ? "Google bağlandı" : "Bağlantı başarısız"}</h2>
+<p style="margin:0;color:#3a4a56;line-height:1.4">${mesaj}</p>
+<p style="margin:14px 0 0;color:#6a7a86;font-size:13px">Bu pencereyi kapatıp Vega Raporlama’ya dönebilirsiniz.</p>
+</div></body></html>`;
+      if (hata) {
+        res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(htmlSonuc(false, "Google izni verilmedi: " + hata));
+        return;
+      }
+      if (!kod || !state || state !== googleOAuthState) {
+        res.writeHead(400, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(htmlSonuc(false, "Geçersiz veya süresi dolmuş bağlantı isteği."));
+        return;
+      }
+      googleOAuthState = "";
+      try {
+        const ayar = googleAyarOku();
+        const govde = new URLSearchParams({
+          code: kod,
+          client_id: ayar.clientId,
+          client_secret: ayar.clientSecret,
+          redirect_uri: googleRedirectUri(),
+          grant_type: "authorization_code",
+        });
+        const yanit = await fetch("https://oauth2.googleapis.com/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: govde.toString(),
+        });
+        const data = await yanit.json();
+        if (!yanit.ok) throw new Error(data.error_description || data.error || "Token alınamadı.");
+        const email = await googleEmailGetir(data.access_token);
+        googleTokenYaz({
+          access_token: data.access_token,
+          refresh_token: data.refresh_token,
+          expiry: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+          email,
+          olusturma: new Date().toISOString(),
+        });
+        setTimeout(() => {
+          googleOtomatikSenkronCalistir("baglanti").catch(() => {});
+        }, 1500);
+        res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(htmlSonuc(true, (email ? email + " hesabı bağlandı. " : "") + "Otomatik senkron açık; hatırlatmalar belirli aralıklarla Google Takvim’e aktarılır."));
+      } catch (error) {
+        res.writeHead(500, { "Content-Type": "text/html; charset=utf-8" });
+        res.end(htmlSonuc(false, error.message || "Bağlantı hatası"));
+      }
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/senkron") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      if (!googleDurum().bagli) return gonder(res, 400, { error: "Önce Google hesabını bağlayın." });
+      const sonuc = await googleOtomatikSenkronCalistir("manuel");
+      if (!sonuc) {
+        const son = googleSonSenkronOku();
+        if (son?.hata) return gonder(res, 400, { error: son.hata, durum: googleDurum() });
+        return gonder(res, 400, { error: "Senkron şu an çalışıyor veya bağlantı yok.", durum: googleDurum() });
+      }
+      gonder(res, 200, { ok: true, ...sonuc, durum: googleDurum() });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/kopar") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      googleTokenSil();
+      gonder(res, 200, { ok: true, ...googleDurum() });
+      return;
+    }
+
     gonder(res, 404, { error: "Sayfa yok." });
   } catch (error) {
     gonder(res, 500, { error: error.message || "Sunucu hatası" });
@@ -2822,24 +4443,34 @@ WHERE ISNULL(d.Deleted, 0) = 0 AND ISNULL(h.IZAHAT, 0) = ${tanim.izahat} AND h.P
 
 server.on("error", (error) => {
   if (error.code === "EADDRINUSE") {
+    // Port doluysa mevcut sunucuya bağlanan pencereyi aç; Edge'in kalkması için kısa bekle.
     uygulamaPenceresi(`http://127.0.0.1:${PORT}`, false);
-    process.exit(0);
+    setTimeout(() => process.exit(0), 2000);
+    return;
   }
-  console.error(error.message || "Sunucu açılmadı");
+  if (!paketMi()) console.error(error.message || "Sunucu açılmadı");
   process.exit(1);
 });
 
 server.listen(PORT, "0.0.0.0", () => {
   const adres = `http://127.0.0.1:${PORT}`;
-  console.log(`Vega Raporlama ${adres}`);
-  for (const ag of Object.values(networkInterfaces()).flat()) {
-    if (!ag || ag.internal) continue;
-    if (ag.family !== "IPv4" && ag.family !== 4) continue;
-    console.log(`Ağdan: http://${ag.address}:${PORT}`);
+  if (!paketMi()) {
+    console.log(`Vega Raporlama ${adres}`);
+    for (const ag of Object.values(networkInterfaces()).flat()) {
+      if (!ag || ag.internal) continue;
+      if (ag.family !== "IPv4" && ag.family !== 4) continue;
+      console.log(`Ağdan: http://${ag.address}:${PORT}`);
+    }
+    console.log(`Veritabanı: ${link.server} / ${link.database}`);
+    if (!existsSync(UDL)) console.warn(`Bağlantı dosyası bulunamadı: ${UDL}`);
+    console.log(SQLCMD ? "Sorgu aracı: sqlcmd" : "Sorgu aracı: Windows SQL istemcisi");
   }
-  console.log(`Veritabanı: ${link.server} / ${link.database}`);
-  if (!existsSync(UDL)) console.warn(`Bağlantı dosyası bulunamadı: ${UDL}`);
-  console.log(SQLCMD ? "Sorgu aracı: sqlcmd" : "Sorgu aracı: Windows SQL istemcisi");
+  girisOnbilgiGetir(0).catch(() => {});
+  hatirlatmaGorevleriniSenkronize().catch(() => {});
+  googleOtomatikSenkronKur();
+  setTimeout(() => {
+    googleOtomatikSenkronCalistir("baslangic").catch(() => {});
+  }, 20000);
   if (existsSync(join(whatsappKlasor(), "creds.json"))) {
     whatsappBagla().catch((error) => {
       wa.durum = "hata";

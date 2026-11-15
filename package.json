@@ -2,7 +2,8 @@
   "name": "vega-raporlama",
   "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "sea": "node scripts/build-sea.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc14",
