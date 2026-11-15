@@ -472,9 +472,10 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 1px 2px rgba(0,0,0,.18);
     }
     .takvim-legenda .tk-cek { background: #1f8f9c; }
+    .takvim-legenda .tk-odenecek { background: #b42318; }
     .takvim-legenda .tk-takas { background: #1b7a4a; }
     .takvim-legenda .tk-senet { background: #c05612; }
-    .takvim-legenda .tk-visa { background: #2f6fb0; }
+    .takvim-legenda .tk-visa { background: #7c2dbe; }
     .takvim-legenda .tk-karisik { background: #b8860b; }
     .takvim-legenda .tk-not { font-weight: 500; color: #6a7a86; }
     .takvim-uc {
@@ -554,6 +555,47 @@
     }
     .takvim-ay-notlar .not-satir.gecmis .gun { color: #9a6418; }
     .takvim-ay-notlar .not-satir.gecmis .saat { color: #8a6a3a; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.cek {
+      background: #eaf6f8; border-color: #9bc8cf;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.cek:hover {
+      border-color: #1f8f9c; background: #d9eef2;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.cek .gun,
+    .takvim-ay-notlar .not-satir.odeme-ozet.cek .metin { color: #0e5962; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.odenecek {
+      background: #fdecea; border-color: #e7b4af;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.odenecek:hover {
+      border-color: #b42318; background: #f8d4d0;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.odenecek .gun,
+    .takvim-ay-notlar .not-satir.odeme-ozet.odenecek .metin { color: #8f1d14; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.takas {
+      background: #e8f5ee; border-color: #8fc9a8;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.takas:hover {
+      border-color: #1b7a4a; background: #d5eedf;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.takas .gun,
+    .takvim-ay-notlar .not-satir.odeme-ozet.takas .metin { color: #1b7a4a; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.senet {
+      background: #fff4eb; border-color: #e2b48f;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.senet:hover {
+      border-color: #c05612; background: #ffe8d6;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.senet .gun,
+    .takvim-ay-notlar .not-satir.odeme-ozet.senet .metin { color: #c05612; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.visa {
+      background: #f3e8ff; border-color: #c084fc;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.visa:hover {
+      border-color: #7c2dbe; background: #e9d5ff;
+    }
+    .takvim-ay-notlar .not-satir.odeme-ozet.visa .gun,
+    .takvim-ay-notlar .not-satir.odeme-ozet.visa .metin { color: #6b21a8; }
+    .takvim-ay-notlar .not-satir.odeme-ozet.gecmis { opacity: 0.88; }
     .takvim-ay-notlar .not-aktif-baslik {
       margin-top: 2px;
     }
@@ -591,6 +633,11 @@
       background: linear-gradient(180deg, #5ed0dc 0%, #1f8f9c 50%, #14616c 100%);
       box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 1px 0 #0c4650, 0 2px 4px rgba(14, 70, 80, .2);
     }
+    .takvim-gun.dolu.odenecek {
+      border-color: #7f1d1d;
+      background: linear-gradient(180deg, #f0a8a2 0%, #c0392b 50%, #8f1d14 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 1px 0 #6b1510, 0 2px 4px rgba(120, 30, 24, .25);
+    }
     .takvim-gun.dolu.takas {
       border-color: #0f5a34;
       background: linear-gradient(180deg, #62c98b 0%, #1b7a4a 50%, #0f5a34 100%);
@@ -602,9 +649,9 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #6a2c06, 0 2px 4px rgba(120, 60, 15, .2);
     }
     .takvim-gun.dolu.visa {
-      border-color: #1e4f86;
-      background: linear-gradient(180deg, #7eb0e0 0%, #2f6fb0 50%, #1e4f86 100%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #163a64, 0 2px 4px rgba(30, 70, 120, .2);
+      border-color: #5b21b6;
+      background: linear-gradient(180deg, #c084fc 0%, #7c2dbe 50%, #5b21b6 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 1px 0 #4c1d95, 0 2px 4px rgba(91, 33, 182, .25);
     }
     .takvim-gun.dolu.karisik {
       border-color: #7a5a08;
@@ -656,9 +703,10 @@
     .takvim-popup .satir:first-of-type { border-top: 0; }
     .takvim-popup .tur { font-weight: 750; white-space: normal; line-height: 1.25; }
     .takvim-popup .tur.cek { color: #1f8f9c; }
+    .takvim-popup .tur.odenecek { color: #b42318; }
     .takvim-popup .tur.takas { color: #1b7a4a; }
     .takvim-popup .tur.senet { color: #c05612; }
-    .takvim-popup .tur.visa { color: #2f6fb0; }
+    .takvim-popup .tur.visa { color: #7c2dbe; }
     .takvim-popup .kim {
       min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.3;
     }
@@ -1212,7 +1260,7 @@
       <div class="ic">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.2</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.7</div>
         <p class="guncelleme-yazi" id="guncellemeYazi"></p>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
@@ -1677,6 +1725,7 @@
       </div>
       <div class="takvim-legenda">
         <span><i class="tk-cek"></i>Çek</span>
+        <span><i class="tk-odenecek"></i>Ödenecek çek</span>
         <span><i class="tk-takas"></i>Takas</span>
         <span><i class="tk-senet"></i>Senet</span>
         <span><i class="tk-visa"></i>Visa</span>
@@ -1713,9 +1762,11 @@
     <div class="google-panel" role="dialog" aria-labelledby="googleBaslik">
       <h3 id="googleBaslik">Google Takvim</h3>
       <p class="ipucu">
-        Hatırlatmaları Google Takvim ile senkronize eder (saatinde ve 10 dk önce bildirim).
-        Telefonda <b>Google Takvim</b> uygulaması açık, bildirimler açık ve aynı hesapla girişli olmalı.
-        Cloud Console’da Calendar API + Takvim izni gerekir. Yetkili yönlendirme URI:
+        <b>Çift yönlü senkron:</b> program ↔ Google Takvim olayları ve Google <b>Görevler</b> (Tasks).
+        Açık <b>çek / senet / Visa</b> vadeleri Google Takvim’e hatırlatma olarak yazılır (tahsil/iptal olunca kalkar).
+        Otomatik senkron <b>program kapalıyken de</b> arka planda çalışır (Windows zamanlanmış görev).
+        Telefonda görev/takvim aynı hesapla olmalı. Cloud Console’da <b>Google Calendar API</b> ve <b>Google Tasks API</b> ikisini de etkinleştirin.
+        Görevler için: Bağlantıyı kes → Google ile bağla (Tasks iznini onaylayın). Yetkili yönlendirme URI:
         <code id="googleRedirectUri">http://127.0.0.1:3850/api/google/callback</code>
       </p>
       <label>Google JSON dosyası (client_secret…)
@@ -2163,21 +2214,41 @@
       return body;
     }
 
+    let guncellemeSonDurum = "";
     async function guncellemeYaziKur() {
       const el = document.getElementById("guncellemeYazi");
-      if (!el) return;
       try {
         const body = await getir("/api/guncelleme");
-        el.classList.remove("hata", "guncel");
-        if (body.durum === "hata") el.classList.add("hata");
-        if (body.durum === "guncel") el.classList.add("guncel");
-        el.textContent = body.mesaj || "";
+        if (el) {
+          el.classList.remove("hata", "guncel");
+          if (body.durum === "hata") el.classList.add("hata");
+          if (body.durum === "guncel") el.classList.add("guncel");
+          el.textContent = body.mesaj || "";
+        }
         if (body.surum) {
-          document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
+          const surumEl = document.getElementById("uygulamaSurum");
+          if (surumEl) surumEl.textContent = "Vega Raporlama v" + body.surum;
+        }
+        const aktif = body.durum === "indiriliyor" || body.durum === "uygulaniyor" || body.durum === "var";
+        if (aktif && body.mesaj && guncellemeSonDurum !== body.durum + body.mesaj) {
+          guncellemeSonDurum = body.durum + body.mesaj;
+          const toast = document.getElementById("hatirlatmaToast");
+          if (toast) {
+            document.getElementById("hatirlatmaToastBaslik").textContent = "Güncelleme";
+            document.getElementById("hatirlatmaToastMetin").textContent = body.mesaj;
+            toast.hidden = false;
+          }
+          const durumEl = document.getElementById("odemeTakvimDurum");
+          if (durumEl) durumEl.textContent = body.mesaj;
         }
       } catch {
-        /* sessiz */
+        /* sunucu kapanıyor olabilir (güncelleme) */
       }
+    }
+
+    function guncellemeIzlemeyiBaslat() {
+      guncellemeYaziKur();
+      setInterval(guncellemeYaziKur, 3000);
     }
 
     function firmaAd(firma) {
@@ -5802,7 +5873,7 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     function hatirlatmaGunListe(gun) {
-      return hatirlatmalarOku().filter((item) => item.gun === gun && !item.gonderildi);
+      return hatirlatmalarOku().filter((item) => item.gun === gun);
     }
 
     async function hatirlatmalariYukle() {
@@ -6077,7 +6148,8 @@ ${"<" + "/script>"}</body></html>`);
       if (googleDurumCache.bagli) {
         yazi = "Bağlı" + (googleDurumCache.email ? ": " + googleDurumCache.email : "");
         if (googleDurumCache.autoSync !== false) {
-          yazi += " · Otomatik senkron: " + (googleDurumCache.autoSyncDk || 15) + " dk";
+          yazi += " · Otomatik: " + (googleDurumCache.autoSyncDk || 15) + " dk"
+            + (googleDurumCache.arkaPlan !== false ? " (arka plan açık)" : "");
         } else {
           yazi += " · Otomatik senkron kapalı";
         }
@@ -6112,8 +6184,8 @@ ${"<" + "/script>"}</body></html>`);
       googleDurumYansit(durum);
       document.getElementById("odemeTakvimDurum").textContent =
         durum.autoSync === false
-          ? "Otomatik Google senkron kapalı."
-          : ("Otomatik Google senkron: " + (durum.autoSyncDk || 15) + " dk");
+          ? "Otomatik Google senkron kapalı (arka plan da kapandı)."
+          : ("Otomatik Google senkron: " + (durum.autoSyncDk || 15) + " dk · program kapalıyken de çalışır");
     }
 
     async function googleDurumYukle() {
@@ -6239,15 +6311,30 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     async function googleSenkron() {
-      document.getElementById("googleDurumYazi").textContent = "Google Takvim’e aktarılıyor…";
-      document.getElementById("odemeTakvimDurum").textContent = "Google senkron…";
-      const body = await getir("/api/google/senkron", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+      document.getElementById("googleDurumYazi").textContent = "Çift yönlü senkron…";
+      document.getElementById("odemeTakvimDurum").textContent = "Google ↔ program senkron…";
+      const body = await getir("/api/google/senkron", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firma: oturum.firma, donem: oturum.donem }),
+      });
       if (body.durum) googleDurumYansit(body.durum);
-      let ozet = "Google: +" + (body.eklenen || 0) + " yeni, " + (body.guncellenen || 0) + " güncellendi"
-        + (body.hata ? ", " + body.hata + " hata" : "");
-      if (body.hatalar && body.hatalar.length) {
-        ozet += " · " + body.hatalar[0];
+      try {
+        const hat = await getir("/api/hatirlatma");
+        hatirlatmaCache = hat.items || [];
+      } catch { /* takvim yine de yenilenir */ }
+      let ozet = "→ Google +" + (body.eklenen || 0) + "/" + (body.guncellenen || 0)
+        + " · ← program +" + (body.iceEklenen || 0) + "/" + (body.iceGuncellenen || 0);
+      if (body.odemeEklenen || body.odemeGuncellenen || body.odemeKapanan) {
+        ozet += " · ödeme +" + (body.odemeEklenen || 0) + "/" + (body.odemeGuncellenen || 0)
+          + (body.odemeKapanan ? " kapanan " + body.odemeKapanan : "");
       }
+      if (body.gorevIceEklenen || body.gorevIceGuncellenen) {
+        ozet += " · görev ← +" + (body.gorevIceEklenen || 0) + "/" + (body.gorevIceGuncellenen || 0);
+      }
+      if (body.hata) ozet += " · hata " + body.hata;
+      if (body.iceHata) ozet += " · " + body.iceHata;
+      if (body.hatalar && body.hatalar.length) ozet += " · " + body.hatalar[0];
       document.getElementById("googleDurumYazi").textContent = ozet;
       document.getElementById("odemeTakvimDurum").textContent = ozet;
       odemeTakvimCiz(odemeTakvimSonGunler);
@@ -6370,7 +6457,7 @@ ${"<" + "/script>"}</body></html>`);
         const satir = document.createElement("div");
         satir.className = "satir";
         const tur = document.createElement("span");
-        const turSinif = kayit.takas ? "takas" : kayit.tur;
+        const turSinif = odemeTakvimKayitRenk(kayit);
         tur.className = "tur " + turSinif;
         tur.textContent = (kayit.takas ? "Takas" : (TAKVIM_TUR[kayit.tur] || kayit.tur)) + " " + (TAKVIM_YON[kayit.yon] || "");
         const kim = document.createElement("span");
@@ -6397,8 +6484,27 @@ ${"<" + "/script>"}</body></html>`);
       popup.style.top = top + "px";
     }
 
+    function odemeTakvimOdenecekMi(kayit) {
+      if (kayit?.tur !== "cek" || kayit?.yon !== "odeme") return false;
+      const durum = String(kayit.durum || "")
+        .toLocaleLowerCase("tr-TR")
+        .replace(/ö/g, "o")
+        .replace(/ü/g, "u")
+        .replace(/ı/g, "i")
+        .replace(/ş/g, "s")
+        .replace(/ç/g, "c")
+        .replace(/ğ/g, "g");
+      return durum.includes("odenecek");
+    }
+
+    function odemeTakvimKayitRenk(kayit) {
+      if (odemeTakvimOdenecekMi(kayit)) return "odenecek";
+      if (kayit?.takas) return "takas";
+      return kayit?.tur || "cek";
+    }
+
     function odemeTakvimRenkSinif(kayitlar) {
-      const siniflar = [...new Set(kayitlar.map((k) => (k.takas ? "takas" : (k.tur || "cek"))))];
+      const siniflar = [...new Set(kayitlar.map((k) => odemeTakvimKayitRenk(k)))];
       if (siniflar.length > 1) return "karisik";
       return siniflar[0] || "cek";
     }
@@ -6494,71 +6600,133 @@ ${"<" + "/script>"}</body></html>`);
       const notlar = document.createElement("div");
       notlar.className = "takvim-ay-notlar";
       const ayOn = yil + "-" + String(ay + 1).padStart(2, "0");
-      const bugunStr = (() => {
-        const t = new Date();
-        return t.getFullYear() + "-" + String(t.getMonth() + 1).padStart(2, "0") + "-" + String(t.getDate()).padStart(2, "0");
-      })();
+      const simdi = new Date();
+      const hatirlatmaZamaniGecti = (item) => {
+        const gun = String(item.gun || "");
+        const saatHam = String(item.saat || "00:00").trim();
+        const saat = /^\d{2}:\d{2}$/.test(saatHam) ? saatHam : "00:00";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(gun)) return true;
+        const t = new Date(gun + "T" + saat + ":00");
+        if (!Number.isFinite(t.getTime())) return true;
+        return t.getTime() <= simdi.getTime();
+      };
       const ayTum = hatirlatmalarOku()
-        .filter((item) => item && String(item.gun || "").startsWith(ayOn))
+        .filter((item) => item && String(item.gun || "").startsWith(ayOn) && item.kaynak !== "odeme-takvim")
         .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
-      const ayAktif = ayTum.filter((item) => !item.gonderildi && String(item.gun) >= bugunStr);
-      const ayGecmis = ayTum.filter((item) => item.gonderildi || String(item.gun) < bugunStr);
+      // Saati geçmiş notlar → Geçmiş; gelecek tarih/saat → Notlar
+      const ayAktif = ayTum.filter((item) => !hatirlatmaZamaniGecti(item));
+      const ayGecmis = ayTum.filter((item) => hatirlatmaZamaniGecti(item));
+      // Çek / senet / Visa: gün+tür özet satırı (detay çift tık)
+      const odemeOzetleri = [];
+      for (const [gunKod, kayitlar] of Object.entries(gunler || {})) {
+        if (!String(gunKod).startsWith(ayOn) || !Array.isArray(kayitlar) || !kayitlar.length) continue;
+        const grup = new Map();
+        for (const kayit of kayitlar) {
+          const anahtar = String(kayit.tur || "") + "|" + String(kayit.yon || "tahsilat");
+          if (!grup.has(anahtar)) grup.set(anahtar, []);
+          grup.get(anahtar).push(kayit);
+        }
+        for (const [anahtar, liste] of grup) {
+          const [tur, yon] = anahtar.split("|");
+          const tutar = liste.reduce((sum, x) => sum + (Number(x.tutar) || 0), 0);
+          const hepsiTakas = tur === "cek" && liste.every((x) => x.takas);
+          const renkler = [...new Set(liste.map((x) => odemeTakvimKayitRenk(x)))];
+          odemeOzetleri.push({
+            gun: gunKod,
+            saat: "09:00",
+            tur,
+            yon,
+            renk: renkler.length === 1 ? renkler[0] : (hepsiTakas ? "takas" : (tur || "cek")),
+            adet: liste.length,
+            tutar,
+            kayitlar: liste,
+            metin:
+              (hepsiTakas ? "Takas" : ((TAKVIM_TUR[tur] || tur) + " " + (TAKVIM_YON[yon] || yon)))
+              + " · " + liste.length + " adet · "
+              + para.format(tutar) + " ₺",
+          });
+        }
+      }
+      odemeOzetleri.sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.tur).localeCompare(String(b.tur)));
+      const odemeAktif = odemeOzetleri.filter((item) => !hatirlatmaZamaniGecti(item));
+      const odemeGecmis = odemeOzetleri.filter((item) => hatirlatmaZamaniGecti(item));
       const notSatirYap = (item, gecmisMi) => {
         const satir = document.createElement("div");
-        satir.className = "not-satir" + (gecmisMi ? " gecmis" : "");
-        satir.title = "Düzenlemek için tıkla · Hatırlatma: " + String(item.gun || "").split("-").reverse().join(".");
+        const odemeSinif = item.odemeMi ? (" odeme-ozet " + (item.renk || item.tur || "cek")) : "";
+        satir.className = "not-satir" + (gecmisMi ? " gecmis" : "") + odemeSinif;
+        satir.title = item.odemeMi
+          ? "Çift tık: gün detayı · " + String(item.gun || "").split("-").reverse().join(".")
+          : "Düzenlemek için tıkla · Hatırlatma: " + String(item.gun || "").split("-").reverse().join(".");
         const g = document.createElement("span");
         g.className = "gun";
         g.textContent = String(item.gun || "").split("-").reverse().join(".");
         const s = document.createElement("span");
         s.className = "saat";
-        s.textContent = item.saat || "";
+        s.textContent = item.odemeMi ? (item.adet + " ad") : (item.saat || "");
         const m = document.createElement("span");
         m.className = "metin";
         m.textContent = (item.gonderildi ? "✓ " : "") + (item.metin || "");
         satir.appendChild(g);
         satir.appendChild(s);
         satir.appendChild(m);
-        satir.onclick = () => {
-          if (item.onceAnaId) {
-            const ana = hatirlatmalarOku().find((x) => x.id === item.onceAnaId);
-            if (ana) {
-              hatirlatmaAc(ana.gun, ana.id);
-              return;
+        if (item.odemeMi) {
+          satir.ondblclick = (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            odemeTakvimPopupSabit = true;
+            odemeTakvimPopupGun = item.gun;
+            odemeTakvimPopupGoster(event, item.gun, item.kayitlar || gunler[item.gun] || [], true);
+          };
+        } else {
+          satir.onclick = () => {
+            if (item.onceAnaId) {
+              const ana = hatirlatmalarOku().find((x) => x.id === item.onceAnaId);
+              if (ana) {
+                hatirlatmaAc(ana.gun, ana.id);
+                return;
+              }
             }
-          }
-          hatirlatmaAc(item.gun, item.id);
-        };
+            hatirlatmaAc(item.gun, item.id);
+          };
+        }
         return satir;
       };
-      if (ayGecmis.length) {
+      const gecmisHepsi = [
+        ...odemeGecmis.map((x) => ({ ...x, odemeMi: true })),
+        ...ayGecmis,
+      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
+      const aktifHepsi = [
+        ...odemeAktif.map((x) => ({ ...x, odemeMi: true })),
+        ...ayAktif,
+      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
+      if (gecmisHepsi.length) {
         const gecmisBtn = document.createElement("button");
         gecmisBtn.type = "button";
         gecmisBtn.className = "not-gecmis-btn";
-        gecmisBtn.textContent = "Geçmiş notlar · " + ayGecmis.length;
+        gecmisBtn.textContent = "Geçmiş notlar · " + gecmisHepsi.length;
         const gecmisListe = document.createElement("div");
         gecmisListe.className = "not-gecmis-liste";
         gecmisListe.hidden = true;
-        for (const item of ayGecmis.slice().reverse()) gecmisListe.appendChild(notSatirYap(item, true));
+        for (const item of gecmisHepsi.slice().reverse()) gecmisListe.appendChild(notSatirYap(item, true));
         gecmisBtn.onclick = () => {
           const acik = gecmisListe.hidden;
           gecmisListe.hidden = !acik;
-          gecmisBtn.textContent = (acik ? "Geçmiş notları gizle · " : "Geçmiş notlar · ") + ayGecmis.length;
+          gecmisBtn.textContent = (acik ? "Geçmiş notları gizle · " : "Geçmiş notlar · ") + gecmisHepsi.length;
         };
         notlar.appendChild(gecmisBtn);
         notlar.appendChild(gecmisListe);
       }
       const notBas = document.createElement("div");
-      notBas.className = "not-bas" + (ayGecmis.length ? " not-aktif-baslik" : "");
-      notBas.textContent = "Notlar" + (ayAktif.length ? " · " + ayAktif.length : "");
+      notBas.className = "not-bas" + (gecmisHepsi.length ? " not-aktif-baslik" : "");
+      notBas.textContent = "Notlar" + (aktifHepsi.length ? " · " + aktifHepsi.length : "");
       notlar.appendChild(notBas);
-      if (!ayAktif.length) {
+      if (!aktifHepsi.length) {
         const bos = document.createElement("div");
         bos.className = "not-bos";
         bos.textContent = "Bu ayda gelecek not yok.";
         notlar.appendChild(bos);
       } else {
-        for (const item of ayAktif) notlar.appendChild(notSatirYap(item, false));
+        for (const item of aktifHepsi) notlar.appendChild(notSatirYap(item, false));
       }
       ayKutu.appendChild(notlar);
       konteyner.appendChild(ayKutu);
@@ -6587,6 +6755,7 @@ ${"<" + "/script>"}</body></html>`);
       odemeTakvimPopupKapat();
       const ciro = document.getElementById("odemeTakvimCiro").checked ? "1" : "0";
       const aylar = [0, 1, 2].map((ek) => odemeTakvimAyKodu(new Date(odemeTakvimAy.getFullYear(), odemeTakvimAy.getMonth() + ek, 1)));
+      await hatirlatmalariYukle().catch(() => {});
       const govdeler = await Promise.all(aylar.map((ay) => getir("/api/odeme-takvim?" + new URLSearchParams({
         firma: String(oturum.firma),
         donem: String(oturum.donem),
@@ -7178,8 +7347,7 @@ ${"<" + "/script>"}</body></html>`);
           if (body.surum) {
             document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
           }
-          guncellemeYaziKur();
-          setInterval(guncellemeYaziKur, 4000);
+          guncellemeIzlemeyiBaslat();
           kullaniciSelect.innerHTML = "";
           for (const item of body.kullanicilar || []) {
             const option = document.createElement("option");

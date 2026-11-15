@@ -1,7 +1,7 @@
 [Setup]
 AppId={{A7C3E1B4-6F28-4D5A-9C01-8B2E4F6A1D73}
 AppName=Vega Raporlama
-AppVersion=1.2.2
+AppVersion=1.2.7
 AppPublisher=Expert Bilişim
 DefaultDirName={autopf}\Vega Raporlama
 DefaultGroupName=Vega Raporlama
@@ -27,8 +27,8 @@ Source: "baslat.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\expert-bilisim.ico"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Vega Raporlama"; Filename: "{app}\baslat.vbs"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
-Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\baslat.vbs"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
+Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
+Name: "{autodesktop}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
 
 [Run]
-Filename: "{app}\baslat.vbs"; Description: "Vega Raporlama'yı başlat"; Flags: nowait postinstall skipifsilent shellexec
+Filename: "{app}\VegaRaporlama.exe"; Description: "Vega Raporlama'yı başlat"; Flags: nowait postinstall skipifsilent
