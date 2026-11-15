@@ -1212,7 +1212,7 @@
       <div class="ic">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.1</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.2</div>
         <p class="guncelleme-yazi" id="guncellemeYazi"></p>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
@@ -1729,6 +1729,12 @@
       <label>Client Secret<input id="googleClientSecret" type="password" autocomplete="off" placeholder="GOCSPX-…"></label>
       <div class="butonlar" style="justify-content:flex-start">
         <button type="button" class="soluk" id="googleAyarKaydet">Kimlik bilgilerini kaydet</button>
+      </div>
+      <p class="ipucu" style="margin-top:10px">veya Cloud Console → Credentials → <b>API key</b> (AIza…)</p>
+      <label>API anahtarı<input id="googleApiKey" type="password" autocomplete="off" placeholder="AIza…"></label>
+      <div class="butonlar" style="justify-content:flex-start;flex-wrap:wrap">
+        <button type="button" class="senkron" id="googleApiKeyKaydet">API anahtarını kaydet</button>
+        <span class="ipucu" id="googleApiKeyDurum" style="margin:0"></span>
       </div>
       <div class="durum-satir" id="googleDurumYazi">Durum yükleniyor…</div>
       <label class="bakiye-tik" style="display:flex;align-items:center;gap:8px">
@@ -6083,8 +6089,15 @@ ${"<" + "/script>"}</body></html>`);
           if (son.hata) yazi += " (hata)";
           else if (son.eklenen != null) yazi += " (+" + (son.eklenen || 0) + "/" + (son.guncellenen || 0) + ")";
         }
-      } else if (googleDurumCache.ayarli) yazi = "Kimlik bilgileri kayıtlı. Google ile bağla’ya basın.";
+      } else if (googleDurumCache.oauthAyarli) yazi = "Kimlik bilgileri kayıtlı. Google ile bağla’ya basın.";
+      else if (googleDurumCache.apiKeyAyarli) yazi = "API anahtarı kayıtlı (" + (googleDurumCache.apiKeyMaske || "") + "). Takvim için OAuth da bağlayın.";
       document.getElementById("googleDurumYazi").textContent = yazi;
+      const apiDurum = document.getElementById("googleApiKeyDurum");
+      if (apiDurum) {
+        apiDurum.textContent = googleDurumCache.apiKeyAyarli
+          ? ("Kayıtlı: " + (googleDurumCache.apiKeyMaske || "API key"))
+          : "";
+      }
     }
 
     async function googleAutoAyarKaydet() {
@@ -6127,18 +6140,46 @@ ${"<" + "/script>"}</body></html>`);
     async function googleAyarKaydet() {
       const clientId = document.getElementById("googleClientId").value.trim();
       const clientSecret = document.getElementById("googleClientSecret").value.trim();
-      if (!clientId || !clientSecret) {
-        document.getElementById("googleDurumYazi").textContent = "Client ID ve Client Secret gerekli.";
+      const apiKey = document.getElementById("googleApiKey").value.trim();
+      if ((!clientId || !clientSecret) && !apiKey) {
+        document.getElementById("googleDurumYazi").textContent = "Client ID/Secret veya API anahtarı girin.";
         return;
       }
+      const body = {};
+      if (clientId && clientSecret) {
+        body.clientId = clientId;
+        body.clientSecret = clientSecret;
+      }
+      if (apiKey) body.apiKey = apiKey;
       const durum = await getir("/api/google/ayar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientId, clientSecret }),
+        body: JSON.stringify(body),
       });
       document.getElementById("googleClientSecret").value = "";
+      if (apiKey) document.getElementById("googleApiKey").value = "";
       googleDurumYansit(durum);
       document.getElementById("odemeTakvimDurum").textContent = "Google kimlik bilgileri kaydedildi.";
+    }
+
+    async function googleApiKeyKaydet() {
+      const apiKey = document.getElementById("googleApiKey").value.trim();
+      if (!apiKey) {
+        document.getElementById("googleDurumYazi").textContent = "API anahtarı girin (AIza…).";
+        return;
+      }
+      document.getElementById("googleDurumYazi").textContent = "API anahtarı doğrulanıyor…";
+      const durum = await getir("/api/google/api-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+      });
+      document.getElementById("googleApiKey").value = "";
+      googleDurumYansit(durum);
+      document.getElementById("googleDurumYazi").textContent = durum.mesaj || "API anahtarı kaydedildi.";
+      document.getElementById("odemeTakvimDurum").textContent = durum.ok === false
+        ? (durum.mesaj || "API anahtarı kaydedildi.")
+        : "Google API anahtarı kaydedildi.";
     }
 
     async function googleJsonIcerikYukle(jsonText) {
@@ -6226,6 +6267,11 @@ ${"<" + "/script>"}</body></html>`);
     document.getElementById("googleIptal").onclick = () => googlePanelKapat();
     document.getElementById("googleAyarKaydet").onclick = () => {
       googleAyarKaydet().catch((error) => {
+        document.getElementById("googleDurumYazi").textContent = error.message;
+      });
+    };
+    document.getElementById("googleApiKeyKaydet").onclick = () => {
+      googleApiKeyKaydet().catch((error) => {
         document.getElementById("googleDurumYazi").textContent = error.message;
       });
     };

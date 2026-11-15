@@ -10,7 +10,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.1";
+const UYGULAMA_SURUM = "1.2.2";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -930,6 +930,7 @@ function googleAyarOku() {
       return {
         clientId: String(process.env.GOOGLE_CLIENT_ID || "").trim(),
         clientSecret: String(process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+        apiKey: String(process.env.GOOGLE_API_KEY || "").trim(),
         calendarId: "primary",
         autoSync: true,
         autoSyncDk: 15,
@@ -940,12 +941,13 @@ function googleAyarOku() {
     return {
       clientId: String(ham.clientId || process.env.GOOGLE_CLIENT_ID || "").trim(),
       clientSecret: String(ham.clientSecret || process.env.GOOGLE_CLIENT_SECRET || "").trim(),
+      apiKey: String(ham.apiKey || process.env.GOOGLE_API_KEY || "").trim(),
       calendarId: String(ham.calendarId || "primary").trim() || "primary",
       autoSync: ham.autoSync !== false,
       autoSyncDk: Number.isFinite(dk) && dk >= 5 ? Math.min(240, Math.floor(dk)) : 15,
     };
   } catch {
-    return { clientId: "", clientSecret: "", calendarId: "primary", autoSync: true, autoSyncDk: 15 };
+    return { clientId: "", clientSecret: "", apiKey: "", calendarId: "primary", autoSync: true, autoSyncDk: 15 };
   }
 }
 
@@ -955,6 +957,7 @@ function googleAyarYaz(ayar) {
   const yeni = {
     clientId: String(ayar.clientId != null ? ayar.clientId : once.clientId || "").trim(),
     clientSecret: String(ayar.clientSecret != null ? ayar.clientSecret : once.clientSecret || "").trim(),
+    apiKey: String(ayar.apiKey != null ? ayar.apiKey : once.apiKey || "").trim(),
     calendarId: String(ayar.calendarId != null ? ayar.calendarId : once.calendarId || "primary").trim() || "primary",
     autoSync: ayar.autoSync != null ? Boolean(ayar.autoSync) : once.autoSync !== false,
     autoSyncDk: Number.isFinite(dkHam) && dkHam >= 5 ? Math.min(240, Math.floor(dkHam)) : 15,
@@ -1030,11 +1033,20 @@ function googleOtomatikSenkronKur() {
 
 function googleClientSecretParse(ham) {
   const obj = typeof ham === "string" ? JSON.parse(ham) : ham;
+  const apiKey = String(obj.api_key || obj.apiKey || obj.key || "").trim();
   const blok = obj.web || obj.installed || obj;
   const clientId = String(blok.client_id || blok.clientId || "").trim();
   const clientSecret = String(blok.client_secret || blok.clientSecret || "").trim();
-  if (!clientId || !clientSecret) throw new Error("JSON içinde client_id / client_secret bulunamadı.");
-  return { clientId, clientSecret, tip: obj.web ? "web" : (obj.installed ? "installed" : "diger") };
+  if (apiKey && (!clientId || !clientSecret)) {
+    return { clientId: "", clientSecret: "", apiKey, tip: "apiKey" };
+  }
+  if (!clientId || !clientSecret) throw new Error("JSON içinde client_id / client_secret veya api_key bulunamadı.");
+  return {
+    clientId,
+    clientSecret,
+    apiKey,
+    tip: obj.web ? "web" : (obj.installed ? "installed" : "diger"),
+  };
 }
 
 function googleIndirilenSecretYollari() {
@@ -1082,8 +1094,13 @@ function googleDurum() {
   const ayar = googleAyarOku();
   const token = googleTokenOku();
   const son = googleSonSenkronOku();
+  const oauthAyarli = Boolean(ayar.clientId && ayar.clientSecret);
+  const apiKeyAyarli = Boolean(ayar.apiKey);
   return {
-    ayarli: Boolean(ayar.clientId && ayar.clientSecret),
+    ayarli: oauthAyarli || apiKeyAyarli,
+    oauthAyarli,
+    apiKeyAyarli,
+    apiKeyMaske: apiKeyAyarli ? (ayar.apiKey.slice(0, 6) + "…" + ayar.apiKey.slice(-4)) : "",
     bagli: Boolean(token && token.refresh_token),
     email: token?.email || "",
     calendarId: ayar.calendarId || "primary",
@@ -1125,9 +1142,16 @@ async function googleTokenYenile() {
   return yeni.access_token;
 }
 
+function googleApiUrl(yol) {
+  const ayar = googleAyarOku();
+  const temel = "https://www.googleapis.com/calendar/v3" + yol;
+  if (!ayar.apiKey) return temel;
+  return temel + (temel.includes("?") ? "&" : "?") + "key=" + encodeURIComponent(ayar.apiKey);
+}
+
 async function googleApi(yol, secenek = {}) {
   const access = await googleTokenYenile();
-  const yanit = await fetch("https://www.googleapis.com/calendar/v3" + yol, {
+  const yanit = await fetch(googleApiUrl(yol), {
     ...secenek,
     headers: {
       Authorization: "Bearer " + access,
@@ -1147,6 +1171,35 @@ async function googleApi(yol, secenek = {}) {
     throw err;
   }
   return data;
+}
+
+async function googleApiKeyDogrula() {
+  const ayar = googleAyarOku();
+  if (!ayar.apiKey) throw new Error("API anahtarı kayıtlı değil.");
+  // Calendar API’nin projede açık ve anahtarın geçerli olduğunu dener.
+  const yanit = await fetch(
+    "https://www.googleapis.com/calendar/v3/calendars/primary?key=" + encodeURIComponent(ayar.apiKey),
+    { headers: { "User-Agent": "VegaRaporlama/" + UYGULAMA_SURUM } }
+  );
+  const text = await yanit.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+  if (yanit.ok) {
+    return { ok: true, mesaj: "API anahtarı geçerli. Takvim senkronu için Google ile bağla (OAuth) da gerekir." };
+  }
+  const sebep = String(data?.error?.errors?.[0]?.reason || "");
+  const msg = String(data?.error?.message || "");
+  // Anahtar geçerli ama private takvim için login ister → API tarafı çalışıyor sayılır.
+  if (yanit.status === 401 || /loginRequired|authError|unauthorized/i.test(sebep + " " + msg)) {
+    return { ok: true, mesaj: "API anahtarı kabul edildi. Kişisel takvim için Google ile bağla’ya basın." };
+  }
+  if (/API key not valid|API_KEY_INVALID|keyInvalid/i.test(sebep + " " + msg)) {
+    throw new Error("API anahtarı geçersiz. Cloud Console → Credentials → API key kontrol edin.");
+  }
+  if (/accessNotConfigured|Calendar API has not been used|disabled/i.test(sebep + " " + msg)) {
+    throw new Error("Google Calendar API bu projede kapalı. Cloud Console’da Calendar API’yi etkinleştirin.");
+  }
+  throw new Error(msg || ("API anahtarı doğrulanamadı (" + yanit.status + ")."));
 }
 
 async function googleEmailGetir(accessToken) {
@@ -4466,11 +4519,35 @@ ORDER BY k.${tarihAlan};
       const ayar = googleAyarYaz({
         clientId: body.clientId,
         clientSecret: body.clientSecret,
+        apiKey: body.apiKey,
         calendarId: body.calendarId,
         autoSync: body.autoSync,
         autoSyncDk: body.autoSyncDk,
       });
-      gonder(res, 200, { ...googleDurum(), kaydedildi: Boolean(ayar.clientId && ayar.clientSecret) });
+      gonder(res, 200, {
+        ...googleDurum(),
+        kaydedildi: Boolean((ayar.clientId && ayar.clientSecret) || ayar.apiKey),
+      });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/google/api-key") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const body = await okuGovde(req);
+      const apiKey = String(body.apiKey || "").trim();
+      if (!apiKey) return gonder(res, 400, { error: "API anahtarı gerekli." });
+      googleAyarYaz({ apiKey });
+      try {
+        const dogrulama = await googleApiKeyDogrula();
+        gonder(res, 200, { ...googleDurum(), kaydedildi: true, ...dogrulama });
+      } catch (error) {
+        gonder(res, 200, {
+          ...googleDurum(),
+          kaydedildi: true,
+          ok: false,
+          mesaj: error.message || "API anahtarı kaydedildi ancak doğrulanamadı.",
+        });
+      }
       return;
     }
 
@@ -4496,8 +4573,9 @@ ORDER BY k.${tarihAlan};
         return gonder(res, 400, { error: error.message || "JSON okunamadı." });
       }
       googleAyarYaz({
-        clientId: parsed.clientId,
-        clientSecret: parsed.clientSecret,
+        clientId: parsed.clientId || undefined,
+        clientSecret: parsed.clientSecret || undefined,
+        apiKey: parsed.apiKey || undefined,
         calendarId: body.calendarId,
       });
       // Yerel kopya (senkron için)
@@ -4509,9 +4587,12 @@ ORDER BY k.${tarihAlan};
         kaydedildi: true,
         tip: parsed.tip,
         clientId: parsed.clientId,
-        uyari: parsed.tip === "web"
-          ? "Web istemcisi: Google Console’da yönlendirme URI’sini eklediğinizden emin olun."
-          : "",
+        apiKey: parsed.apiKey ? true : false,
+        uyari: parsed.tip === "apiKey"
+          ? "API anahtarı yüklendi. Takvim yazmak için Client ID/Secret + Google ile bağla da gerekir."
+          : (parsed.tip === "web"
+            ? "Web istemcisi: Google Console’da yönlendirme URI’sini eklediğinizden emin olun."
+            : ""),
       });
       return;
     }

@@ -1,7 +1,7 @@
 [Setup]
 AppId={{A7C3E1B4-6F28-4D5A-9C01-8B2E4F6A1D73}
 AppName=Vega Raporlama
-AppVersion=1.2.1
+AppVersion=1.2.2
 AppPublisher=Expert Bilişim
 DefaultDirName={autopf}\Vega Raporlama
 DefaultGroupName=Vega Raporlama
