@@ -695,7 +695,13 @@
       padding: 12px 14px; pointer-events: none;
     }
     .takvim-popup.sabit { pointer-events: auto; }
-    .takvim-popup b { display: block; margin-bottom: 8px; color: #0e5962; font-size: 14px; font-weight: 800; }
+    .takvim-popup b {
+      display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+      margin-bottom: 8px; color: #0e5962; font-size: 14px; font-weight: 800;
+    }
+    .takvim-popup .popup-toplam {
+      margin-left: auto; white-space: nowrap; font-variant-numeric: tabular-nums; color: #111827;
+    }
     .takvim-popup .satir {
       display: grid; grid-template-columns: minmax(70px, 88px) minmax(0, 1fr) auto; gap: 8px; align-items: start;
       padding: 6px 0; border-top: 1px solid #e7eef2; font-size: 12px; color: #1d2430;
@@ -1260,7 +1266,7 @@
       <div class="ic">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.7</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.8</div>
         <p class="guncelleme-yazi" id="guncellemeYazi"></p>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
@@ -6332,6 +6338,8 @@ ${"<" + "/script>"}</body></html>`);
       if (body.gorevIceEklenen || body.gorevIceGuncellenen) {
         ozet += " · görev ← +" + (body.gorevIceEklenen || 0) + "/" + (body.gorevIceGuncellenen || 0);
       }
+      const hareket = (body.eklenen || 0) + (body.guncellenen || 0) + (body.iceEklenen || 0) + (body.iceGuncellenen || 0) + (body.silinen || 0) + (body.odemeEklenen || 0) + (body.odemeGuncellenen || 0) + (body.odemeKapanan || 0);
+      if (!hareket && !body.hata && !body.iceHata) ozet = "Senkron tamam. Yeni değişiklik yok.";
       if (body.hata) ozet += " · hata " + body.hata;
       if (body.iceHata) ozet += " · " + body.iceHata;
       if (body.hatalar && body.hatalar.length) ozet += " · " + body.hatalar[0];
@@ -6451,7 +6459,13 @@ ${"<" + "/script>"}</body></html>`);
       if (odemeTakvimPopupSabit && !sabit && odemeTakvimPopupGun !== gunYazi) return;
       const parca = document.createDocumentFragment();
       const baslik = document.createElement("b");
-      baslik.textContent = gunYazi.split("-").reverse().join(".") + (sabit || odemeTakvimPopupSabit ? " · sabit" : "");
+      const tarih = document.createElement("span");
+      tarih.textContent = gunYazi.split("-").reverse().join(".") + (sabit || odemeTakvimPopupSabit ? " · sabit" : "");
+      const toplamEl = document.createElement("span");
+      toplamEl.className = "popup-toplam";
+      const toplam = kayitlar.reduce((tutar, kayit) => tutar + Number(kayit.tutar || 0), 0);
+      toplamEl.textContent = para.format(toplam) + " ₺";
+      baslik.append(tarih, toplamEl);
       parca.appendChild(baslik);
       for (const kayit of kayitlar) {
         const satir = document.createElement("div");

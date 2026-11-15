@@ -10,7 +10,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.7";
+const UYGULAMA_SURUM = "1.2.8";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -1088,38 +1088,70 @@ function googleSonSenkronYaz(kayit) {
   try { writeFileSync(googleSonSenkronDosya(), JSON.stringify(kayit, null, 2), "utf8"); } catch { /* ok */ }
 }
 
+let googleOtomatikIs = null;
+
+function googleKilitBekle(ms) {
+  const son = Date.now() + ms;
+  return new Promise((resolve) => {
+    const dene = () => {
+      if (googleSenkronKilitAl()) {
+        resolve(true);
+        return;
+      }
+      if (Date.now() >= son) {
+        resolve(false);
+        return;
+      }
+      setTimeout(dene, 400);
+    };
+    dene();
+  });
+}
+
 async function googleOtomatikSenkronCalistir(kaynak = "otomatik", baglam = {}) {
-  if (googleOtomatikCalisiyor) return null;
+  if (googleOtomatikIs) {
+    if (kaynak === "manuel" || kaynak === "baglanti") return googleOtomatikIs;
+    return null;
+  }
   if (!googleDurum().bagli) return null;
   const ayar = googleAyarOku();
   if ((kaynak === "otomatik" || kaynak === "arka-plan" || kaynak === "baslangic") && ayar.autoSync === false) return null;
-  if (!googleSenkronKilitAl()) return null;
-  googleOtomatikCalisiyor = true;
-  try {
-    const kayitli = googleBaglamOku();
-    const birlesik = {
-      firma: tamSayi(baglam.firma) || kayitli.firma,
-      donem: tamSayi(baglam.donem) || kayitli.donem,
-    };
-    if (birlesik.firma && birlesik.donem) googleBaglamYaz(birlesik);
-    const sonuc = await googleHatirlatmalariSenkronize(birlesik);
-    googleSonSenkronYaz({
-      zaman: new Date().toISOString(),
-      kaynak,
-      ...sonuc,
-    });
-    return sonuc;
-  } catch (error) {
-    googleSonSenkronYaz({
-      zaman: new Date().toISOString(),
-      kaynak,
-      hata: error.message || "Senkron hatası",
-    });
-    return null;
-  } finally {
-    googleOtomatikCalisiyor = false;
-    googleSenkronKilitBirak();
-  }
+  const is = (async () => {
+    const bekleyen = kaynak === "manuel" || kaynak === "baglanti";
+    const kilit = bekleyen ? await googleKilitBekle(20000) : googleSenkronKilitAl();
+    if (!kilit) return null;
+    googleOtomatikCalisiyor = true;
+    try {
+      const kayitli = googleBaglamOku();
+      const birlesik = {
+        firma: tamSayi(baglam.firma) || kayitli.firma,
+        donem: tamSayi(baglam.donem) || kayitli.donem,
+      };
+      if (birlesik.firma && birlesik.donem) googleBaglamYaz(birlesik);
+      const sonuc = await googleHatirlatmalariSenkronize(birlesik);
+      googleSonSenkronYaz({
+        zaman: new Date().toISOString(),
+        kaynak,
+        ...sonuc,
+      });
+      return sonuc;
+    } catch (error) {
+      googleSonSenkronYaz({
+        zaman: new Date().toISOString(),
+        kaynak,
+        hata: error.message || "Senkron hatası",
+      });
+      return null;
+    } finally {
+      googleOtomatikCalisiyor = false;
+      googleSenkronKilitBirak();
+    }
+  })();
+  googleOtomatikIs = is;
+  is.finally(() => {
+    if (googleOtomatikIs === is) googleOtomatikIs = null;
+  });
+  return is;
 }
 
 function googleOtomatikSenkronKur() {
@@ -1500,18 +1532,22 @@ async function googleGorevleriDisaAktar(liste) {
   }
   for (const item of liste) {
     if (item.onceAnaId) continue;
-    if (item.kaynak === "odeme-takvim") continue; // çek/senet/visa → yalnızca Google Takvim
+    if (item.kaynak === "odeme-takvim" || item.kaynak === "teklif") continue; // çek/senet/visa ve teklif → yalnızca takvim + yerel hatırlatma
     if (!/^\d{4}-\d{2}-\d{2}$/.test(String(item.gun || ""))) continue;
     // Takvimden gelen özel olayları görev yapma
     if (item.kaynak === "google" && item.googleEventId && !item.googleTaskId) continue;
     try {
       const govde = googleGorevGovde(item);
+      const imza = googleIcerikImza(govde);
+      const sonZaman = Date.parse(googleSonSenkronOku()?.zaman || "") || 0;
+      if (!googleYazmaGerekli(item, imza, "googleTaskId", "googleGorevImza", sonZaman)) continue;
       const hedefListe = item.googleTaskListId || listId;
       if (item.googleTaskId) {
         await googleTasksApi(
           "/lists/" + encodeURIComponent(hedefListe) + "/tasks/" + encodeURIComponent(item.googleTaskId),
           { method: "PATCH", body: JSON.stringify(govde) }
         );
+        item.googleGorevImza = imza;
         guncellenen += 1;
       } else if (!item.gonderildi) {
         const olusan = await googleTasksApi(
@@ -1520,6 +1556,7 @@ async function googleGorevleriDisaAktar(liste) {
         );
         item.googleTaskId = olusan.id;
         item.googleTaskListId = hedefListe;
+        item.googleGorevImza = imza;
         eklenen += 1;
       }
     } catch (error) {
@@ -1619,6 +1656,23 @@ function googleOlayGovde(item) {
     },
     extendedProperties: { private: { vegaId: String(item.id) } },
   };
+}
+
+function googleIcerikImza(govde) {
+  return createHash("sha1").update(JSON.stringify(govde)).digest("hex").slice(0, 20);
+}
+
+function googleYazmaGerekli(item, imza, idAlan, imzaAlan, sonZaman) {
+  if (!item[idAlan]) return true;
+  if (item[imzaAlan] === imza) return false;
+  if (!item[imzaAlan]) {
+    const yerel = Date.parse(item.guncelleme || item.olusturma || "") || 0;
+    if (!(yerel > sonZaman + 2000)) {
+      item[imzaAlan] = imza;
+      return false;
+    }
+  }
+  return true;
 }
 
 function googleOzelOlayMi(item, olay) {
@@ -1983,6 +2037,154 @@ async function odemeTakvimHatirlatmalariSenkronize(liste, firma, donem) {
   return { eklenen, guncellenen, kapanan, toplam: aktif.size };
 }
 
+function teklifBaglamlari() {
+  const liste = [];
+  const gorulen = new Set();
+  const ekle = (firma, donem) => {
+    const firmaNo = tamSayi(firma);
+    const donemNo = tamSayi(donem);
+    if (!firmaNo || !donemNo) return;
+    const anahtar = firmaNo + ":" + donemNo;
+    if (gorulen.has(anahtar)) return;
+    gorulen.add(anahtar);
+    liste.push({ firma: firmaNo, donem: donemNo });
+  };
+  for (const oturumKaydi of oturumlar.values()) ekle(oturumKaydi?.firma, oturumKaydi?.donem);
+  const kayitli = googleBaglamOku();
+  ekle(kayitli.firma, kayitli.donem);
+  return liste;
+}
+
+function teklifMetin(kayit) {
+  const [yil, ay, gun] = String(kayit.tarih || "").split("-");
+  const tarih = gun && ay && yil ? gun + "." + ay + "." + yil : "";
+  return [kayit.cari, tarih, kayit.belge].filter(Boolean).join(" · ").slice(0, 500);
+}
+
+async function teklifKayitlariGetir(firma, donem) {
+  const firmaNo = tamSayi(firma);
+  const donemNo = tamSayi(donem);
+  if (!firmaNo || !donemNo) return [];
+  const tablo = donemTablo(firmaNo, donemNo, "TBLSPTEKLIFBASLIK");
+  if (!await nesneVar(tablo)) return [];
+  const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CAST(b.IND AS varchar(12)),
+  CONVERT(varchar(10), b.TARIH, 23),
+  ${temiz("b.FIRMAADI")},
+  ${temiz("b.BELGENO")},
+  CASE WHEN ISNULL(b.IPTAL, 0) = 1 THEN N'1' ELSE N'0' END
+FROM ${tablo} b
+WHERE b.TARIH >= DATEADD(day, -30, CAST(GETDATE() AS date))
+  AND b.TARIH < DATEADD(day, 1, CAST(GETDATE() AS date));
+`);
+  const kayitlar = [];
+  for (const line of lines) {
+    const [ind, tarih, cari, belge, iptal] = line.split("|").map((part) => part.trim());
+    if (!ind || !/^\d{4}-\d{2}-\d{2}$/.test(tarih || "")) continue;
+    kayitlar.push({
+      ind,
+      tarih,
+      cari: cari || "—",
+      belge: belge || "—",
+      iptal: iptal === "1",
+    });
+  }
+  return kayitlar;
+}
+
+async function teklifHatirlatmalariSenkronize(liste, firma, donem) {
+  const kayitlar = await teklifKayitlariGetir(firma, donem);
+  const byKey = new Map();
+  for (const item of liste) {
+    if (item.teklifKey) byKey.set(String(item.teklifKey), item);
+  }
+  let eklenen = 0;
+  let guncellenen = 0;
+  let kapanan = 0;
+  for (const kayit of kayitlar) {
+    const teklifKey = "teklif:" + tamSayi(firma) + ":" + tamSayi(donem) + ":" + kayit.ind;
+    const gun = hatirlatmaGunKaydir(kayit.tarih, 7);
+    const saat = "10:00";
+    const metin = teklifMetin(kayit);
+    const zaman = new Date(gun + "T" + saat + ":00");
+    let item = byKey.get(teklifKey);
+    if (kayit.iptal) {
+      if (item && !item.gonderildi) {
+        item.gonderildi = true;
+        item.guncelleme = new Date().toISOString();
+        kapanan += 1;
+        try { await hatirlatmaGorevSil(item.id); } catch { /* görev kalkar */ }
+      }
+      continue;
+    }
+    if (!item && (!Number.isFinite(zaman.getTime()) || zaman.getTime() < Date.now() - 12 * 60 * 60 * 1000)) continue;
+    if (item) {
+      const degisti = String(item.gun) !== gun || String(item.saat) !== saat || String(item.metin || "") !== metin || item.gonderildi === true;
+      item.kaynak = "teklif";
+      item.teklifKey = teklifKey;
+      item.saat = saat;
+      if (!degisti) continue;
+      item.gun = gun;
+      item.metin = metin;
+      item.gonderildi = false;
+      item.guncelleme = new Date().toISOString();
+      guncellenen += 1;
+      try { await hatirlatmaGorevKur(item); } catch { /* görev sonra kurulur */ }
+      continue;
+    }
+    item = {
+      id: randomBytes(6).toString("hex"),
+      gun,
+      saat,
+      metin,
+      gonderildi: false,
+      olusturma: new Date().toISOString(),
+      guncelleme: new Date().toISOString(),
+      kaynak: "teklif",
+      teklifKey,
+      onceGun: 0,
+    };
+    liste.push(item);
+    byKey.set(teklifKey, item);
+    eklenen += 1;
+    try { await hatirlatmaGorevKur(item); } catch { /* görev sonra kurulur */ }
+  }
+  return { eklenen, guncellenen, kapanan };
+}
+
+let teklifSonCalisma = 0;
+let teklifIs = null;
+
+async function teklifHatirlatmaOtomatik(zorla = false) {
+  if (teklifIs) return teklifIs;
+  if (!zorla && Date.now() - teklifSonCalisma < 60 * 1000) return null;
+  const is = (async () => {
+    const baglamlar = teklifBaglamlari();
+    if (!baglamlar.length) return { eklenen: 0, guncellenen: 0, kapanan: 0 };
+    const liste = hatirlatmalariOku();
+    let eklenen = 0;
+    let guncellenen = 0;
+    let kapanan = 0;
+    for (const baglam of baglamlar) {
+      const sonuc = await teklifHatirlatmalariSenkronize(liste, baglam.firma, baglam.donem);
+      eklenen += sonuc.eklenen;
+      guncellenen += sonuc.guncellenen;
+      kapanan += sonuc.kapanan;
+    }
+    if (eklenen || guncellenen || kapanan) hatirlatmalariYaz(liste);
+    teklifSonCalisma = Date.now();
+    return { eklenen, guncellenen, kapanan };
+  })();
+  teklifIs = is;
+  is.finally(() => {
+    if (teklifIs === is) teklifIs = null;
+  });
+  return is;
+}
+
 async function googleHatirlatmalariSenkronize(baglam = {}) {
   const ayar = googleAyarOku();
   const calendarId = encodeURIComponent(ayar.calendarId || "primary");
@@ -2036,6 +2238,9 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
     } catch (error) {
       odemeHata = error.message || "Ödeme takvimi okunamadı";
     }
+    try {
+      await teklifHatirlatmalariSenkronize(liste, firma, donem);
+    } catch { /* teklif hatırlatması takvimi durdurmasın */ }
   }
   let iceEklenen = 0;
   let iceGuncellenen = 0;
@@ -2072,6 +2277,7 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
   let silinen = 0;
   let hata = 0;
   const hatalar = [];
+  const sonZaman = Date.parse(googleSonSenkronOku()?.zaman || "") || 0;
   for (const item of liste) {
     try {
       if (item.gonderildi) {
@@ -2094,6 +2300,8 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
         continue;
       }
       const govde = googleOlayGovde(item);
+      const imza = googleIcerikImza(govde);
+      if (!googleYazmaGerekli(item, imza, "googleEventId", "googleImza", sonZaman)) continue;
       if (item.googleEventId) {
         try {
           // PATCH: özel eventType alanını bozmadan yalnızca bizim alanları güncelle
@@ -2101,6 +2309,7 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
             method: "PATCH",
             body: JSON.stringify(govde),
           });
+          item.googleImza = imza;
           guncellenen += 1;
         } catch (error) {
           const msg = String(error.message || "");
@@ -2117,6 +2326,7 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
               body: JSON.stringify(govde),
             });
             item.googleEventId = olusan.id;
+            item.googleImza = imza;
             eklenen += 1;
           } else throw error;
         }
@@ -2126,6 +2336,7 @@ async function googleHatirlatmalariSenkronize(baglam = {}) {
           body: JSON.stringify(govde),
         });
         item.googleEventId = olusan.id;
+        item.googleImza = imza;
         eklenen += 1;
       }
     } catch (error) {
@@ -2773,15 +2984,12 @@ function guncellemeOtomatikKur() {
     guncellemeZaman = null;
   }
   if (process.env.VEGA_GUNCELLEME === "0") return;
-  // Açılışta hemen + kısa sonra tekrar; diğer PC’ler kaçırmasın
-  const hemen = setTimeout(() => {
+  guncellemeDurum.durum = "bekliyor";
+  guncellemeDurum.mesaj = "Güncelleme kontrolü 1 dakika sonra.";
+  const ilk = setTimeout(() => {
     guncellemeKontrolEt(true).catch((e) => guncellemeLogYaz("oto: " + (e.message || e)));
-  }, 1500);
-  if (hemen.unref) hemen.unref();
-  const ikinci = setTimeout(() => {
-    guncellemeKontrolEt(true).catch((e) => guncellemeLogYaz("oto2: " + (e.message || e)));
-  }, 12000);
-  if (ikinci.unref) ikinci.unref();
+  }, 60 * 1000);
+  if (ilk.unref) ilk.unref();
   guncellemeZaman = setInterval(() => {
     guncellemeKontrolEt(true).catch((e) => guncellemeLogYaz("periyot: " + (e.message || e)));
   }, 5 * 60 * 1000);
@@ -5367,7 +5575,10 @@ WHERE ISNULL(Deleted, 0) = 0
     }
 
     if (req.method === "GET" && url.pathname === "/api/hatirlatma") {
-      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const kim = oturum(req);
+      if (!kim) return gonder(res, 401, { error: "Giriş gerekli." });
+      if (kim.firma && kim.donem) googleBaglamYaz({ firma: kim.firma, donem: kim.donem });
+      try { await teklifHatirlatmaOtomatik(); } catch { /* teklif okunamazsa mevcut notlar döner */ }
       gonder(res, 200, { items: hatirlatmalariOku() });
       return;
     }
@@ -5740,7 +5951,7 @@ WHERE ISNULL(Deleted, 0) = 0
       if (!sonuc) {
         const son = googleSonSenkronOku();
         if (son?.hata) return gonder(res, 400, { error: son.hata, durum: googleDurum() });
-        return gonder(res, 400, { error: "Senkron şu an çalışıyor veya bağlantı yok.", durum: googleDurum() });
+        return gonder(res, 400, { error: "Google senkronu şu an meşgul. Birkaç saniye sonra tekrar deneyin.", durum: googleDurum() });
       }
       gonder(res, 200, { ok: true, ...sonuc, durum: googleDurum() });
       return;
@@ -5822,7 +6033,12 @@ server.listen(PORT, "0.0.0.0", () => {
   googleArkaPlanGorevSenkronize().catch(() => {});
   setTimeout(() => {
     googleOtomatikSenkronCalistir("baslangic").catch(() => {});
+    teklifHatirlatmaOtomatik(true).catch(() => {});
   }, 20000);
+  const teklifZaman = setInterval(() => {
+    teklifHatirlatmaOtomatik().catch(() => {});
+  }, 5 * 60 * 1000);
+  if (teklifZaman.unref) teklifZaman.unref();
   if (existsSync(join(whatsappKlasor(), "creds.json"))) {
     whatsappBagla().catch((error) => {
       wa.durum = "hata";
