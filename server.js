@@ -1,14 +1,24 @@
 const { execFile, spawn } = require("node:child_process");
 const { randomBytes } = require("node:crypto");
-const { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync, unlinkSync, rmSync } = require("node:fs");
+const { createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync, unlinkSync, rmSync } = require("node:fs");
 const { createServer } = require("node:http");
 const { networkInterfaces, tmpdir } = require("node:os");
 const { basename, dirname, join } = require("node:path");
+const { Readable } = require("node:stream");
+const { pipeline } = require("node:stream/promises");
 const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.0";
+const UYGULAMA_SURUM = "1.2.1";
+const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
+const guncellemeDurum = {
+  durum: "bekliyor",
+  surum: UYGULAMA_SURUM,
+  yeniSurum: "",
+  mesaj: "",
+  zaman: null,
+};
 
 function ilkVarolan(adaylar) {
   return adaylar.find((yol) => yol && existsSync(yol)) || "";
@@ -1483,6 +1493,159 @@ function ikonYolu() {
   ]);
 }
 
+function surumParcala(surum) {
+  return String(surum || "")
+    .replace(/^v/i, "")
+    .split(/[^\d]+/)
+    .filter(Boolean)
+    .map((x) => Number(x) || 0);
+}
+
+function surumKarsilastir(a, b) {
+  const x = surumParcala(a);
+  const y = surumParcala(b);
+  const n = Math.max(x.length, y.length);
+  for (let i = 0; i < n; i += 1) {
+    const sol = x[i] || 0;
+    const sag = y[i] || 0;
+    if (sol < sag) return -1;
+    if (sol > sag) return 1;
+  }
+  return 0;
+}
+
+function kuruluExeYolu() {
+  if (paketMi()) return process.execPath;
+  const local = process.env.LOCALAPPDATA || "";
+  const pf = process.env.ProgramFiles || "C:\\Program Files";
+  return ilkVarolan([
+    join(local, "Programs", "Vega Raporlama", "VegaRaporlama.exe"),
+    join(pf, "Vega Raporlama", "VegaRaporlama.exe"),
+    join(dirname(process.execPath), "VegaRaporlama.exe"),
+  ]);
+}
+
+function guncellemeDurumAl() {
+  return {
+    ...guncellemeDurum,
+    surum: UYGULAMA_SURUM,
+    paket: paketMi(),
+  };
+}
+
+async function githubSonSurum() {
+  const yanit = await fetch(`https://api.github.com/repos/${GUNCELLEME_REPO}/releases/latest`, {
+    headers: {
+      Accept: "application/vnd.github+json",
+      "User-Agent": "VegaRaporlama/" + UYGULAMA_SURUM,
+    },
+  });
+  if (!yanit.ok) throw new Error("GitHub sürüm bilgisi alınamadı (" + yanit.status + ").");
+  const veri = await yanit.json();
+  const surum = String(veri.tag_name || "").replace(/^v/i, "");
+  const exe = (veri.assets || []).find((a) => /^VegaRaporlama\.exe$/i.test(String(a.name || "")));
+  if (!surum) throw new Error("Release sürümü yok.");
+  if (!exe?.browser_download_url) throw new Error("Release’te VegaRaporlama.exe yok (setup değil, exe gerekli).");
+  return {
+    surum,
+    url: exe.browser_download_url,
+    boyut: Number(exe.size) || 0,
+  };
+}
+
+async function dosyaIndir(url, hedef) {
+  const yanit = await fetch(url, {
+    headers: { "User-Agent": "VegaRaporlama/" + UYGULAMA_SURUM },
+    redirect: "follow",
+  });
+  if (!yanit.ok || !yanit.body) throw new Error("İndirme başarısız (" + yanit.status + ").");
+  mkdirSync(dirname(hedef), { recursive: true });
+  const gecici = hedef + ".part";
+  try { unlinkSync(gecici); } catch { /* yok */ }
+  const kaynak = typeof yanit.body.getReader === "function"
+    ? Readable.fromWeb(yanit.body)
+    : yanit.body;
+  await pipeline(kaynak, createWriteStream(gecici));
+  try { unlinkSync(hedef); } catch { /* yok */ }
+  renameSync(gecici, hedef);
+}
+
+function exeGuncellemesiniUygula(yeniExe) {
+  const hedef = kuruluExeYolu();
+  if (!hedef || !existsSync(hedef)) throw new Error("Kurulu VegaRaporlama.exe bulunamadı.");
+  if (!existsSync(yeniExe)) throw new Error("İndirilen exe yok.");
+  const klasor = dirname(hedef);
+  const bat = join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "guncelle.cmd");
+  mkdirSync(dirname(bat), { recursive: true });
+  const baslat = join(klasor, "baslat.vbs");
+  const eski = hedef + ".eski";
+  const satirlar = [
+    "@echo off",
+    "ping -n 3 127.0.0.1 >nul",
+    `del /f /q "${eski}" 2>nul`,
+    `ren "${hedef}" "VegaRaporlama.exe.eski"`,
+    `copy /y "${yeniExe}" "${hedef}" >nul`,
+    `if exist "${baslat}" (`,
+    `  start "" wscript "${baslat}"`,
+    `) else (`,
+    `  start "" "${hedef}"`,
+    `)`,
+    `del /f /q "${yeniExe}" 2>nul`,
+    `del /f /q "%~f0" 2>nul`,
+  ];
+  writeFileSync(bat, satirlar.join("\r\n"), "utf8");
+  spawn("cmd.exe", ["/c", bat], { detached: true, windowsHide: true, stdio: "ignore" }).unref();
+  setTimeout(() => process.exit(0), 400);
+}
+
+async function guncellemeKontrolEt(otomatikUygula = true) {
+  if (process.env.VEGA_GUNCELLEME === "0") {
+    guncellemeDurum.durum = "kapali";
+    guncellemeDurum.mesaj = "Otomatik güncelleme kapalı.";
+    return guncellemeDurumAl();
+  }
+  if (guncellemeDurum.durum === "indiriliyor" || guncellemeDurum.durum === "uygulaniyor") {
+    return guncellemeDurumAl();
+  }
+  try {
+    guncellemeDurum.durum = "kontrol";
+    guncellemeDurum.mesaj = "Sürüm kontrol ediliyor…";
+    guncellemeDurum.zaman = new Date().toISOString();
+    const son = await githubSonSurum();
+    guncellemeDurum.yeniSurum = son.surum;
+    if (surumKarsilastir(UYGULAMA_SURUM, son.surum) >= 0) {
+      guncellemeDurum.durum = "guncel";
+      guncellemeDurum.mesaj = "Uygulama güncel (v" + UYGULAMA_SURUM + ").";
+      return guncellemeDurumAl();
+    }
+    guncellemeDurum.durum = "var";
+    guncellemeDurum.mesaj = "Yeni sürüm var: v" + son.surum;
+    if (!otomatikUygula) return guncellemeDurumAl();
+    // Geliştirme (node server.js) sırasında kurulu exe’i sessizce değiştirme; paket exe kendini günceller.
+    if (!paketMi() && process.env.VEGA_GUNCELLEME !== "1") {
+      guncellemeDurum.mesaj = "Yeni sürüm v" + son.surum + " (kurulu uygulamada otomatik iner).";
+      return guncellemeDurumAl();
+    }
+    if (!kuruluExeYolu()) throw new Error("Kurulu VegaRaporlama.exe bulunamadı.");
+    guncellemeDurum.durum = "indiriliyor";
+    guncellemeDurum.mesaj = "v" + son.surum + " indiriliyor…";
+    const kok = join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama", "guncelleme");
+    mkdirSync(kok, { recursive: true });
+    const hedef = join(kok, "VegaRaporlama-" + son.surum + ".exe");
+    await dosyaIndir(son.url, hedef);
+    const boyut = statSync(hedef).size;
+    if (boyut < 1024 * 1024) throw new Error("İndirilen dosya çok küçük.");
+    guncellemeDurum.durum = "uygulaniyor";
+    guncellemeDurum.mesaj = "v" + son.surum + " uygulanıyor, uygulama yeniden başlayacak…";
+    exeGuncellemesiniUygula(hedef);
+    return guncellemeDurumAl();
+  } catch (error) {
+    guncellemeDurum.durum = "hata";
+    guncellemeDurum.mesaj = error.message || "Güncelleme başarısız.";
+    return guncellemeDurumAl();
+  }
+}
+
 const GIRIS_PENCERE = { genislik: 460, yukseklik: 640 };
 
 function konsolAcikMi() {
@@ -2099,7 +2262,18 @@ const server = createServer(async (req, res) => {
     }
 
     if (req.method === "GET" && url.pathname === "/api/baglanti") {
-      gonder(res, 200, { surum: UYGULAMA_SURUM, server: link.server, database: link.database });
+      gonder(res, 200, { surum: UYGULAMA_SURUM, server: link.server, database: link.database, guncelleme: guncellemeDurumAl() });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/guncelleme") {
+      gonder(res, 200, guncellemeDurumAl());
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/guncelleme") {
+      const sonuc = await guncellemeKontrolEt(true);
+      gonder(res, sonuc.durum === "hata" ? 400 : 200, sonuc);
       return;
     }
 
@@ -4503,4 +4677,7 @@ server.listen(PORT, "0.0.0.0", () => {
   konsoluGizle();
   setTimeout(konsoluGizle, 300);
   uygulamaPenceresi(adres);
+  setTimeout(() => {
+    guncellemeKontrolEt(true).catch(() => {});
+  }, 8000);
 });

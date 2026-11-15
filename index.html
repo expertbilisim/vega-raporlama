@@ -60,6 +60,9 @@
     .ust .logo { text-align: left; font-size: 15px; letter-spacing: 0.08em; }
     .surum { text-align: center; color: #666; font-size: 13px; margin-top: 8px; }
     .surum-no { text-align: center; color: #8a9099; font-size: 12px; margin-top: 4px; font-weight: 650; }
+    .guncelleme-yazi { text-align: center; color: #0e5962; font-size: 12px; margin: 6px 0 0; font-weight: 650; min-height: 1.1em; }
+    .guncelleme-yazi.hata { color: #b42318; }
+    .guncelleme-yazi.guncel { color: #5c6b7a; font-weight: 550; }
     h1 { margin: 16px 0 12px; text-align: center; font-size: 26px; font-weight: 500; }
     .alan { display: flex; align-items: center; border: 1px solid #bdbdbd; margin-top: 10px; background: #fff; }
     .alan span { width: 36px; text-align: center; color: #666; }
@@ -1209,7 +1212,8 @@
       <div class="ic">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.0</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.1</div>
+        <p class="guncelleme-yazi" id="guncellemeYazi"></p>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
           <span aria-hidden="true">👤</span>
@@ -2151,6 +2155,23 @@
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error || "İstek tamamlanamadı");
       return body;
+    }
+
+    async function guncellemeYaziKur() {
+      const el = document.getElementById("guncellemeYazi");
+      if (!el) return;
+      try {
+        const body = await getir("/api/guncelleme");
+        el.classList.remove("hata", "guncel");
+        if (body.durum === "hata") el.classList.add("hata");
+        if (body.durum === "guncel") el.classList.add("guncel");
+        el.textContent = body.mesaj || "";
+        if (body.surum) {
+          document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
+        }
+      } catch {
+        /* sessiz */
+      }
     }
 
     function firmaAd(firma) {
@@ -7111,6 +7132,8 @@ ${"<" + "/script>"}</body></html>`);
           if (body.surum) {
             document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
           }
+          guncellemeYaziKur();
+          setInterval(guncellemeYaziKur, 4000);
           kullaniciSelect.innerHTML = "";
           for (const item of body.kullanicilar || []) {
             const option = document.createElement("option");
