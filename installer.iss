@@ -1,7 +1,7 @@
 [Setup]
 AppId={{A7C3E1B4-6F28-4D5A-9C01-8B2E4F6A1D73}
 AppName=Vega Raporlama
-AppVersion=1.2.8
+AppVersion=1.2.9
 AppPublisher=Expert Bilişim
 DefaultDirName={autopf}\Vega Raporlama
 DefaultGroupName=Vega Raporlama
@@ -25,6 +25,8 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Source: "dist\VegaRaporlama.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "baslat.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\expert-bilisim.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\expert-bilisim.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\expert-logo.jpg"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
