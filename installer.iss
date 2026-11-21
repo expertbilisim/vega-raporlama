@@ -26,7 +26,9 @@ Source: "dist\VegaRaporlama.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "baslat.vbs"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\expert-bilisim.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "assets\expert-bilisim.png"; DestDir: "{app}"; Flags: ignoreversion
-Source: "assets\expert-logo.jpg"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\expert-logo.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\expert-logo-teklif.png"; DestDir: "{app}"; Flags: ignoreversion
+Source: "assets\vega-yazilim-logo.png"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\Vega Raporlama"; Filename: "{app}\VegaRaporlama.exe"; IconFilename: "{app}\expert-bilisim.ico"; WorkingDir: "{app}"
