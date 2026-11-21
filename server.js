@@ -11,7 +11,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.9";
+const UYGULAMA_SURUM = "1.2.10";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -3262,7 +3262,7 @@ function guncellemeOtomatikKur() {
   guncellemeDurum.mesaj = "Açılışta sürüm kontrol ediliyor…";
   const ilk = setTimeout(() => {
     guncellemeKontrolEt(true).catch((e) => guncellemeLogYaz("oto: " + (e.message || e)));
-  }, 1500);
+  }, 400);
   if (ilk.unref) ilk.unref();
   guncellemeZaman = setInterval(() => {
     guncellemeKontrolEt(true).catch((e) => guncellemeLogYaz("periyot: " + (e.message || e)));
