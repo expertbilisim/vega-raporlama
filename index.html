@@ -14,6 +14,7 @@
     if (acilis.get("bordro")) document.documentElement.classList.add("bordro-pencere");
   </script>
   <style>
+    html { background: #f4f8fb; }
     :root { color-scheme: light; }
     * { box-sizing: border-box; }
     body {
@@ -195,7 +196,9 @@
     .bugun-islem .bugun-satir.senet .tur { color: #c05612; }
     .bugun-islem .bugun-satir.visa { background: #f3e8ff; border-color: #c084fc; }
     .bugun-islem .bugun-satir.visa .tur { color: #6b21a8; }
-    .bugun-islem .bugun-satir.teklif { background: #e7f1fb; border-color: #9ebfe0; }
+    .bugun-islem .bugun-satir.teklif { background: #e7f1fb; border-color: #9ebfe0; cursor: pointer; }
+    .bugun-islem .bugun-satir.animsat { background: #fff8e8; border-color: #e6d3a1; }
+    .bugun-islem .bugun-satir.animsat .tur { color: #8a5a00; }
     .bugun-islem .bugun-satir.teklif .tur { color: #1d4e89; }
     @media (max-width: 980px) {
       .ana-icerik { grid-template-columns: 1fr; }
@@ -320,6 +323,10 @@
       background: linear-gradient(180deg, #f3fbf8 0%, #d7f0e6 100%);
       border: 1px solid #b7dfcf;
     }
+    #teklifAlt .teklif-eski {
+      margin-right: auto; border: 1px solid #1f7f8c; background: #fff; color: #0e4f57;
+      border-radius: 8px; padding: 6px 12px; font-weight: 700; cursor: pointer;
+    }
     .portfoy-alt b { font-size: 22px; margin-left: 8px; }
     .portfoy-alt .secilen { color: #8a3b08; }
     .portfoy-alt .secilen b { color: #c05612; }
@@ -355,6 +362,54 @@
       border: 1px solid #b7c9d2; border-radius: 8px; padding: 6px 8px; background: #fff;
     }
     #ciroRapor { gap: 8px; }
+    #siparisIhtiyac { gap: 8px; }
+    #siparisIhtiyac .siparis-govde {
+      flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.85fr); gap: 12px;
+    }
+    @media (max-width: 1100px) {
+      #siparisIhtiyac .siparis-govde { grid-template-columns: 1fr; }
+    }
+    #siparisIhtiyac .siparis-kartlar { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .siparis-kart {
+      padding: 12px 14px; border-radius: 14px; color: #fff;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 8px 16px rgba(20, 60, 70, .14);
+    }
+    .siparis-kart span { display: block; opacity: .9; font-size: 12px; font-weight: 650; }
+    .siparis-kart b { display: block; margin-top: 4px; font-size: 22px; }
+    .siparis-kart.adet { background: linear-gradient(145deg, #35b7c5 0%, #14727d 100%); }
+    .siparis-kart.miktar { background: linear-gradient(145deg, #f0a06a 0%, #c05612 100%); }
+    .siparis-kart.kritik { background: linear-gradient(145deg, #f0a0a0 0%, #b42318 100%); }
+    .siparis-panel {
+      min-height: 0; display: flex; flex-direction: column; gap: 8px;
+      padding: 10px; border-radius: 14px; background: #fff; border: 1px solid #c5d5de;
+    }
+    .siparis-panel h3 { margin: 0; color: #0e5962; font-size: 14px; }
+    .siparis-panel .ipucu { margin: 0; color: #5c6b7a; font-size: 12px; }
+    #siparisIhtiyac .tablo-wrap { flex: 1; min-height: 180px; }
+    #siparisIhtiyac table { table-layout: fixed; width: 100%; }
+    #siparisIhtiyac th:nth-child(1),
+    #siparisIhtiyac td:nth-child(1) { width: 18%; overflow: hidden; text-overflow: ellipsis; }
+    #siparisIhtiyac th:nth-child(2),
+    #siparisIhtiyac td:nth-child(2) {
+      width: 34%; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.3;
+    }
+    #siparisSatirlar tr.kritik td { background: #fff1f0; }
+    .siparis-grafik { display: flex; flex-direction: column; gap: 12px; overflow: auto; min-height: 0; }
+    .siparis-satir { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .siparis-satir .ad {
+      min-width: 0; font-size: 12px; font-weight: 700; color: #1d2430; line-height: 1.3;
+      overflow-wrap: anywhere; word-break: break-word;
+    }
+    .siparis-satir .ad small { display: block; font-weight: 650; color: #5c6b7a; overflow-wrap: anywhere; }
+    .siparis-cubuklar { display: flex; flex-direction: column; gap: 3px; }
+    .siparis-cubuk { height: 10px; border-radius: 999px; background: #e7eef3; overflow: hidden; }
+    .siparis-cubuk i { display: block; height: 100%; border-radius: 999px; }
+    .siparis-cubuk.env i { background: #1f8f9c; }
+    .siparis-cubuk.sip i { background: #c05612; }
+    .siparis-lejant { display: flex; gap: 12px; font-size: 12px; color: #3a4a56; font-weight: 700; }
+    .siparis-lejant i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; }
+    .siparis-lejant .env { background: #1f8f9c; }
+    .siparis-lejant .sip { background: #c05612; }
     #ciroRapor .ciro-govde {
       flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
       gap: 12px;
@@ -688,6 +743,20 @@
     .takvim-legenda .tk-karisik { background: #a89858; }
     .takvim-legenda .tk-gecmis { background: #3e464c; }
     .takvim-legenda .tk-not { font-weight: 500; color: #6a7a86; }
+    .takvim-telefon {
+      display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto;
+      padding: 6px 8px; border-radius: 10px;
+      background: #fff8ea; border: 1px solid #c4a36a;
+    }
+    .takvim-telefon[hidden] { display: none; }
+    .takvim-telefon-bas { font-size: 12px; font-weight: 800; color: #8a5a00; }
+    .takvim-telefon-liste { display: flex; flex-wrap: wrap; gap: 6px; max-height: 78px; overflow: auto; }
+    .takvim-telefon-satir {
+      border: 1px solid #e2c48a; background: #fff; border-radius: 8px;
+      padding: 4px 8px; font-size: 12px; font-weight: 650; color: #3a2a10;
+      cursor: pointer; text-align: left; max-width: 100%;
+    }
+    .takvim-telefon-satir:hover { border-color: #8a5a00; background: #fffdf8; }
     .takvim-uc {
       flex: 1; min-height: 0; display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; overflow: hidden; padding: 2px 0 6px;
@@ -826,6 +895,12 @@
     .takvim-ay-notlar .not-satir.teklif .gun,
     .takvim-ay-notlar .not-satir.teklif .saat,
     .takvim-ay-notlar .not-satir.teklif .metin { color: #455e78; }
+    .takvim-ay-notlar .not-satir.etkinlik {
+      background: #fff8ea; border-color: #e2c48a;
+    }
+    .takvim-ay-notlar .not-satir.etkinlik .gun,
+    .takvim-ay-notlar .not-satir.etkinlik .saat,
+    .takvim-ay-notlar .not-satir.etkinlik .metin { color: #6a4a10; }
     .takvim-ay-notlar .not-satir.gecmis,
     .takvim-ay-notlar .not-satir.odeme-ozet.gecmis {
       opacity: 1;
@@ -924,6 +999,17 @@
       text-shadow: none;
       font-weight: 800;
     }
+    .takvim-gun.dolu.not {
+      border-color: #c4a36a;
+      background: linear-gradient(180deg, #fff8ea 0%, #f3e2c0 100%);
+      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(80, 60, 20, .1);
+    }
+    .takvim-gun.dolu.not .gun-no,
+    .takvim-gun.dolu.not .gun-adet {
+      color: #5a3e10;
+      text-shadow: none;
+      font-weight: 800;
+    }
     .takvim-gun.dolu.gecmis {
       border: 2px solid #2c3338;
       background: #3e464c;
@@ -991,6 +1077,7 @@
     .takvim-popup .tur.senet { color: #b07a45; }
     .takvim-popup .tur.visa { color: #7a6896; }
     .takvim-popup .tur.teklif { color: #5d7ea0; }
+    .takvim-popup .tur.hatirlatma { color: #8a5a00; }
     .takvim-popup .kim {
       min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.3;
     }
@@ -1004,6 +1091,29 @@
       background: rgba(18, 36, 48, .42); padding: 16px;
     }
     #hatirlatmaKutu[hidden] { display: none; }
+    #kurKutu {
+      position: fixed; inset: 0; z-index: 130; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #kurKutu[hidden] { display: none; }
+    #kurKutu .hatirlatma-panel { width: min(440px, 100%); }
+    #kurKutu .kur-metin { margin: 0; font-size: 13px; line-height: 1.4; color: #3a4a56; }
+    #kurKutu .kur-uyari { margin: 0; font-size: 13px; line-height: 1.4; color: #9a3412; }
+    #kurKutu .kur-uyari[hidden] { display: none; }
+    #waNumaraKutu {
+      position: fixed; inset: 0; z-index: 140; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #waNumaraKutu[hidden] { display: none; }
+    #waNumaraKutu .hatirlatma-panel { width: min(460px, 100%); }
+    .wa-numara-liste { display: grid; gap: 6px; max-height: 360px; overflow: auto; }
+    .wa-numara-liste button.wa-kisi {
+      display: grid; gap: 2px; width: 100%; text-align: left; cursor: pointer;
+      background: #fff; color: #1a4e58; border: 1px solid #c5d5de; border-radius: 10px; padding: 8px 10px;
+    }
+    .wa-numara-liste button.wa-kisi b { font-size: 14px; color: #0e5962; }
+    .wa-numara-liste button.wa-kisi span { font-size: 12px; font-weight: 650; color: #3a4a56; }
+    .wa-numara-liste button.wa-kisi:hover { border-color: #0e5962; background: #f3fbfc; }
     .hatirlatma-panel {
       width: min(420px, 100%);
       background: linear-gradient(180deg, #ffffff 0%, #f2f7f9 100%);
@@ -1588,9 +1698,32 @@
       position: absolute; z-index: 8; left: 0; right: 0; top: calc(100% + 1px); max-height: 200px; overflow: auto;
       background: #fff; border: 1px solid #7f9db9; box-shadow: 0 8px 18px rgba(20, 40, 54, .18);
     }
+    .teklif-oneri { max-height: 280px; }
     .teklif-oneri button { display: block; width: 100%; text-align: left; border: 0; background: #fff; padding: 5px 7px; font: inherit; font-size: 12px; cursor: pointer; }
-    .teklif-oneri button:hover { background: #e7f6f8; }
+    .teklif-oneri button.oneri-satir { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .teklif-oneri button:hover, .teklif-oneri button.aktif { background: #d7eef2; }
+    .teklif-oneri .sol { flex: 1; white-space: normal; line-height: 1.25; }
     .teklif-oneri small { display: block; color: #6b7c88; }
+    .teklif-oneri .sag { flex: none; font-weight: 750; font-variant-numeric: tabular-nums; color: #0e4f57; white-space: nowrap; }
+    .teklif-oneri .sag.eksi { color: #9a3412; }
+    .teklif-oneri .bos { padding: 8px; color: #5a6d78; font-size: 12px; }
+    .teklif-fiyat-pop {
+      position: fixed; z-index: 220; width: min(540px, calc(100vw - 16px));
+      max-height: min(72vh, 520px); overflow: auto; background: #fff;
+      border: 1px solid #7f9db9; border-radius: 8px; padding: 10px 12px;
+      box-shadow: 0 14px 32px rgba(20, 40, 54, .24); font-size: 12px; color: #1d2430;
+    }
+    .teklif-fiyat-pop h3 { margin: 0 0 2px; font-size: 13px; color: #0e4f57; }
+    .teklif-fiyat-pop .alt { margin: 0 0 8px; color: #5a6d78; }
+    .teklif-fiyat-pop .kartlar { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+    .teklif-fiyat-pop .kart {
+      background: #f4f7fa; border: 1px solid #d5dee6; border-radius: 6px; padding: 4px 8px; min-width: 92px;
+    }
+    .teklif-fiyat-pop .kart b { display: block; font-size: 13px; }
+    .teklif-fiyat-pop h4 { margin: 8px 0 4px; font-size: 12px; color: #0e4f57; }
+    .teklif-fiyat-pop table { width: 100%; border-collapse: collapse; }
+    .teklif-fiyat-pop th, .teklif-fiyat-pop td { border-bottom: 1px solid #e6edf2; padding: 3px 4px; text-align: left; }
+    .teklif-fiyat-pop td.n, .teklif-fiyat-pop th.n { text-align: right; white-space: nowrap; }
     #teklifTablo { width: 100%; border-collapse: collapse; background: #fff; font-size: 12px; table-layout: fixed; }
     #teklifTablo th {
       position: sticky; top: 0; background: #f3ead0; color: #1d2430; border: 1px solid #d7c89a;
@@ -1669,6 +1802,7 @@
         inset 0 -1px 0 rgba(0,0,0,.18),
         0 3px 8px rgba(14, 79, 87, .35);
     }
+    .fr-ust input[type="range"] { width: 72px; accent-color: #0e6b76; }
     .fr-ust select, .fr-ust input[type="number"], .fr-ust input[type="color"], .fr-ust input[type="text"] {
       border: 1px solid #7f919e; border-radius: 6px; padding: 4px 6px; font: inherit; font-size: 12px;
       background: linear-gradient(180deg, #fff, #eef2f5);
@@ -1726,6 +1860,7 @@
     }
     .fr-sayfa {
       width: 794px; min-height: 1123px; margin: 0 auto; position: relative;
+      display: flex; flex-direction: column; justify-content: flex-start;
       background:
         linear-gradient(145deg, rgba(255,255,255,.85) 0%, transparent 40%),
         linear-gradient(165deg, #ffffff 0%, #f7fafb 55%, #eef3f5 100%);
@@ -1740,7 +1875,7 @@
         0 42px 72px rgba(15, 30, 40, .22);
     }
     .fr-bant {
-      position: relative; border-bottom: 1px dashed rgba(14, 107, 118, .28);
+      position: relative; z-index: 1; flex: 0 0 auto; border-bottom: 1px dashed rgba(14, 107, 118, .28);
       background-image:
         linear-gradient(rgba(14, 107, 118, .05) 1px, transparent 1px),
         linear-gradient(90deg, rgba(14, 107, 118, .05) 1px, transparent 1px);
@@ -1764,6 +1899,12 @@
       border-color: #2f8a42; color: #0d3418;
       box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 2px 6px rgba(30, 110, 50, .2);
     }
+    .fr-arka, #teklifKagit .kagit-arka {
+      position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%);
+      width: 62%; height: 62%; object-fit: contain; pointer-events: none; z-index: 0;
+      user-select: none;
+    }
+    .fr-bant.sayfa { margin-top: 0; }
     .fr-bant.sayfa .fr-bant-baslik {
       background: linear-gradient(180deg, #f0f2f6 0%, #b8c0cc 55%, #8a95a5 100%);
       border-color: #5a6573; color: #1a222c;
@@ -1804,7 +1945,7 @@
     }
     .fr-nesne.table table { width: 100%; height: auto; border-collapse: collapse; table-layout: fixed; }
     .fr-nesne.table th, .fr-nesne.table td {
-      border: 1px solid #c5d5e0; padding: var(--fr-pad-y, 1px) var(--fr-pad-x, 4px); vertical-align: middle;
+      border: 1px solid #d4e0e6; padding: var(--fr-pad-y, 1px) var(--fr-pad-x, 4px); vertical-align: middle;
     }
     .fr-nesne.table th {
       background: linear-gradient(180deg, #f2f8f9, #d7e6ea);
@@ -1867,7 +2008,7 @@
       font-family: "Segoe UI", "Candara", sans-serif;
       width: 794px;
       max-width: 100%;
-      min-height: 1123px;
+      min-height: 0;
       position: relative;
       overflow: visible;
       background:
@@ -1886,11 +2027,13 @@
     }
     #teklifKagit .kagit-sayfa {
       position: relative; width: 794px; min-height: 1123px;
-      display: flex; flex-direction: column;
+      display: flex; flex-direction: column; justify-content: flex-start;
     }
+    #teklifKagit .kagit-bant { flex: 0 0 auto; overflow: hidden; }
     #teklifKagit .kagit-bant.sayfa-no {
-      margin-top: auto;
+      margin-top: auto; overflow: hidden;
     }
+    #teklifKagit .kagit-nesne.picture.alta { z-index: 4; }
     #teklifKagit .kagit-sayfa::before {
       content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
       background:
@@ -2030,16 +2173,13 @@
     .kagit-meta { display: grid; gap: 4px; align-content: center; }
     .kagit-meta div { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; }
     .kagit-meta span { color: #6a7d88; }
-    #teklifKagit table { width: 100%; border-collapse: separate; border-spacing: 0; background: transparent; min-width: 0; }
+    #teklifKagit table { width: 100%; border-collapse: collapse; border-spacing: 0; background: transparent; min-width: 0; }
     #teklifKagit thead th:first-child { border-top-left-radius: 8px; }
     #teklifKagit thead th:last-child { border-top-right-radius: 8px; }
     #teklifKagit .kagit-nesne.table {
       border-radius: 10px;
-      box-shadow:
-        inset 0 1px 0 rgba(255,255,255,.85),
-        0 2px 0 #c9d7df,
-        0 8px 18px rgba(20, 40, 50, .12);
-      border: 1px solid rgba(14, 79, 87, .14);
+      box-shadow: none;
+      border: 1px solid #d4e0e6;
       overflow: hidden;
       background: #fff;
     }
@@ -2047,17 +2187,17 @@
       position: static; font-size: 9px; letter-spacing: .04em; text-transform: uppercase;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       padding: var(--hucre-pad-y) var(--hucre-pad-x); height: calc(var(--satir-h) * .85);
-      color: #fff; border: 0; border-bottom: 0;
+      color: #fff; border: 1px solid #d4e0e6;
       background: linear-gradient(180deg, #2aa0ad 0%, #0e6b76 48%, #0a5560 100%);
       text-shadow: 0 1px 1px rgba(0,0,0,.28);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.28), inset 0 -1px 0 rgba(0,0,0,.12);
+      box-shadow: none;
     }
     #teklifKagit td {
-      border: 0; border-bottom: 1px solid rgba(14, 79, 87, .08); border-radius: 0;
-      background: linear-gradient(180deg, #ffffff 0%, #f7fafb 100%);
+      border: 1px solid #d4e0e6; border-radius: 0;
+      background: #fff;
       padding: var(--hucre-pad-y) var(--hucre-pad-x); vertical-align: middle; color: var(--kagit-ink); height: var(--satir-h);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.7);
+      box-shadow: none;
     }
     #teklifKagit td.kagit-aciklama { white-space: normal; color: var(--kagit-muted); font-size: 10px; }
     #teklifKagit tbody tr:nth-child(even):not(.kagit-satir-not) td {
@@ -2068,7 +2208,7 @@
     #teklifKagit tbody tr.kagit-satir-not td {
       height: auto; white-space: normal; overflow: visible; text-overflow: unset;
       font-size: 10px; color: var(--kagit-muted); font-style: italic; padding-top: 0;
-      border-bottom: 1px solid rgba(14, 79, 87, .08);
+      border: 1px solid #d4e0e6;
     }
     #teklifKagit td.kagit-foto-hucre { text-align: center; vertical-align: middle; }
     #teklifKagit td.kagit-foto-hucre img {
@@ -2152,8 +2292,14 @@
       html.teklif-yazdir #teklifKagit {
         box-shadow: none !important; border: 0 !important; border-radius: 0 !important; padding: 0 !important; overflow: visible;
         background: #fff !important; transform: none !important;
+        width: 210mm !important; max-width: none !important;
+      }
+      html.teklif-yazdir #teklifKagit .kagit-sayfa {
+        width: 210mm; min-height: 297mm; justify-content: flex-start;
       }
       html.teklif-yazdir #teklifKagit .kagit-sayfa::before { display: none; }
+      html.teklif-yazdir #teklifKagit th,
+      html.teklif-yazdir #teklifKagit td { border: 1px solid #d4e0e6 !important; }
       html.teklif-yazdir #teklifKagit .kagit-nesne.picture,
       html.teklif-yazdir #teklifKagit td.kagit-foto-hucre img,
       html.teklif-yazdir #teklifKagit th,
@@ -2252,8 +2398,7 @@
         <button type="button" id="waBaslat">QR oluştur</button>
         <button type="button" id="waCikis" class="soluk">Bağlantıyı kes</button>
         <label class="ayar-tik"><input id="waSmsIzni" type="checkbox" checked> WhatsApp mesaj gönderilsin</label>
-        <p class="ayar-aciklama">İşaretliyse yalnızca cari kartında <b>SMS Gönderilsin</b> açık olanlara WhatsApp gider.</p>
-        <label class="ayar-tik"><input id="waTumNumara" type="checkbox" checked> Karttaki tüm numaralara gönder</label>
+        <p class="ayar-aciklama">İşaretliyse yalnızca cari kartında <b>SMS Gönderilsin</b> açık olanlara WhatsApp gider. Alıcı listesinde rehberdeki ad, yoksa WhatsApp’taki ad görünür; mesaj seçtiğiniz kişiye gider.</p>
       </div>
     </div>
     <div class="ana-icerik" id="anaIcerik">
@@ -2271,6 +2416,7 @@
       <button class="rapor-btn" id="visaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20M5 15h4" stroke="currentColor" stroke-width="1.6"/></svg>Visa</button>
       <button class="rapor-btn" id="odemeTakvimBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" stroke-width="1.5"/></svg>Ödeme Takvimi</button>
       <button class="rapor-btn" id="teklifBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="12" width="6" height="4.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 18.5h6" stroke="currentColor" stroke-width="1.4"/></svg>Fiyat Teklifleri</button>
+      <button class="rapor-btn" id="siparisIhtiyacBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15h3V9H7zM12 15h3V6h-3zM17 15h3v-4h-3z" fill="currentColor"/></svg>Sipariş İhtiyaç</button>
     </div>
     <aside class="bugun-islem" id="bugunIslem" aria-label="Bugünün işlemleri">
       <div class="bugun-baslik">
@@ -2749,8 +2895,61 @@
         <span><i class="tk-gecmis"></i>Günü geçen</span>
         <span class="tk-not">Ay görünümü · tıkla detay · çift tık hatırlatma</span>
       </div>
+      <div class="takvim-telefon" id="odemeTakvimTelefon" hidden></div>
       <div class="takvim-uc" id="odemeTakvimGrid" aria-label="Üç aylık takvim"></div>
       <div class="takvim-popup" id="odemeTakvimPopup" hidden></div>
+    </div>
+    <div class="rapor-ekran" id="siparisIhtiyac" hidden>
+      <div class="araclar">
+        <button class="geri" id="siparisGeri" type="button">‹</button>
+        <strong class="baslik">Sipariş İhtiyaç</strong>
+        <label class="bakiye-tik">Satış başlangıç</label>
+        <input id="siparisBas" type="date" aria-label="Satış başlangıç">
+        <label class="bakiye-tik">Bitiş</label>
+        <input id="siparisBit" type="date" aria-label="Satış bitiş">
+        <label class="bakiye-tik">Hedef gün</label>
+        <input id="siparisHedef" type="number" min="1" max="365" value="30" aria-label="Hedef stok günü">
+        <label class="bakiye-tik">Stok tipi
+          <select id="siparisTip" aria-label="Stok tipi">
+            <option value="0,100" selected>Emtia ve ticari mal</option>
+            <option value="">Tümü</option>
+          </select>
+        </label>
+        <input id="siparisAra" type="search" placeholder="Stok kodu veya adı" aria-label="Stok ara">
+        <span class="durum" id="siparisDurum"></span>
+      </div>
+      <div class="siparis-kartlar">
+        <div class="siparis-kart adet"><span>Sipariş verilecek ürün</span><b id="siparisAdet">0</b></div>
+        <div class="siparis-kart miktar"><span>Toplam sipariş miktarı</span><b id="siparisMiktar">0</b></div>
+        <div class="siparis-kart kritik"><span>7 günden az dayanan</span><b id="siparisKritik">0</b></div>
+      </div>
+      <div class="siparis-govde">
+        <section class="siparis-panel">
+          <h3>Envantere göre liste</h3>
+          <p class="ipucu">En az dayanan ürün üstte. Sipariş = günlük satış × hedef gün − envanter.</p>
+          <div class="tablo-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Stok Kodu</th>
+                  <th>Stok Adı</th>
+                  <th class="num">Envanter</th>
+                  <th class="num">Satılan</th>
+                  <th class="num">Günlük</th>
+                  <th class="num">Yeter</th>
+                  <th class="num">Sipariş</th>
+                </tr>
+              </thead>
+              <tbody id="siparisSatirlar"></tbody>
+            </table>
+          </div>
+        </section>
+        <section class="siparis-panel">
+          <h3>Grafik</h3>
+          <div class="siparis-lejant"><span><i class="env"></i>Envanter</span><span><i class="sip"></i>Sipariş</span></div>
+          <div class="siparis-grafik" id="siparisGrafik"></div>
+        </section>
+      </div>
     </div>
     <div class="rapor-ekran" id="teklifEkran" hidden>
       <div class="araclar">
@@ -2835,7 +3034,7 @@
                     <div class="teklif-oneri" id="teklifCariOneri" hidden></div>
                   </div>
                 </div>
-                <div class="satir"><label>Firma Adı</label><input id="teklifFirmaAd"></div>
+                <div class="satir"><label>Firma Adı</label><input id="teklifFirmaAd" class="teklif-cari-ara" autocomplete="off"></div>
                 <div class="satir"><label>Tarih</label>
                   <div class="tarih-alan">
                     <input id="teklifTarih" type="date">
@@ -2854,7 +3053,11 @@
               <section>
                 <div class="satir"><label>Müş.Tem.</label><input id="teklifMustem"></div>
                 <div class="satir"><label>Para Birimi</label>
-                  <select id="teklifPb"><option>TL</option><option>$</option><option>EUR</option></select>
+                  <select id="teklifPb">
+                    <option value="TL">TL</option>
+                    <option value="$">$</option>
+                    <option value="EUR">€</option>
+                  </select>
                   <label class="kisa">Kur</label><input id="teklifKur" type="number" min="0" step="0.0001" value="1">
                 </div>
                 <div class="satir"><label>KDV</label><input id="teklifKdvTik" type="checkbox"></div>
@@ -2939,6 +3142,9 @@
       <b>FastReport · Fiyat Teklifi</b>
       <button type="button" id="frText">Text</button>
       <button type="button" id="frPicture" title="Banda tıklayınca resim ekler">Resim</button>
+      <button type="button" id="frArkaPlan" title="Kağıdın arkasına soluk logo koy">Arka plan</button>
+      <input id="frArkaOpak" type="range" min="4" max="35" value="12" title="Arka plan solukluğu" aria-label="Arka plan solukluğu">
+      <button type="button" id="frArkaSil" title="Arka plan logosunu kaldır">×</button>
       <button type="button" id="frLine">Line</button>
       <button type="button" id="frTable">Table</button>
       <span class="fr-ayir"></span>
@@ -2994,6 +3200,31 @@
       </aside>
     </div>
     <div class="fr-ipucu">Sürükleyerek taşıyın · köşeden boyutlandırın · Data alanına çift tıklayınca seçili Text’e yazılır · Kaydet sonrası çıktıya uygulanır.</div>
+  </div>
+  <div id="kurKutu" hidden>
+    <div class="hatirlatma-panel" role="dialog" aria-labelledby="kurBaslik">
+      <h3 id="kurBaslik">Döviz kuru</h3>
+      <p id="kurMetin" class="kur-metin"></p>
+      <p id="kurUyari" class="kur-uyari" hidden></p>
+      <label>Elle giriş
+        <input id="kurElle" inputmode="decimal" placeholder="34,50" autocomplete="off">
+      </label>
+      <div class="butonlar">
+        <button type="button" class="soluk" id="kurIptal">Vazgeç</button>
+        <button type="button" class="soluk" id="kurMerkez">Merkez Bankasından çek</button>
+        <button type="button" id="kurElleKaydet">Elle kaydet</button>
+      </div>
+    </div>
+  </div>
+  <div id="waNumaraKutu" hidden>
+    <div class="hatirlatma-panel" role="dialog" aria-labelledby="waNumaraBaslik">
+      <h3 id="waNumaraBaslik">WhatsApp alıcısı</h3>
+      <p id="waNumaraMetin" class="kur-metin"></p>
+      <div class="wa-numara-liste" id="waNumaraListe"></div>
+      <div class="butonlar">
+        <button type="button" class="soluk" id="waNumaraIptal">Vazgeç</button>
+      </div>
+    </div>
   </div>
   <div id="hatirlatmaKutu" hidden>
     <div class="hatirlatma-panel" role="dialog" aria-labelledby="hatirlatmaBaslik">
@@ -3414,10 +3645,144 @@
 
   <script>
     const para = new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    function teklifPbKod(pb) {
+      const kod = String(pb || "").trim();
+      const ust = kod.toUpperCase();
+      if (kod === "$" || ust === "USD" || ust === "DOLAR") return "$";
+      if (ust === "EUR" || ust === "EURO" || kod === "€") return "EUR";
+      return "TL";
+    }
     function pbYazi(pb) {
-      const kod = String(pb || "").trim().toUpperCase();
-      if (kod === "TL" || kod === "TRY") return "₺";
-      return String(pb || "").trim();
+      const kod = String(pb || "").trim();
+      const ust = kod.toUpperCase();
+      if (!kod) return "";
+      if (ust === "TL" || ust === "TRY" || kod === "₺") return "₺";
+      if (kod === "$" || ust === "USD" || ust === "DOLAR") return "$";
+      if (ust === "EUR" || ust === "EURO" || kod === "€") return "€";
+      return kod;
+    }
+    let teklifKurIstek = 0;
+    function teklifKurSayi(yazi) {
+      const temiz = String(yazi ?? "").trim().replace(/\s/g, "");
+      if (!temiz) return NaN;
+      const n = temiz.includes(",")
+        ? Number(temiz.replace(/\./g, "").replace(",", "."))
+        : Number(temiz);
+      return Number.isFinite(n) && n > 0 ? n : NaN;
+    }
+    function teklifKurYaz(kur) {
+      const n = Math.round(Number(kur) * 10000) / 10000;
+      if (!teklifForm || !Number.isFinite(n) || n <= 0) return;
+      teklifForm.kur = n;
+      const el = document.getElementById("teklifKur");
+      if (el) el.value = String(n);
+      if (!teklifFormCiziliyor && teklifDuzenlenebilir()) teklifFormOku();
+    }
+    function teklifGunYazi(iso) {
+      const yazi = String(iso || "");
+      return /^\d{4}-\d{2}-\d{2}$/.test(yazi) ? `${yazi.slice(8)}.${yazi.slice(5, 7)}.${yazi.slice(0, 4)}` : (yazi || "seçilen gün");
+    }
+    let teklifKurPencereKapat = null;
+    function teklifKurPencere(pb, tarih) {
+      if (teklifKurPencereKapat) teklifKurPencereKapat(null);
+      const kutu = document.getElementById("kurKutu");
+      const metin = document.getElementById("kurMetin");
+      const uyari = document.getElementById("kurUyari");
+      const elle = document.getElementById("kurElle");
+      const kaydet = document.getElementById("kurElleKaydet");
+      const merkez = document.getElementById("kurMerkez");
+      const iptal = document.getElementById("kurIptal");
+      return new Promise((resolve) => {
+        const kapat = (sonuc) => {
+          if (teklifKurPencereKapat !== kapat) return;
+          teklifKurPencereKapat = null;
+          kutu.hidden = true;
+          kaydet.disabled = false;
+          merkez.disabled = false;
+          resolve(sonuc);
+        };
+        teklifKurPencereKapat = kapat;
+        metin.textContent = teklifGunYazi(tarih) + " tarihi için " + pbYazi(pb) + " kuru Vega'da yok. Elle yazın veya Merkez Bankası'ndan çekin.";
+        uyari.hidden = true;
+        uyari.textContent = "";
+        elle.value = "";
+        kutu.hidden = false;
+        elle.focus();
+        iptal.onclick = () => kapat(null);
+        kaydet.onclick = () => {
+          const n = teklifKurSayi(elle.value);
+          if (!Number.isFinite(n)) {
+            uyari.hidden = false;
+            uyari.textContent = "Geçerli bir kur yazın. Örnek: 34,50";
+            elle.focus();
+            return;
+          }
+          kapat(n);
+        };
+        elle.onkeydown = (event) => {
+          if (event.key === "Enter") { event.preventDefault(); kaydet.click(); }
+          if (event.key === "Escape") { event.preventDefault(); iptal.click(); }
+        };
+        merkez.onclick = async () => {
+          uyari.hidden = true;
+          merkez.disabled = true;
+          kaydet.disabled = true;
+          try {
+            const body = await getir("/api/tcmb-kur?pb=" + encodeURIComponent(teklifPbKod(pb)) + "&tarih=" + encodeURIComponent(tarih));
+            if (teklifKurPencereKapat !== kapat) return;
+            if (body.bulundu && Number(body.kur) > 0) {
+              kapat(Number(body.kur));
+              return;
+            }
+            uyari.hidden = false;
+            uyari.textContent = body.mesaj || "Merkez Bankası bu gün için kur yayımlamamış. Kuru elle yazın.";
+            elle.focus();
+          } catch (error) {
+            if (teklifKurPencereKapat !== kapat) return;
+            uyari.hidden = false;
+            uyari.textContent = error.message || "Merkez Bankası'na ulaşılamadı. Kuru elle yazın.";
+          } finally {
+            if (teklifKurPencereKapat === kapat) {
+              merkez.disabled = false;
+              kaydet.disabled = false;
+            }
+          }
+        };
+      });
+    }
+    async function teklifKurSor(pb, geriAl) {
+      if (!teklifForm || !teklifDuzenlenebilir()) return false;
+      const kod = teklifPbKod(pb);
+      if (kod === "TL") {
+        teklifKurYaz(1);
+        return true;
+      }
+      const istek = ++teklifKurIstek;
+      const tarih = document.getElementById("teklifTarih")?.value || teklifForm.tarih || "";
+      let bulundu = false;
+      let kur = 0;
+      try {
+        const body = await getir("/api/doviz-kur?pb=" + encodeURIComponent(kod) + "&tarih=" + encodeURIComponent(tarih));
+        bulundu = !!body.bulundu;
+        kur = Number(body.kur);
+      } catch (error) {
+        const durum = document.getElementById("teklifDurum");
+        if (durum) durum.textContent = error.message;
+      }
+      if (istek !== teklifKurIstek) return false;
+      if (bulundu && kur > 0) {
+        teklifKurYaz(kur);
+        return true;
+      }
+      if (istek !== teklifKurIstek) return false;
+      const girilen = await teklifKurPencere(kod, tarih);
+      if (istek !== teklifKurIstek) return false;
+      if (!Number.isFinite(girilen)) {
+        if (typeof geriAl === "function") geriAl();
+        return false;
+      }
+      teklifKurYaz(girilen);
+      return true;
     }
     const miktarFmt = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
     const yuzde = new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -3888,24 +4253,83 @@
       ortKar.classList.toggle("eksi", karToplam < 0);
     }
 
-    function pencereKaydet(anahtar, pencere) {
+    const PENCERE_OLCU = "vegaPencereOlcu";
+
+    function pencereKayitCoz(anahtar) {
       try {
-        if (!pencere || pencere.closed) return;
-        const genislik = pencere.innerWidth;
-        const yukseklik = pencere.innerHeight;
+        const kayit = JSON.parse(localStorage.getItem(anahtar) || "null");
+        const genislik = Number(kayit?.genislik);
+        const yukseklik = Number(kayit?.yukseklik);
+        if (genislik < 480 || yukseklik < 320) return null;
+        return {
+          genislik: Math.min(genislik, screen.availWidth),
+          yukseklik: Math.min(yukseklik, screen.availHeight),
+          left: Number(kayit.left),
+          top: Number(kayit.top),
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    function pencereOlcuOku() {
+      return pencereKayitCoz(PENCERE_OLCU)
+        || pencereKayitCoz("vegaBelgeOlcu")
+        || pencereKayitCoz("vegaUrunOlcu")
+        || pencereKayitCoz("vegaCariOlcu")
+        || pencereKayitCoz("vegaCiktiOlcu")
+        || pencereKayitCoz("vegaBordroOlcu");
+    }
+
+    let pencereOlcuYazma = 0;
+    function pencereOlcuYaz(pencere) {
+      try {
+        const hedef = pencere || window;
+        if (!hedef || hedef.closed) return;
+        const genislik = hedef.outerWidth || hedef.innerWidth;
+        const yukseklik = hedef.outerHeight || hedef.innerHeight;
         if (genislik < 480 || yukseklik < 320) return;
-        localStorage.setItem(anahtar, JSON.stringify({
+        const tam = genislik >= screen.availWidth - 16 && yukseklik >= screen.availHeight - 16;
+        const govde = JSON.stringify({
           genislik,
           yukseklik,
-          left: pencere.screenX,
-          top: pencere.screenY,
-        }));
+          left: hedef.screenX,
+          top: hedef.screenY,
+          tam,
+        });
+        localStorage.setItem(PENCERE_OLCU, govde);
+        clearTimeout(pencereOlcuYazma);
+        pencereOlcuYazma = setTimeout(() => {
+          fetch("/api/pencere", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: govde,
+            keepalive: true,
+          }).catch(() => {});
+        }, 200);
       } catch { /* pencere kapandı */ }
     }
 
+    function pencereOlcuUygula(pencere, kayit) {
+      if (!pencere || pencere.closed || !kayit) return;
+      const kendi = pencere === window;
+      if (kendi) olcuBizden = true;
+      try {
+        if (kayit.tam) {
+          pencere.moveTo(0, 0);
+          pencere.resizeTo(screen.availWidth, screen.availHeight);
+        } else {
+          pencere.resizeTo(Math.round(kayit.genislik), Math.round(kayit.yukseklik));
+          if (Number.isFinite(kayit.left) && Number.isFinite(kayit.top)) {
+            pencere.moveTo(Math.round(kayit.left), Math.round(kayit.top));
+          }
+        }
+      } catch { /* tarayıcı pencere boyutunu kilitlemiş olabilir */ }
+      if (kendi) setTimeout(() => { olcuBizden = false; }, 500);
+    }
+
     function pencereOzelligi(anahtar, varsayilan) {
-      let kayit = null;
-      try { kayit = JSON.parse(localStorage.getItem(anahtar) || "null"); } catch { kayit = null; }
+      const kayit = pencereOlcuOku() || pencereKayitCoz(anahtar);
       const genislik = Math.min(Number(kayit?.genislik) || varsayilan.genislik, screen.availWidth);
       const yukseklik = Math.min(Number(kayit?.yukseklik) || varsayilan.yukseklik, screen.availHeight);
       let left = Number(kayit?.left);
@@ -3922,9 +4346,19 @@
     }
 
     function pencereAc(url, ad, anahtar, varsayilan) {
+      const kayit = pencereOlcuOku() || pencereKayitCoz(anahtar);
       const pencere = window.open(url, ad + Date.now(), pencereOzelligi(anahtar, varsayilan));
       if (!pencere) return null;
-      const kaydet = () => pencereKaydet(anahtar, pencere);
+      if (kayit) {
+        pencereOlcuUygula(pencere, kayit);
+        setTimeout(() => pencereOlcuUygula(pencere, kayit), 80);
+        setTimeout(() => pencereOlcuUygula(pencere, kayit), 250);
+      }
+      let kaydaHazir = false;
+      const kaydet = () => {
+        if (!kaydaHazir) return;
+        pencereOlcuYaz(pencere);
+      };
       try {
         pencere.addEventListener("resize", kaydet);
         pencere.addEventListener("beforeunload", kaydet);
@@ -3932,10 +4366,12 @@
       const zaman = setInterval(() => {
         if (pencere.closed) {
           clearInterval(zaman);
+          kaydet();
           return;
         }
         kaydet();
       }, 500);
+      setTimeout(() => { kaydaHazir = true; }, 400);
       return pencere;
     }
 
@@ -4012,31 +4448,14 @@
     }
 
     function belgeOlcusu() {
-      try {
-        const kayit = JSON.parse(localStorage.getItem("vegaBelgeOlcu") || "null");
-        const genislik = Number(kayit?.genislik);
-        const yukseklik = Number(kayit?.yukseklik);
-        if (genislik < 480 || yukseklik < 320) return null;
-        return {
-          genislik: Math.min(genislik, screen.availWidth),
-          yukseklik: Math.min(yukseklik, screen.availHeight),
-        };
-      } catch {
-        return null;
-      }
+      return pencereOlcuOku();
     }
 
     let olcuBizden = false;
     let olcuZaman = 0;
     function belgeOlcusunuKaydet() {
       if (olcuBizden) return;
-      if (window.outerWidth < 480 || window.outerHeight < 320) return;
-      localStorage.setItem("vegaBelgeOlcu", JSON.stringify({
-        genislik: window.innerWidth,
-        yukseklik: window.innerHeight,
-        left: window.screenX,
-        top: window.screenY,
-      }));
+      pencereOlcuYaz(window);
     }
 
     function belgeBoyutla(satirSayisi) {
@@ -4145,11 +4564,7 @@
     async function belgePenceresiniBaslat() {
       belgeSutunlariniKur();
       const olcu = belgeOlcusu();
-      if (olcu) {
-        olcuBizden = true;
-        try { window.resizeTo(olcu.genislik, olcu.yukseklik); } catch { /* kayıtlı ölçü uygulanamadı */ }
-        setTimeout(() => { olcuBizden = false; }, 500);
-      }
+      if (olcu) pencereOlcuUygula(window, olcu);
       let kayit = null;
       try { kayit = JSON.parse(sessionStorage.getItem("vegaBelgePencere") || "null"); } catch { kayit = null; }
       document.getElementById("giris").hidden = true;
@@ -4273,6 +4688,8 @@
     }
 
     function urunPenceresiniBaslat() {
+      const olcu = pencereOlcuOku();
+      if (olcu) pencereOlcuUygula(window, olcu);
       let kayit = null;
       try { kayit = JSON.parse(sessionStorage.getItem("vegaUrunPencere") || "null"); } catch { kayit = null; }
       if (!kayit?.oturum || !kayit.urun) {
@@ -5353,8 +5770,8 @@ ${"<" + "/script>"}</body></html>`);
     }
     window.vegaPdf = vegaPdf;
     window.vegaBelgeToken = () => oturum?.token || "";
-    function whatsappIbresi() {
-      const ad = cariBelge?.cari?.ad || cariBelge?.cari?.kod || "";
+    function whatsappIbresi(kisi) {
+      const ad = kisi?.ad || "";
       const bugun = new Date().toLocaleDateString("tr-TR");
       const bakiye = cariBelge
         ? "Bakiye: " + para.format(Math.abs(cariBelge.bakiye)) + " " + cariBelge.pb + " (" + bakiyeDurum(cariBelge.bakiye) + ")"
@@ -5369,12 +5786,8 @@ ${"<" + "/script>"}</body></html>`);
       return satirlar.join("\n");
     }
     async function vegaWhatsapp(html, ozet, dosyaAdi) {
-      if (localStorage.getItem("vegaSmsIzni") !== "0" && !cariBelge?.smsGonder) {
-        throw new Error("Bu carinin SMS gönder izni yok.");
-      }
-      let telefonlar = cariBelge?.telefonlar?.length ? cariBelge.telefonlar.slice() : [cariBelge?.telefon].filter(Boolean);
-      if (localStorage.getItem("vegaTumNumara") === "0") telefonlar = telefonlar.slice(0, 1);
-      if (!telefonlar.length) throw new Error("Cari kartında Telefon 1, 2 veya 3 yok.");
+      const kod = String(cariBelge?.cari?.kod || "").trim();
+      if (!kod) throw new Error("Cari seçin.");
       const ayar = await getir("/api/whatsapp");
       if (!ayar.hazir) {
         const ana = window.opener && !window.opener.closed && window.opener.document.getElementById("ayarBtn")
@@ -5386,15 +5799,28 @@ ${"<" + "/script>"}</body></html>`);
         if (dugme && panel?.hidden) dugme.click();
         throw new Error("Sağ üstteki Ayarlar'dan telefonu bağlayın.");
       }
-      const sonuc = await getir("/api/whatsapp-gonder", {
+      const body = await getir("/api/cari-numaralar?firma=" + encodeURIComponent(oturum.firma) + "&kod=" + encodeURIComponent(kod));
+      if (localStorage.getItem("vegaSmsIzni") !== "0" && !body.smsGonder) {
+        throw new Error("Bu carinin SMS gönder izni yok.");
+      }
+      const kisiler = Array.isArray(body.kisiler) ? body.kisiler : [];
+      if (!kisiler.length) {
+        throw new Error(body.dolu ? "Cari kartındaki numaralar WhatsApp için uygun değil." : "Cari kartında telefon yok.");
+      }
+      window.focus();
+      const kisi = await teklifNumaraSec(kisiler);
+      if (!kisi) return "Gönderim iptal edildi.";
+      await getir("/api/whatsapp-gonder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telefonlar, html, ozet: whatsappIbresi(), dosyaAdi }),
+        body: JSON.stringify({
+          telefonlar: [kisi.telefon],
+          html,
+          ozet: whatsappIbresi(kisi),
+          dosyaAdi,
+        }),
       });
-      const adet = Number(sonuc.adet) || telefonlar.length;
-      return adet > 1
-        ? adet + " numaraya detaylı ekstre PDF gönderildi. Peş peşe gönderimler 5 dakika arayla gitti."
-        : "Detaylı ekstre PDF gönderildi";
+      return (kisi.ad || telefonYazi(kisi.telefon)) + " kişisine gönderildi.";
     }
     window.vegaWhatsapp = vegaWhatsapp;
 
@@ -5412,7 +5838,7 @@ ${"<" + "/script>"}</body></html>`);
         return;
       }
       btn.disabled = true;
-      not.textContent = "WhatsApp'a gönderiliyor…";
+      not.textContent = "Alıcılar hazırlanıyor…";
       try {
         const ad = cariBelge.cari.ad || cariBelge.cari.kod;
         not.textContent = await vegaWhatsapp(vegaEkstreHtml(), ad + " detaylı hesap ekstresi", "hesap-ekstresi-detayli.pdf");
@@ -5422,12 +5848,9 @@ ${"<" + "/script>"}</body></html>`);
       btn.disabled = false;
     };
     const smsKutu = document.getElementById("waSmsIzni");
-    const tumKutu = document.getElementById("waTumNumara");
-    if (smsKutu && tumKutu) {
+    if (smsKutu) {
       smsKutu.checked = localStorage.getItem("vegaSmsIzni") !== "0";
-      tumKutu.checked = localStorage.getItem("vegaTumNumara") !== "0";
       smsKutu.onchange = () => localStorage.setItem("vegaSmsIzni", smsKutu.checked ? "1" : "0");
-      tumKutu.onchange = () => localStorage.setItem("vegaTumNumara", tumKutu.checked ? "1" : "0");
     }
     let ayarFirmalar = [];
     let ayarDonemler = [];
@@ -5621,6 +6044,8 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     function cariPenceresiniBaslat() {
+      const olcu = pencereOlcuOku();
+      if (olcu) pencereOlcuUygula(window, olcu);
       const kayit = cariKaydiOku();
       document.getElementById("giris").hidden = true;
       document.getElementById("ev").hidden = true;
@@ -5723,6 +6148,8 @@ ${"<" + "/script>"}</body></html>`);
       if (odemeTakvim) odemeTakvim.hidden = true;
       const teklifEkran = document.getElementById("teklifEkran");
       if (teklifEkran) teklifEkran.hidden = true;
+      const siparisIhtiyac = document.getElementById("siparisIhtiyac");
+      if (siparisIhtiyac) siparisIhtiyac.hidden = true;
       document.documentElement.classList.remove("teklif-yazdir");
       const liste = document.getElementById("portfoyDurumListe");
       if (liste) liste.hidden = true;
@@ -8677,7 +9104,13 @@ ${"<" + "/script>"}</body></html>`);
           if (son.hata) yazi += " (hata)";
           else if (son.eklenen != null) yazi += " (+" + (son.eklenen || 0) + "/" + (son.guncellenen || 0) + ")";
         }
-      } else if (googleDurumCache.oauthAyarli) yazi = "Kimlik bilgileri kayıtlı. Google ile bağla’ya basın.";
+        const tel = googleDurumCache.sonTelefon;
+        if (tel?.metin) {
+          const gun = String(tel.gun || "").split("-").reverse().join(".");
+          yazi += " · Son telefon notu: " + [gun, tel.saat, tel.metin].filter(Boolean).join(" ");
+        }
+      } else if (googleDurumCache.baglantiUyari) yazi = googleDurumCache.baglantiUyari;
+      else if (googleDurumCache.oauthAyarli) yazi = "Kimlik bilgileri kayıtlı. Google ile bağla’ya basın.";
       else if (googleDurumCache.apiKeyAyarli) yazi = "API anahtarı kayıtlı (" + (googleDurumCache.apiKeyMaske || "") + "). Takvim için OAuth da bağlayın.";
       document.getElementById("googleDurumYazi").textContent = yazi;
       const apiDurum = document.getElementById("googleApiKeyDurum");
@@ -8856,6 +9289,7 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("googleDurumYazi").textContent = ozet;
       document.getElementById("odemeTakvimDurum").textContent = ozet;
       odemeTakvimCiz(odemeTakvimSonGunler);
+      bugunIslemYukle().catch(() => {});
     }
 
     async function googleKopar() {
@@ -8908,6 +9342,7 @@ ${"<" + "/script>"}</body></html>`);
       googleSenkron().catch((error) => {
         document.getElementById("googleDurumYazi").textContent = error.message;
         document.getElementById("odemeTakvimDurum").textContent = error.message;
+        googleDurumYukle().catch(() => {});
       });
     };
     document.getElementById("googleKopar").onclick = () => {
@@ -8975,7 +9410,7 @@ ${"<" + "/script>"}</body></html>`);
       tarih.textContent = gunYazi.split("-").reverse().join(".") + (sabit || odemeTakvimPopupSabit ? " · sabit" : "");
       const toplamEl = document.createElement("span");
       toplamEl.className = "popup-toplam";
-      const paraKayit = kayitlar.filter((kayit) => !kayit.teklif);
+      const paraKayit = kayitlar.filter((kayit) => !kayit.teklif && !kayit.hatirlatma);
       if (paraKayit.length) {
         const toplam = paraKayit.reduce((tutar, kayit) => tutar + Number(kayit.tutar || 0), 0);
         toplamEl.textContent = para.format(toplam) + " ₺";
@@ -8988,18 +9423,20 @@ ${"<" + "/script>"}</body></html>`);
         const satir = document.createElement("div");
         satir.className = "satir";
         const tur = document.createElement("span");
-        const turSinif = kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit);
+        const turSinif = kayit.hatirlatma ? "hatirlatma" : (kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit));
         tur.className = "tur " + turSinif;
-        tur.textContent = kayit.teklif
+        tur.textContent = kayit.hatirlatma
+          ? ((kayit.kaynak === "google" ? "Etkinlik" : "Görev") + (kayit.saat ? " " + kayit.saat : ""))
+          : kayit.teklif
           ? "Teklif"
           : (kayit.takas ? "Takas" : (TAKVIM_TUR[kayit.tur] || kayit.tur)) + " " + (TAKVIM_YON[kayit.yon] || "");
         const kim = document.createElement("span");
         kim.className = "kim";
-        kim.textContent = kayit.teklif ? (kayit.metin || kayit.firma || "—") : (kayit.firma || "—");
-        kim.title = [kayit.firma, kayit.keside, kayit.belge].filter(Boolean).join(" · ");
+        kim.textContent = (kayit.teklif || kayit.hatirlatma) ? (kayit.metin || kayit.firma || "—") : (kayit.firma || "—");
+        kim.title = kayit.hatirlatma ? [kayit.metin, kayit.yer].filter(Boolean).join(" · ") : [kayit.firma, kayit.keside, kayit.belge].filter(Boolean).join(" · ");
         const tutar = document.createElement("span");
         tutar.className = "tutar";
-        tutar.textContent = kayit.teklif ? "" : para.format(Number(kayit.tutar || 0)) + " ₺";
+        tutar.textContent = (kayit.teklif || kayit.hatirlatma) ? "" : para.format(Number(kayit.tutar || 0)) + " ₺";
         satir.appendChild(tur);
         satir.appendChild(kim);
         satir.appendChild(tutar);
@@ -9075,13 +9512,16 @@ ${"<" + "/script>"}</body></html>`);
         const teklifler = hatirlatmaGunListe(kod)
           .filter((item) => item.kaynak === "teklif" && !item.gonderildi)
           .map((item) => ({ teklif: true, metin: item.metin, firma: item.metin, tur: "teklif" }));
-        const acilacak = kayitlar.concat(teklifler);
+        const gunNotlari = hatirlatmaGunListe(kod)
+          .filter((item) => item && item.kaynak !== "teklif" && item.kaynak !== "odeme-takvim")
+          .map((item) => ({ hatirlatma: true, kaynak: item.kaynak, yer: item.yer || "", metin: item.metin, firma: item.metin, saat: item.saat || "", tur: "hatirlatma" }));
+        const acilacak = kayitlar.concat(teklifler, gunNotlari);
         adet += kayitlar.length;
         const kutu = document.createElement("div");
         const gunGecti = kod < bugunKod;
         const doluSinif = kayitlar.length
           ? " dolu " + odemeTakvimRenkSinif(kayitlar)
-          : (teklifler.length ? (gunGecti ? " dolu teklif-beyaz" : " dolu teklif") : "");
+          : (teklifler.length ? (gunGecti ? " dolu teklif-beyaz" : " dolu teklif") : (gunNotlari.length ? " dolu not" : ""));
         const hatirlatmalar = hatirlatmaGunListe(kod);
         kutu.className = "takvim-gun"
           + (kod === bugunKod ? " bugun" : "")
@@ -9104,7 +9544,14 @@ ${"<" + "/script>"}</body></html>`);
         if (acilacak.length) {
           const sayac = document.createElement("span");
           sayac.className = "gun-adet";
-          sayac.textContent = kayitlar.length ? (kayitlar.length + " işl.") : (teklifler.length + " teklif");
+          const parcalar = [];
+          if (kayitlar.length) parcalar.push(kayitlar.length + " işl.");
+          if (teklifler.length) parcalar.push(teklifler.length + " teklif");
+          const etkinlikSayi = gunNotlari.filter((item) => item.kaynak === "google").length;
+          const gorevSayi = gunNotlari.length - etkinlikSayi;
+          if (etkinlikSayi) parcalar.push(etkinlikSayi + " etkinlik");
+          if (gorevSayi) parcalar.push(gorevSayi + " görev");
+          sayac.textContent = parcalar.join(" · ");
           kutu.appendChild(sayac);
           kutu.onmouseenter = (event) => {
             if (!odemeTakvimPopupSabit) odemeTakvimPopupGoster(event, kod, acilacak, false);
@@ -9141,16 +9588,7 @@ ${"<" + "/script>"}</body></html>`);
       const notlar = document.createElement("div");
       notlar.className = "takvim-ay-notlar";
       const ayOn = yil + "-" + String(ay + 1).padStart(2, "0");
-      const simdi = new Date();
-      const hatirlatmaZamaniGecti = (item) => {
-        const gun = String(item.gun || "");
-        const saatHam = String(item.saat || "00:00").trim();
-        const saat = /^\d{2}:\d{2}$/.test(saatHam) ? saatHam : "00:00";
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(gun)) return true;
-        const t = new Date(gun + "T" + saat + ":00");
-        if (!Number.isFinite(t.getTime())) return true;
-        return t.getTime() <= simdi.getTime();
-      };
+      const hatirlatmaZamaniGecti = (item) => String(item.gun || "") < bugunKod;
       const ayTum = hatirlatmalarOku()
         .filter((item) => item && String(item.gun || "").startsWith(ayOn) && item.kaynak !== "odeme-takvim")
         .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
@@ -9195,9 +9633,11 @@ ${"<" + "/script>"}</body></html>`);
       const notSatirYap = (item, gecmisMi) => {
         const satir = document.createElement("div");
         const teklifMi = item.kaynak === "teklif";
+        const etkinlikMi = item.kaynak === "google";
         const odemeSinif = item.odemeMi ? (" odeme-ozet " + (item.renk || item.tur || "cek")) : "";
         const teklifSinif = teklifMi && !gecmisMi ? " teklif" : "";
-        satir.className = "not-satir" + (gecmisMi && !teklifMi ? " gecmis" : "") + odemeSinif + teklifSinif;
+        const etkinlikSinif = etkinlikMi && !item.odemeMi ? " etkinlik" : "";
+        satir.className = "not-satir" + (gecmisMi && !teklifMi ? " gecmis" : "") + odemeSinif + teklifSinif + etkinlikSinif;
         satir.title = item.odemeMi
           ? "Çift tık: gün detayı · " + String(item.gun || "").split("-").reverse().join(".")
           : "Düzenlemek için tıkla · Hatırlatma: " + String(item.gun || "").split("-").reverse().join(".");
@@ -9240,7 +9680,9 @@ ${"<" + "/script>"}</body></html>`);
       const aktifHepsi = [
         ...odemeGunuGelmeyen.map((x) => ({ ...x, odemeMi: true })),
         ...ayAktif,
-      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
+      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun))
+        || Number(Boolean(a.odemeMi)) - Number(Boolean(b.odemeMi))
+        || String(a.saat || "").localeCompare(String(b.saat || "")));
       if (gecmisHepsi.length) {
         const gecmisBtn = document.createElement("button");
         gecmisBtn.type = "button";
@@ -9282,8 +9724,42 @@ ${"<" + "/script>"}</body></html>`);
       return adet;
     }
 
+    function odemeTakvimTelefonCiz() {
+      const kutu = document.getElementById("odemeTakvimTelefon");
+      if (!kutu) return;
+      const bugun = bugunTarihKodu(new Date());
+      const hepsi = hatirlatmalarOku()
+        .filter((item) => item && !item.onceAnaId && item.gun >= bugun && (item.kaynak === "google" || (item.kaynak === "google-task" && !item.gonderildi)))
+        .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
+      const notlar = hepsi.slice(0, 12);
+      kutu.replaceChildren();
+      if (!notlar.length) {
+        kutu.hidden = true;
+        return;
+      }
+      kutu.hidden = false;
+      const bas = document.createElement("div");
+      bas.className = "takvim-telefon-bas";
+      bas.textContent = "Telefon etkinlikleri · " + hepsi.length;
+      const liste = document.createElement("div");
+      liste.className = "takvim-telefon-liste";
+      for (const item of notlar) {
+        const satir = document.createElement("button");
+        satir.type = "button";
+        satir.className = "takvim-telefon-satir";
+        const gun = String(item.gun || "").split("-").reverse().join(".");
+        const turAd = item.kaynak === "google" ? "Etkinlik" : "Görev";
+        satir.textContent = [gun, turAd, item.saat, item.metin, item.yer].filter(Boolean).join("  ");
+        satir.title = satir.textContent;
+        satir.onclick = () => hatirlatmaAc(item.gun, item.id);
+        liste.appendChild(satir);
+      }
+      kutu.append(bas, liste);
+    }
+
     function odemeTakvimCiz(gunler) {
       odemeTakvimSonGunler = gunler || {};
+      odemeTakvimTelefonCiz();
       const grid = document.getElementById("odemeTakvimGrid");
       grid.replaceChildren();
       let adetToplam = 0;
@@ -9295,11 +9771,45 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("odemeTakvimAyAd").textContent =
         TAKVIM_AY[odemeTakvimAy.getMonth()] + " " + odemeTakvimAy.getFullYear() +
         " – " + TAKVIM_AY[son.getMonth()] + " " + son.getFullYear();
-      document.getElementById("odemeTakvimDurum").textContent = adetToplam + " kayıt";
+      const tel = googleDurumCache.sonTelefon;
+      const telYazi = tel?.metin
+        ? (" · Son telefon: " + [String(tel.gun || "").split("-").reverse().join("."), tel.saat, tel.metin].filter(Boolean).join(" "))
+        : "";
+      document.getElementById("odemeTakvimDurum").textContent = adetToplam + " kayıt" + telYazi;
     }
 
     function bugunTarihKodu(tarih) {
       return tarih.getFullYear() + "-" + String(tarih.getMonth() + 1).padStart(2, "0") + "-" + String(tarih.getDate()).padStart(2, "0");
+    }
+
+    let hatirlatmaEkranImza = "";
+    async function hatirlatmaEkraniniTazele() {
+      if (!oturum) return;
+      try {
+        const hat = await getir("/api/hatirlatma");
+        const imza = JSON.stringify(hat.items || []);
+        if (imza === hatirlatmaEkranImza) return;
+        hatirlatmaEkranImza = imza;
+        hatirlatmaCache = hat.items || [];
+        bugunIslemYukle().catch(() => {});
+        const takvim = document.getElementById("odemeTakvim");
+        if (takvim && !takvim.hidden && odemeTakvimSonGunler) odemeTakvimCiz(odemeTakvimSonGunler);
+      } catch { /* senkron dosyası henüz okunamadı */ }
+    }
+    setInterval(() => { hatirlatmaEkraniniTazele().catch(() => {}); }, 20000);
+
+    async function bugunTeklifAc(teklifKey) {
+      const parca = String(teklifKey || "").split(":");
+      const ind = Number(parca[3]);
+      if (!Number.isFinite(ind) || ind <= 0) return;
+      if (oturum && (String(parca[1]) !== String(oturum.firma) || String(parca[2]) !== String(oturum.donem))) return;
+      try {
+        await teklifEkraniAc();
+        await teklifDetayAc(ind);
+      } catch (error) {
+        const durum = document.getElementById("teklifDurum");
+        if (durum) durum.textContent = error.message || "Teklif açılamadı.";
+      }
     }
 
     async function bugunIslemYukle() {
@@ -9328,8 +9838,12 @@ ${"<" + "/script>"}</body></html>`);
         const kayitlar = (takvim.gunler && takvim.gunler[kod]) || [];
         const teklifler = (hatir.items || [])
           .filter((item) => item && item.gun === kod && item.kaynak === "teklif" && !item.gonderildi)
-          .map((item) => ({ teklif: true, metin: item.metin, firma: item.metin, tur: "teklif" }));
-        const hepsi = kayitlar.concat(teklifler);
+          .map((item) => ({ teklif: true, metin: item.metin, firma: item.metin, tur: "teklif", teklifKey: item.teklifKey || "" }));
+        const animsatmalar = (hatir.items || [])
+          .filter((item) => item && item.gun === kod && item.kaynak !== "teklif" && item.kaynak !== "odeme-takvim" && (item.kaynak === "google" || !item.gonderildi))
+          .sort((a, b) => String(a.saat || "").localeCompare(String(b.saat || "")))
+          .map((item) => ({ animsat: true, kaynak: item.kaynak, gun: item.gun, saat: item.saat || "", metin: item.metin, firma: item.metin, tur: "animsat" }));
+        const hepsi = kayitlar.concat(teklifler, animsatmalar);
         liste.replaceChildren();
         if (!hepsi.length) {
           const yok = document.createElement("div");
@@ -9338,18 +9852,20 @@ ${"<" + "/script>"}</body></html>`);
           liste.appendChild(yok);
           return;
         }
-        const paraKayit = hepsi.filter((kayit) => !kayit.teklif);
+        const paraKayit = hepsi.filter((kayit) => !kayit.teklif && !kayit.animsat);
         if (paraKayit.length) {
           const toplam = paraKayit.reduce((tutar, kayit) => tutar + Number(kayit.tutar || 0), 0);
           toplamEl.textContent = para.format(toplam) + " ₺";
         }
         for (const kayit of hepsi) {
           const satir = document.createElement("div");
-          const sinif = kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit);
+          const sinif = kayit.animsat ? "animsat" : (kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit));
           satir.className = "bugun-satir " + sinif;
           const tur = document.createElement("span");
           tur.className = "tur";
-          tur.textContent = kayit.teklif
+          tur.textContent = kayit.animsat
+            ? ((kayit.kaynak === "google" ? "Etkinlik" : "Görev") + (kayit.saat ? " " + kayit.saat : ""))
+            : kayit.teklif
             ? "Teklif"
             : (kayit.takas ? "Takas" : (TAKVIM_TUR[kayit.tur] || kayit.tur)) + " " + (TAKVIM_YON[kayit.yon] || "");
           const kim = document.createElement("span");
@@ -9360,6 +9876,10 @@ ${"<" + "/script>"}</body></html>`);
           tutar.className = "tutar";
           tutar.textContent = kayit.teklif ? "" : para.format(Number(kayit.tutar || 0)) + " ₺";
           satir.append(tur, kim, tutar);
+          if (kayit.teklif && kayit.teklifKey) {
+            satir.title = "Çift tık: teklifi aç";
+            satir.ondblclick = () => bugunTeklifAc(kayit.teklifKey);
+          }
           liste.appendChild(satir);
         }
       } catch (error) {
@@ -9564,6 +10084,7 @@ ${"<" + "/script>"}</body></html>`);
     let FR_BANTLAR = FR_BANT_VARSAYILAN.map((item) => ({ ...item }));
     let teklifForm = null;
     let teklifKayitlar = [];
+    let teklifEskiAcik = false;
     let teklifSecili = 0;
     let teklifBelgede = false;
     let teklifDizaynAcik = false;
@@ -9695,6 +10216,15 @@ ${"<" + "/script>"}</body></html>`);
       if (frSec) frSec.value = deger;
     }
 
+    function teklifFirmaKarti() {
+      const no = Number(oturum?.firma) || 0;
+      if (!no) return null;
+      const liste = []
+        .concat(Array.isArray(ayarFirmalar) ? ayarFirmalar : [])
+        .concat(Array.isArray(firmalar) ? firmalar : []);
+      return liste.find((item) => Number(item.no) === no) || null;
+    }
+
     function teklifDizaynOku(zorunluId) {
       const tasarimId = teklifTasarimGecerli(zorunluId || teklifTasarimAktifId());
       const depo = teklifTasarimDepoOku();
@@ -9721,7 +10251,17 @@ ${"<" + "/script>"}</body></html>`);
         web: kayit?.web || "",
         renk: kayit?.renk || meta.renk || TEKLIF_DIZAYN.renk,
       };
-      if (!dizayn.unvan && oturum?.firmaYazi) dizayn.unvan = String(oturum.firmaYazi).split(" - ")[0];
+      const kart = teklifFirmaKarti();
+      if (kart) {
+        const unvan = String(kart.ad || kart.kisaAd || "").trim();
+        if (unvan) dizayn.unvan = unvan;
+        if (kart.adres) dizayn.adres = kart.adres;
+        if (kart.telefon) dizayn.telefon = kart.telefon;
+        if (kart.eposta) dizayn.eposta = kart.eposta;
+        if (kart.web) dizayn.web = kart.web;
+      } else if (!dizayn.unvan && oturum?.firmaYazi) {
+        dizayn.unvan = String(oturum.firmaYazi).split(" - ")[0];
+      }
       if (!dizayn.resimler || typeof dizayn.resimler !== "object") dizayn.resimler = {};
       if (yenile || !Array.isArray(dizayn.layout) || !dizayn.layout.length) {
         dizayn.layout = frVarsayilan(dizayn, tasarimId);
@@ -9788,6 +10328,7 @@ ${"<" + "/script>"}</body></html>`);
         if (Array.isArray(kucuk.layout)) {
           kucuk.layout = kucuk.layout.map((item) => item?.type === "picture" ? { ...item, src: "" } : item);
         }
+        if (kucuk.arkaPlan?.src && String(kucuk.arkaPlan.src).startsWith("data:")) kucuk.arkaPlan = { ...kucuk.arkaPlan, src: "" };
         if (yaz(kucuk)) {
           if (durum) durum.textContent = "Dizayn kaydedildi (büyük resimler ayrıldı; depolama sınırı).";
           return true;
@@ -9940,13 +10481,64 @@ ${"<" + "/script>"}</body></html>`);
         "[AraToplam]": teklifPara(hesap.ara, form?.pb),
         "[Kdv]": teklifPara(hesap.kdv, form?.pb),
         "[GenelToplam]": teklifPara(hesap.genel, form?.pb),
-        "[Pb]": form?.pb || "TL",
+        "[Pb]": pbYazi(form?.pb) || "₺",
         "[SayfaNo]": String(form?.sayfaNo || 1),
         "[SayfaToplam]": String(form?.sayfaToplam || 1),
       };
       let yazi = String(metin || "");
       for (const [anahtar, deger] of Object.entries(map)) yazi = yazi.split(anahtar).join(deger || "");
       return yazi;
+    }
+
+    function frArkaPlanAl(dizayn) {
+      const kaynak = dizayn || teklifDizaynOku();
+      const ap = kaynak?.arkaPlan || {};
+      const opacity = Math.min(0.35, Math.max(0.04, Number(ap.opacity) || 0.12));
+      return { src: ap.src || "", opacity };
+    }
+
+    function frArkaPlanKaydet(kismi) {
+      const once = teklifDizaynOku();
+      once.arkaPlan = { ...frArkaPlanAl(once), ...kismi };
+      teklifDizaynYaz(once);
+      return once.arkaPlan;
+    }
+
+    function frArkaPlanCiz(hedef, sinif) {
+      const ap = frArkaPlanAl();
+      if (!ap.src) return;
+      const img = document.createElement("img");
+      img.className = sinif;
+      img.src = ap.src;
+      img.alt = "";
+      img.style.opacity = String(ap.opacity);
+      hedef.appendChild(img);
+    }
+
+    function frArkaPlanKontrolYaz() {
+      const ap = frArkaPlanAl();
+      const aralik = document.getElementById("frArkaOpak");
+      if (aralik) aralik.value = String(Math.round(ap.opacity * 100));
+    }
+
+    async function frArkaPlanSec() {
+      const dosya = document.createElement("input");
+      dosya.type = "file";
+      dosya.accept = "image/png,image/jpeg,image/jpg,image/webp,image/gif,image/*";
+      dosya.onchange = async () => {
+        const file = dosya.files && dosya.files[0];
+        if (!file) return;
+        try {
+          const src = await teklifResimKucult(file, 900);
+          frArkaPlanKaydet({ src });
+          frCiz(false);
+          teklifKagitCiz();
+          document.getElementById("teklifDurum").textContent = "Arka plan logosu eklendi. Solukluğu kaydırıcıdan ayarlanır.";
+        } catch (error) {
+          document.getElementById("teklifDurum").textContent = error.message;
+        }
+      };
+      dosya.click();
     }
 
     function frLayoutAl() {
@@ -10239,6 +10831,7 @@ ${"<" + "/script>"}</body></html>`);
     function frCiz(agac = true) {
       const sayfa = document.getElementById("frSayfa");
       sayfa.replaceChildren();
+      frArkaPlanCiz(sayfa, "fr-arka");
       let top = 0;
       for (const bant of FR_BANTLAR) {
         const kutu = document.createElement("div");
@@ -10442,9 +11035,9 @@ ${"<" + "/script>"}</body></html>`);
           }
         };
         sayfa.appendChild(kutu);
-        top += bant.h;
+        if (bant.id !== "sayfa") top += bant.h;
       }
-      sayfa.style.minHeight = Math.max(1123, top) + "px";
+      sayfa.style.minHeight = "1123px";
       if (agac) frAgacCiz();
     }
 
@@ -10478,6 +11071,7 @@ ${"<" + "/script>"}</body></html>`);
       frSecili = "";
       frArac = "sec";
       teklifDizaynAcik = true;
+      frArkaPlanKontrolYaz();
       document.getElementById("teklifFr").hidden = false;
       frCiz();
       frOzellikCiz();
@@ -10585,7 +11179,97 @@ ${"<" + "/script>"}</body></html>`);
       return td;
     }
 
+    function teklifSatirDovizli(satir, form = teklifForm) {
+      return teklifPbKod(satir?.pb || form?.pb) !== "TL";
+    }
+    function teklifDovizAcik(form = teklifForm) {
+      if (!form) return false;
+      if (teklifPbKod(form.pb) !== "TL") return true;
+      return (form.satirlar || []).some((satir) => teklifSatirDovizli(satir, form));
+    }
+    function teklifKurDeger() {
+      const kur = Number(teklifForm?.kur) || Number(document.getElementById("teklifKur")?.value) || 0;
+      return kur > 0 ? kur : 0;
+    }
+    function teklifDovizFiyat(satir) {
+      if (!teklifSatirDovizli(satir)) return 0;
+      const kur = teklifKurDeger();
+      if (!(kur > 0)) return 0;
+      return (Number(satir.fiyat) || 0) / kur;
+    }
+    function teklifDovizTutar(satir) {
+      if (!teklifSatirDovizli(satir)) return 0;
+      const kur = teklifKurDeger();
+      if (!(kur > 0)) return 0;
+      return teklifSatirNet(satir) / kur;
+    }
+    function teklifDovizSayiYazi(n) {
+      if (!Number.isFinite(n)) return "";
+      return String(Math.round(n * 10000) / 10000);
+    }
+    function teklifDovizBaslik(form) {
+      const tablo = document.getElementById("teklifTablo");
+      if (!tablo) return false;
+      tablo.querySelectorAll(".teklif-doviz-bas, .teklif-doviz-col").forEach((el) => el.remove());
+      const acik = teklifDovizAcik(form);
+      if (!acik) return false;
+      const bas = tablo.querySelector("thead tr");
+      const grup = tablo.querySelector("colgroup");
+      const tutarTh = [...bas.children].find((th) => th.textContent.trim() === "Tutar");
+      const cols = [...grup.children];
+      const simge = teklifPbKod(form.pb) === "TL" ? "" : pbYazi(form.pb);
+      const etiket = (ad) => simge ? ad + " (" + simge + ")" : ad;
+      const thFiyat = document.createElement("th");
+      thFiyat.className = "n teklif-doviz-bas";
+      thFiyat.textContent = etiket("Döviz Birim Fiyat");
+      const thTutar = document.createElement("th");
+      thTutar.className = "n teklif-doviz-bas";
+      thTutar.textContent = etiket("Döviz Tutar");
+      if (tutarTh) {
+        tutarTh.after(thFiyat);
+        thFiyat.after(thTutar);
+      }
+      const colFiyat = document.createElement("col");
+      colFiyat.className = "teklif-doviz-col";
+      colFiyat.style.width = "9%";
+      const colTutar = document.createElement("col");
+      colTutar.className = "teklif-doviz-col";
+      colTutar.style.width = "9%";
+      if (cols[9]) {
+        cols[9].after(colFiyat);
+        colFiyat.after(colTutar);
+      }
+      return true;
+    }
+    function teklifDovizFiyatHucre(satir, kilit) {
+      const td = document.createElement("td");
+      td.className = "n";
+      const input = document.createElement("input");
+      input.dataset.alan = "dvzFiyat";
+      input.type = "number";
+      input.step = "0.0001";
+      input.readOnly = kilit || !teklifSatirDovizli(satir);
+      input.value = teklifSatirDovizli(satir) ? teklifDovizSayiYazi(teklifDovizFiyat(satir)) : "";
+      td.appendChild(input);
+      return td;
+    }
+    function teklifDovizTutarHucre(satir) {
+      const td = document.createElement("td");
+      td.className = "n";
+      const input = document.createElement("input");
+      input.dataset.alan = "dvzTutar";
+      input.readOnly = true;
+      input.value = teklifSatirDovizli(satir) ? para.format(teklifDovizTutar(satir)) : "";
+      td.appendChild(input);
+      return td;
+    }
+    let teklifFormCiziliyor = false;
     function teklifFormYaz() {
+      teklifFormCiziliyor = true;
+      try { teklifFormYazIc(); }
+      finally { teklifFormCiziliyor = false; }
+    }
+    function teklifFormYazIc() {
       const form = teklifForm || teklifBos();
       const kilit = !teklifDuzenlenebilir(form);
       const yaz = (id, deger) => { const el = document.getElementById(id); if (el) el.value = deger || ""; };
@@ -10607,7 +11291,8 @@ ${"<" + "/script>"}</body></html>`);
       yaz("teklifOk3", form.ok3 || "");
       yaz("teklifOk4", form.ok4 || "");
       yaz("teklifOnay", form.onay || "Onaysız");
-      document.getElementById("teklifPb").value = form.pb || "TL";
+      const pbSecim = document.getElementById("teklifPb");
+      if (pbSecim) pbSecim.value = teklifPbKod(form.pb);
       yaz("teklifKur", form.kur ? String(form.kur) : "1");
       yaz("teklifAciklama", form.aciklama);
       form.tasarim = teklifTasarimGecerli(form.tasarim || teklifBelgeTasarimOku(form));
@@ -10622,6 +11307,7 @@ ${"<" + "/script>"}</body></html>`);
       document.querySelectorAll("#teklifForm .tarih-btn").forEach((btn) => { btn.disabled = kilit; });
       const govde = document.getElementById("teklifSatirlar");
       govde.replaceChildren();
+      const dovizKolon = teklifDovizBaslik(form);
       form.satirlar.forEach((satir, index) => {
         const tr = document.createElement("tr");
         tr.dataset.i = String(index);
@@ -10640,10 +11326,17 @@ ${"<" + "/script>"}</body></html>`);
             input.dataset.alan = "kod";
             input.value = satir.kod || "";
             input.readOnly = kilit;
-            const oneri = document.createElement("div");
-            oneri.className = "teklif-oneri";
-            oneri.hidden = true;
-            sarmal.append(input, oneri);
+            input.autocomplete = "off";
+            if (!kilit) {
+              const ac = () => {
+                if (Date.now() - teklifOneriSus < 500) return;
+                teklifStokAra(input, true);
+              };
+              input.addEventListener("focus", ac);
+              input.addEventListener("click", ac);
+            }
+            input.addEventListener("contextmenu", (event) => teklifStokFiyatAc(event, input));
+            sarmal.append(input);
             td.appendChild(sarmal);
           } else {
             const input = document.createElement("input");
@@ -10651,6 +11344,16 @@ ${"<" + "/script>"}</body></html>`);
             input.value = satir[alan] ?? "";
             if (sayi) input.type = "number";
             input.readOnly = kilit;
+            if (alan === "ad") {
+              input.addEventListener("contextmenu", (event) => teklifStokFiyatAc(event, input));
+              if (!kilit) {
+                input.addEventListener("blur", () => {
+                  if (teklifFormCiziliyor) return;
+                  teklifFormOku();
+                  teklifUrunInternet(index);
+                });
+              }
+            }
             td.appendChild(input);
           }
           tr.appendChild(td);
@@ -10663,11 +11366,42 @@ ${"<" + "/script>"}</body></html>`);
         tutarInput.dataset.alan = "tutar";
         tutarTd.appendChild(tutarInput);
         tr.appendChild(tutarTd);
+        if (dovizKolon) {
+          tr.appendChild(teklifDovizFiyatHucre(satir, kilit));
+          tr.appendChild(teklifDovizTutarHucre(satir));
+        }
         const pbTd = document.createElement("td");
-        const pbInput = document.createElement("input");
-        pbInput.readOnly = true;
-        pbInput.value = form.pb || "TL";
-        pbTd.appendChild(pbInput);
+        const pbSec = document.createElement("select");
+        pbSec.dataset.alan = "pb";
+        for (const [deger, yazi] of [["TL", "TL"], ["$", "$"], ["EUR", "€"]]) {
+          const opt = document.createElement("option");
+          opt.value = deger;
+          opt.textContent = yazi;
+          pbSec.appendChild(opt);
+        }
+        pbSec.value = teklifPbKod(satir.pb || form.pb);
+        pbSec.disabled = kilit;
+        if (!kilit) pbSec.onchange = () => {
+          const onceki = teklifPbKod(satir.pb || form.pb);
+          teklifFormOku();
+          const yeni = teklifPbKod(satir.pb);
+          const ciz = () => { teklifFormYaz(); teklifKagitCiz(); };
+          if (yeni === "TL") {
+            if (teklifPbKod(teklifForm.pb) === onceki || teklifPbKod(teklifForm.pb) === "TL") {
+              teklifForm.pb = "TL";
+              teklifKurYaz(1);
+            }
+            ciz();
+            return;
+          }
+          teklifForm.pb = yeni;
+          teklifKurSor(yeni, () => {
+            satir.pb = onceki;
+            teklifForm.pb = onceki;
+            ciz();
+          }).then((tamam) => { if (tamam) ciz(); });
+        };
+        pbTd.appendChild(pbSec);
         tr.appendChild(pbTd);
         const silTd = document.createElement("td");
         silTd.className = "sil-hucre";
@@ -10705,7 +11439,7 @@ ${"<" + "/script>"}</body></html>`);
       teklifForm.firmaAd = document.getElementById("teklifFirmaAd").value.trim();
       teklifForm.tarih = document.getElementById("teklifTarih").value;
       teklifForm.gecerlilik = document.getElementById("teklifGecerlilik").value;
-      teklifForm.pb = document.getElementById("teklifPb").value || "TL";
+      teklifForm.pb = teklifPbKod(document.getElementById("teklifPb").value);
       teklifForm.kur = Number(document.getElementById("teklifKur").value) || 1;
       teklifForm.aciklama = document.getElementById("teklifAciklama").value.trim();
       teklifForm.tasarim = teklifTasarimGecerli(document.getElementById("teklifTasarimSec")?.value || teklifForm.tasarim);
@@ -10721,6 +11455,8 @@ ${"<" + "/script>"}</body></html>`);
           const input = row.querySelector(`[data-alan="${alan}"]`);
           if (input) satir[alan] = input.value.trim();
         }
+        const pbAlan = row.querySelector(`[data-alan="pb"]`);
+        if (pbAlan) satir.pb = teklifPbKod(pbAlan.value);
         for (const alan of ["miktar", "fiyat", "isk", "kdv"]) {
           const input = row.querySelector(`[data-alan="${alan}"]`);
           if (input) satir[alan] = Number(input.value) || 0;
@@ -10733,6 +11469,12 @@ ${"<" + "/script>"}</body></html>`);
         }
         const tutar = row.querySelector(`[data-alan="tutar"]`);
         if (tutar) tutar.value = para.format(teklifSatirNet(satir));
+        const dvzTutar = row.querySelector(`[data-alan="dvzTutar"]`);
+        if (dvzTutar) dvzTutar.value = teklifSatirDovizli(satir) ? para.format(teklifDovizTutar(satir)) : "";
+        const dvzFiyat = row.querySelector(`[data-alan="dvzFiyat"]`);
+        if (dvzFiyat && document.activeElement !== dvzFiyat) {
+          dvzFiyat.value = teklifSatirDovizli(satir) ? teklifDovizSayiYazi(teklifDovizFiyat(satir)) : "";
+        }
       });
       teklifAltYaz();
     }
@@ -10792,14 +11534,15 @@ ${"<" + "/script>"}</body></html>`);
         if (anahtar === "aciklama") return satir.aciklama || "";
         if (anahtar === "miktar") return miktarFmt.format(Number(satir.miktar) || 0);
         if (anahtar === "birim") return satir.birim || "";
-        if (anahtar === "fiyat") return teklifPara(satir.fiyat, form?.pb);
+        if (anahtar === "fiyat") return teklifPara(satir.fiyat, satir.pb || form?.pb);
         if (anahtar === "isk") return (Number(satir.isk) || 0) ? "%" + miktarFmt.format(Number(satir.isk) || 0) : "—";
         if (anahtar === "kdv") return "%" + miktarFmt.format(Number(satir.kdv) || 0);
-        if (anahtar === "tutar") return teklifPara(teklifSatirNet(satir), form?.pb);
+        if (anahtar === "tutar") return teklifPara(teklifSatirNet(satir), satir.pb || form?.pb);
         return "";
       };
       let satirAdet = 0;
       let notAdet = 0;
+      let resimEk = 0;
       const fotoKolon = kolonlar[0]?.key === "foto";
       for (const satir of (form?.satirlar || [])) {
         const tr = document.createElement("tr");
@@ -10814,7 +11557,7 @@ ${"<" + "/script>"}</body></html>`);
               const img = document.createElement("img");
               img.src = src;
               img.alt = "";
-              img.style.cssText = "width:" + fotoBoy + "px;height:" + fotoBoy + "px;object-fit:cover;border-radius:6px";
+              img.style.cssText = "width:100%;max-height:" + Math.max(fotoBoy, 56) + "px;object-fit:contain;border-radius:4px";
               td.appendChild(img);
             }
           } else if (kolon.key === "urun") {
@@ -10833,6 +11576,10 @@ ${"<" + "/script>"}</body></html>`);
         }
         govde.appendChild(tr);
         satirAdet += 1;
+        if (!satir.resimYok && (satir.resim || satir.gorsel)) {
+          const foto = Math.max(fotoBoy, 56) + padY * 2;
+          if (foto > satirH) resimEk += foto - satirH;
+        }
         const not = String(satir.aciklama || "").trim();
         if (not && !aciklamaKolon) {
           const notTr = document.createElement("tr");
@@ -10859,7 +11606,7 @@ ${"<" + "/script>"}</body></html>`);
         satirAdet,
         notAdet,
         baslikH: Math.round(satirH * 0.85),
-        ekstraH: notAdet * Math.max(14, Math.round(satirH * 0.7)),
+        ekstraH: notAdet * Math.max(14, Math.round(satirH * 0.7)) + resimEk,
       };
     }
 
@@ -10882,6 +11629,8 @@ ${"<" + "/script>"}</body></html>`);
       kagit.replaceChildren();
       const sayfa = document.createElement("div");
       sayfa.className = "kagit-sayfa";
+      frArkaPlanCiz(sayfa, "kagit-arka");
+      const altaResimler = [];
       for (const bant of FR_BANTLAR) {
         const kutu = document.createElement("div");
         kutu.className = "kagit-bant" + (bant.id === "sayfa" ? " sayfa-no" : "");
@@ -10901,6 +11650,7 @@ ${"<" + "/script>"}</body></html>`);
           el.style.fontStyle = nesne.italic ? "italic" : "normal";
           el.style.textAlign = nesne.align || "left";
           let nesneH = Number(nesne.h) || 20;
+          const altaResim = nesne.type === "picture" && nesne.role !== "logo-expert" && nesne.role !== "logo-vega";
           if (nesne.type === "picture") {
             const src = frPictureSrcCoz(nesne, dizayn);
             if (src) {
@@ -10908,6 +11658,12 @@ ${"<" + "/script>"}</body></html>`);
               img.src = src;
               img.alt = nesne.text || "";
               el.appendChild(img);
+            }
+            if (altaResim) {
+              el.classList.add("alta");
+              el.style.top = "auto";
+              altaResimler.push(el);
+              continue;
             }
           } else if (nesne.type === "line") {
             const cizgi = document.createElement("i");
@@ -10947,14 +11703,11 @@ ${"<" + "/script>"}</body></html>`);
         }
         sayfa.appendChild(kutu);
       }
-      kagit.appendChild(sayfa);
-      if (form && (form.iptal || form.converted || form.yeni)) {
-        const damga = document.createElement("div");
-        damga.className = "kagit-damga";
-        damga.style.cssText = "position:absolute;right:24px;bottom:24px";
-        damga.textContent = form.iptal ? "İPTAL" : form.converted ? "FATURALANDI" : "TASLAK";
-        sayfa.appendChild(damga);
+      for (const el of altaResimler) {
+        el.style.bottom = "4px";
+        sayfa.appendChild(el);
       }
+      kagit.appendChild(sayfa);
     }
 
     function teklifGorselAnahtar(satir) {
@@ -10994,6 +11747,12 @@ ${"<" + "/script>"}</body></html>`);
       if (degisti) {
         teklifFormYaz();
         teklifKagitCiz();
+      }
+      for (let index = 0; index < teklifForm.satirlar.length; index += 1) {
+        const satir = teklifForm.satirlar[index];
+        if (!satir || satir.resim || satir.gorsel || satir.resimYok) continue;
+        if (String(satir.ad || "").trim().length < 3) continue;
+        await teklifUrunInternet(index);
       }
     }
 
@@ -11049,7 +11808,10 @@ ${"<" + "/script>"}</body></html>`);
 
     function teklifListeCiz() {
       const govde = document.getElementById("teklifSatir");
-      const liste = teklifGorunen();
+      const tumu = teklifGorunen();
+      const sinir = 30;
+      const liste = teklifEskiAcik ? tumu : tumu.slice(0, sinir);
+      const eskiAdet = Math.max(0, tumu.length - sinir);
       govde.replaceChildren();
       for (const item of liste) {
         const tr = document.createElement("tr");
@@ -11062,7 +11824,7 @@ ${"<" + "/script>"}</body></html>`);
           hucre(para.format(item.ara || 0), true),
           hucre(para.format(item.kdv || 0), true),
           hucre(para.format(item.tutar || 0), true),
-          hucre(item.pb || "TL"),
+          hucre(pbYazi(item.pb) || "₺"),
           hucre(item.iptal ? "İptal" : item.converted ? "Faturalandı" : "Açık"),
         );
         tr.onclick = () => { teklifSecili = item.ind; teklifDetayAc(item.ind); };
@@ -11070,8 +11832,16 @@ ${"<" + "/script>"}</body></html>`);
       }
       const alt = document.getElementById("teklifAlt");
       alt.replaceChildren();
+      if (eskiAdet) {
+        const eskiBtn = document.createElement("button");
+        eskiBtn.type = "button";
+        eskiBtn.className = "teklif-eski";
+        eskiBtn.textContent = teklifEskiAcik ? "Eski teklifleri gizle" : ("Eski teklifler (" + eskiAdet + ")");
+        eskiBtn.onclick = () => { teklifEskiAcik = !teklifEskiAcik; teklifListeCiz(); };
+        alt.appendChild(eskiBtn);
+      }
       const adet = document.createElement("span");
-      adet.textContent = liste.length + " teklif";
+      adet.textContent = (!teklifEskiAcik && eskiAdet) ? ("Son " + liste.length + " teklif") : (liste.length + " teklif");
       alt.appendChild(adet);
       const gruplar = new Map();
       for (const item of liste) {
@@ -11096,6 +11866,7 @@ ${"<" + "/script>"}</body></html>`);
       });
       const body = await getir("/api/fiyat-teklif?" + params);
       teklifKayitlar = body.items || [];
+      teklifEskiAcik = false;
       teklifListeCiz();
     }
 
@@ -11175,22 +11946,101 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("teklifDurum").textContent = "Tasarım: " + ad;
     }
 
+    let teklifOneriAktif = null;
+    let teklifOneriSecim = -1;
+    let teklifOneriSus = 0;
+
+    function teklifAraKutu() {
+      let kutu = document.getElementById("teklifAraListe");
+      if (!kutu) {
+        kutu = document.createElement("div");
+        kutu.id = "teklifAraListe";
+        kutu.className = "teklif-oneri";
+        kutu.hidden = true;
+        kutu.addEventListener("mousedown", (event) => event.preventDefault());
+        document.body.appendChild(kutu);
+      }
+      return kutu;
+    }
+
     function teklifOneriKapat() {
+      teklifOneriAktif = null;
+      teklifOneriSecim = -1;
       document.querySelectorAll(".teklif-oneri").forEach((kutu) => { kutu.hidden = true; kutu.replaceChildren(); });
     }
 
-    function teklifOneriDoldur(kutu, items, sec) {
+    function teklifOneriKonum(kutu, hedef) {
+      if (!kutu || !hedef) return;
+      if (kutu.parentElement !== document.body) document.body.appendChild(kutu);
+      const r = hedef.getBoundingClientRect();
+      const genislik = Math.min(680, window.innerWidth - 16);
+      const left = Math.min(Math.max(8, r.left), window.innerWidth - genislik - 8);
+      const top = r.bottom + 2;
+      kutu.style.position = "fixed";
+      kutu.style.left = left + "px";
+      kutu.style.top = top + "px";
+      kutu.style.width = genislik + "px";
+      kutu.style.right = "auto";
+      kutu.style.zIndex = "400";
+      kutu.dataset.hedef = "1";
+    }
+
+    function teklifOneriVurgu() {
+      if (!teklifOneriAktif) return;
+      const buttons = [...teklifOneriAktif.kutu.querySelectorAll("button")];
+      buttons.forEach((btn, index) => btn.classList.toggle("aktif", index === teklifOneriSecim));
+      if (teklifOneriSecim >= 0) buttons[teklifOneriSecim]?.scrollIntoView({ block: "nearest" });
+    }
+
+    function teklifOneriUygula(item) {
+      if (!teklifOneriAktif || !item) return;
+      const sec = teklifOneriAktif.sec;
+      teklifOneriSus = Date.now();
+      teklifOneriKapat();
+      sec(item);
+    }
+
+    function teklifOneriDoldur(kutu, items, sec, input) {
       kutu.replaceChildren();
-      if (!items.length) { kutu.hidden = true; return; }
+      teklifOneriSecim = -1;
+      teklifOneriAktif = { kutu, items, sec, input: input || null, q: input ? input.value.trim() : "", bekliyor: false };
+      if (!items.length) {
+        const bos = document.createElement("div");
+        bos.className = "bos";
+        bos.textContent = "Kayıt yok";
+        kutu.appendChild(bos);
+        kutu.hidden = false;
+        return;
+      }
+      const sayi = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
       for (const item of items) {
         const btn = document.createElement("button");
         btn.type = "button";
+        btn.className = "oneri-satir";
+        const sol = document.createElement("span");
+        sol.className = "sol";
         const ad = document.createElement("span");
         ad.textContent = item.ad || item.kod;
         const alt = document.createElement("small");
         alt.textContent = item.kod && item.kod !== item.ad ? item.kod : "";
-        btn.append(ad, alt);
-        btn.onclick = (event) => { event.preventDefault(); sec(item); teklifOneriKapat(); };
+        sol.append(ad, alt);
+        btn.append(sol);
+        if (item.bakiye != null || item.envanter != null) {
+          const sag = document.createElement("span");
+          const deger = item.bakiye != null ? Number(item.bakiye) || 0 : Number(item.envanter) || 0;
+          sag.className = "sag" + (deger < 0 ? " eksi" : "");
+          sag.textContent = item.bakiye != null ? para.format(deger) : sayi.format(deger);
+          btn.append(sag);
+        }
+        btn.onmouseenter = () => {
+          teklifOneriSecim = items.indexOf(item);
+          teklifOneriVurgu();
+        };
+        btn.onmousedown = (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          teklifOneriUygula(item);
+        };
         kutu.appendChild(btn);
       }
       kutu.hidden = false;
@@ -11223,7 +12073,7 @@ ${"<" + "/script>"}</body></html>`);
       teklifKagitCiz();
       const stil = document.createElement("style");
       stil.id = "teklifSayfaStil";
-      stil.textContent = "@page { size: A4; margin: 12mm; }";
+      stil.textContent = "@page { size: A4; margin: 0; }";
       document.head.appendChild(stil);
       document.documentElement.classList.add("teklif-yazdir");
       const temizle = () => {
@@ -11234,6 +12084,311 @@ ${"<" + "/script>"}</body></html>`);
       window.addEventListener("afterprint", temizle);
       window.print();
     }
+
+    function telefonYazi(no) {
+      const rakam = String(no || "");
+      if (rakam.startsWith("90") && rakam.length === 12) {
+        const g = rakam.slice(2);
+        return "0" + g.slice(0, 3) + " " + g.slice(3, 6) + " " + g.slice(6, 8) + " " + g.slice(8);
+      }
+      return rakam;
+    }
+
+    function teklifNumaraSec(kisiler) {
+      return new Promise((resolve) => {
+        const kutu = document.getElementById("waNumaraKutu");
+        const liste = document.getElementById("waNumaraListe");
+        let bitti = false;
+        const kapat = (kisi) => {
+          if (bitti) return;
+          bitti = true;
+          kutu.hidden = true;
+          liste.replaceChildren();
+          resolve(kisi || null);
+        };
+        liste.replaceChildren();
+        document.getElementById("waNumaraMetin").textContent = "Rehberinizde kayıtlıysa o ad, değilse WhatsApp’ta görünen ad. Mesaj yalnızca seçtiğiniz kişiye gider.";
+        for (const kisi of kisiler) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "wa-kisi";
+          const ad = document.createElement("b");
+          ad.textContent = kisi.ad || telefonYazi(kisi.telefon);
+          const alt = document.createElement("span");
+          const altParca = [];
+          if (kisi.ad && kisi.adKaynak === "whatsapp") altParca.push("WhatsApp adı");
+          if (kisi.etiket) altParca.push(kisi.etiket);
+          if (kisi.ad) altParca.push(telefonYazi(kisi.telefon));
+          alt.textContent = altParca.join(" · ");
+          btn.append(ad, alt);
+          btn.onclick = () => kapat(kisi);
+          liste.appendChild(btn);
+        }
+        document.getElementById("waNumaraIptal").onclick = () => kapat(null);
+        kutu.hidden = false;
+      });
+    }
+
+    function teklifYazdirStili() {
+      let css = "@page { size: A4; margin: 0; }\nhtml, body { margin: 0; background: #fff; }\n";
+      for (const sheet of document.styleSheets) {
+        let rules;
+        try { rules = sheet.cssRules; } catch { continue; }
+        for (const rule of rules) {
+          const text = rule.cssText || "";
+          if (/teklifKagit|kagit-/.test(text)) css += text + "\n";
+        }
+      }
+      return css.replace(/<\/style/gi, "");
+    }
+
+    async function teklifResimGom(kok) {
+      for (const img of kok.querySelectorAll("img")) {
+        const src = img.getAttribute("src") || "";
+        if (!src || src.startsWith("data:")) continue;
+        try {
+          const headers = {};
+          if (src.startsWith("/") && oturum?.token) headers.Authorization = "Bearer " + oturum.token;
+          const response = await fetch(src, { headers });
+          if (!response.ok) continue;
+          const blob = await response.blob();
+          const veri = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () => reject(new Error("resim"));
+            reader.readAsDataURL(blob);
+          });
+          if (veri) img.src = veri;
+        } catch { /* resim PDF içine alınamadı */ }
+      }
+    }
+
+    async function teklifPdfHtml() {
+      teklifKagitCiz();
+      const kaynak = document.getElementById("teklifKagit");
+      const kopya = kaynak.cloneNode(true);
+      await teklifResimGom(kopya);
+      return "<!DOCTYPE html><html lang=\"tr\" class=\"teklif-yazdir\"><head><meta charset=\"utf-8\"><title>Fiyat Teklifi</title><style>"
+        + teklifYazdirStili()
+        + "</style></head><body>" + kopya.outerHTML + "</body></html>";
+    }
+
+    function teklifWhatsappMetin(kisi) {
+      const ad = kisi?.ad || "";
+      const tarih = teklifTrTarih(teklifForm?.tarih) || teklifForm?.tarih || new Date().toLocaleDateString("tr-TR");
+      const belge = teklifForm?.belge ? teklifForm.belge + " numaralı " : "";
+      return [
+        ad ? "Sayın " + ad + "," : "Sayın yetkili,",
+        "",
+        tarih + " tarihli " + belge + "fiyat teklifimiz ekte bilgilerinize sunulmuştur.",
+        "",
+        "İyi çalışmalar dileriz.",
+        "Expert Bilişim",
+      ].join("\n");
+    }
+
+    let teklifWaGonderiliyor = false;
+    async function teklifWhatsappGonder() {
+      const durum = document.getElementById("teklifDurum");
+      if (teklifWaGonderiliyor) return;
+      if (!teklifForm) {
+        durum.textContent = "Göndermek için listeden bir teklif açın.";
+        return;
+      }
+      if (teklifDuzenlenebilir()) teklifFormOku();
+      const kod = String(teklifForm.firmaKod || "").trim();
+      if (!kod) {
+        durum.textContent = "Önce firma seçin.";
+        return;
+      }
+      teklifWaGonderiliyor = true;
+      durum.textContent = "Numaralar hazırlanıyor…";
+      try {
+        const ayar = await getir("/api/whatsapp");
+        if (!ayar.hazir) {
+          const dugme = document.getElementById("ayarBtn");
+          const panel = document.getElementById("ayarPanel");
+          if (dugme && panel?.hidden) dugme.click();
+          throw new Error("Sağ üstteki Ayarlar'dan telefonu bağlayın.");
+        }
+        const body = await getir("/api/cari-numaralar?firma=" + encodeURIComponent(oturum.firma) + "&kod=" + encodeURIComponent(kod));
+        if (localStorage.getItem("vegaSmsIzni") !== "0" && !body.smsGonder) {
+          throw new Error("Bu carinin SMS gönder izni yok.");
+        }
+        const kisiler = Array.isArray(body.kisiler) ? body.kisiler : [];
+        if (!kisiler.length) {
+          throw new Error(body.dolu ? "Cari kartındaki numaralar WhatsApp için uygun değil." : "Cari kartında telefon yok.");
+        }
+        durum.textContent = "";
+        const kisi = await teklifNumaraSec(kisiler);
+        if (!kisi) return;
+        durum.textContent = (kisi.ad || "Seçilen numara") + " için PDF hazırlanıyor…";
+        if (teklifDizaynAcik) frDizaynKaydet();
+        await teklifGorselleriHazirla();
+        const html = await teklifPdfHtml();
+        const dosya = "fiyat-teklifi-" + String(teklifForm.belge || "taslak").replace(/[\\/:*?"<>|]/g, "").slice(0, 40) + ".pdf";
+        await getir("/api/whatsapp-gonder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            telefonlar: [kisi.telefon],
+            html,
+            ozet: teklifWhatsappMetin(kisi),
+            dosyaAdi: dosya,
+          }),
+        });
+        durum.textContent = (kisi.ad || telefonYazi(kisi.telefon)) + " kişisine fiyat teklifi gönderildi.";
+      } catch (error) {
+        durum.textContent = error.message || "WhatsApp gönderilemedi.";
+      } finally {
+        teklifWaGonderiliyor = false;
+      }
+    }
+
+    let siparisSatirlari = [];
+    let siparisIstek = 0;
+    function siparisTipSecenekleri(tipler) {
+      const select = document.getElementById("siparisTip");
+      if (!select) return;
+      const secili = select.value;
+      const ekstra = (tipler || []).filter((tip) => Number(tip.kod) !== 0 && Number(tip.kod) !== 100);
+      const tekler = [
+        { kod: 0, ad: (tipler || []).find((tip) => Number(tip.kod) === 0)?.ad || "Emtia" },
+        { kod: 100, ad: (tipler || []).find((tip) => Number(tip.kod) === 100)?.ad || "Seri Numaralı Ticari Mal" },
+        ...ekstra,
+      ];
+      select.replaceChildren();
+      for (const [value, ad] of [["0,100", "Emtia ve ticari mal"], ["", "Tümü"]]) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = ad;
+        select.appendChild(option);
+      }
+      for (const tip of tekler) {
+        const option = document.createElement("option");
+        option.value = String(tip.kod);
+        option.textContent = tip.ad || String(tip.kod);
+        select.appendChild(option);
+      }
+      if ([...select.options].some((option) => option.value === secili)) select.value = secili;
+    }
+    function siparisCiz() {
+      const govde = document.getElementById("siparisSatirlar");
+      govde.replaceChildren();
+      const grafik = document.getElementById("siparisGrafik");
+      grafik.replaceChildren();
+      const kritik = siparisSatirlari.filter((satir) => satir.gunYeter <= 7 || satir.envanter <= 0).length;
+      const toplam = siparisSatirlari.reduce((sum, satir) => sum + satir.siparis, 0);
+      document.getElementById("siparisAdet").textContent = String(siparisSatirlari.length);
+      document.getElementById("siparisMiktar").textContent = miktarFmt.format(toplam);
+      document.getElementById("siparisKritik").textContent = String(kritik);
+      if (!siparisSatirlari.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.textContent = "Bu aralıkta sipariş gerektiren ürün yok.";
+        tr.appendChild(td);
+        govde.appendChild(tr);
+        grafik.textContent = "Grafik için sipariş kalemi yok.";
+        return;
+      }
+      for (const satir of siparisSatirlari) {
+        const tr = document.createElement("tr");
+        if (satir.envanter <= 0 || satir.gunYeter <= 7) tr.className = "kritik";
+        const hucre = (yazi, sayi) => {
+          const td = document.createElement("td");
+          if (sayi) td.className = "num";
+          td.textContent = yazi;
+          return td;
+        };
+        const kodHucre = hucre(satir.kod);
+        kodHucre.title = satir.kod || "";
+        const adHucre = hucre(satir.ad);
+        adHucre.title = satir.ad || "";
+        tr.appendChild(kodHucre);
+        tr.appendChild(adHucre);
+        tr.appendChild(hucre(miktarFmt.format(satir.envanter), true));
+        tr.appendChild(hucre(miktarFmt.format(satir.satilan), true));
+        tr.appendChild(hucre(miktarFmt.format(satir.hiz), true));
+        tr.appendChild(hucre(miktarFmt.format(satir.gunYeter) + " gün", true));
+        tr.appendChild(hucre(miktarFmt.format(satir.siparis), true));
+        govde.appendChild(tr);
+      }
+      const tepe = siparisSatirlari.slice(0, 12);
+      const tavan = Math.max(...tepe.map((satir) => Math.max(satir.envanter, satir.siparis, 0.001)));
+      for (const satir of tepe) {
+        const satirEl = document.createElement("div");
+        satirEl.className = "siparis-satir";
+        const ad = document.createElement("div");
+        ad.className = "ad";
+        ad.textContent = satir.ad || satir.kod;
+        ad.title = satir.ad || satir.kod || "";
+        const kod = document.createElement("small");
+        kod.textContent = satir.kod + " · " + miktarFmt.format(satir.gunYeter) + " gün";
+        ad.appendChild(kod);
+        const cubuklar = document.createElement("div");
+        cubuklar.className = "siparis-cubuklar";
+        const cubuk = (sinif, deger) => {
+          const kutu = document.createElement("div");
+          kutu.className = "siparis-cubuk " + sinif;
+          const dolu = document.createElement("i");
+          dolu.style.width = Math.max(0, Math.min(100, (Math.max(deger, 0) / tavan) * 100)) + "%";
+          dolu.title = miktarFmt.format(deger);
+          kutu.appendChild(dolu);
+          return kutu;
+        };
+        cubuklar.append(cubuk("env", satir.envanter), cubuk("sip", satir.siparis));
+        satirEl.append(ad, cubuklar);
+        grafik.appendChild(satirEl);
+      }
+    }
+    async function siparisYukle() {
+      const no = ++siparisIstek;
+      document.getElementById("siparisDurum").textContent = "Hazırlanıyor…";
+      const params = new URLSearchParams({
+        firma: String(oturum.firma),
+        donem: String(oturum.donem),
+        bas: isoGunYazi(document.getElementById("siparisBas").value),
+        bit: isoGunYazi(document.getElementById("siparisBit").value),
+        hedef: String(Math.min(365, Math.max(1, Number(document.getElementById("siparisHedef").value) || 30))),
+      });
+      const q = document.getElementById("siparisAra").value.trim();
+      if (q) params.set("q", q);
+      params.set("tip", document.getElementById("siparisTip").value);
+      const body = await getir("/api/siparis-ihtiyac?" + params);
+      if (no !== siparisIstek) return;
+      siparisTipSecenekleri(body.tipler || []);
+      siparisSatirlari = body.items || [];
+      siparisCiz();
+      document.getElementById("siparisDurum").textContent = siparisSatirlari.length + " ürün · " + (body.gun || "") + " gün satış";
+    }
+    async function siparisEkraniAc() {
+      document.getElementById("menu").hidden = true;
+      document.getElementById("rapor").hidden = true;
+      document.getElementById("cari").hidden = true;
+      kasaEkraniKapat();
+      const bugun = new Date();
+      const bas = new Date(bugun.getFullYear(), bugun.getMonth(), bugun.getDate() - 29);
+      if (!document.getElementById("siparisBit").value) document.getElementById("siparisBit").value = kasaIso(kasaTarihYazi(bugun));
+      if (!document.getElementById("siparisBas").value) document.getElementById("siparisBas").value = kasaIso(kasaTarihYazi(bas));
+      document.getElementById("siparisIhtiyac").hidden = false;
+      try { await siparisYukle(); }
+      catch (error) { document.getElementById("siparisDurum").textContent = error.message; }
+    }
+    document.getElementById("siparisIhtiyacBtn").onclick = () => siparisEkraniAc();
+    document.getElementById("siparisGeri").onclick = () => {
+      document.getElementById("siparisIhtiyac").hidden = true;
+      document.getElementById("menu").hidden = false;
+    };
+    document.getElementById("siparisBas").onchange = () => siparisYukle().catch((error) => { document.getElementById("siparisDurum").textContent = error.message; });
+    document.getElementById("siparisBit").onchange = () => siparisYukle().catch((error) => { document.getElementById("siparisDurum").textContent = error.message; });
+    document.getElementById("siparisHedef").onchange = () => siparisYukle().catch((error) => { document.getElementById("siparisDurum").textContent = error.message; });
+    document.getElementById("siparisTip").onchange = () => siparisYukle().catch((error) => { document.getElementById("siparisDurum").textContent = error.message; });
+    document.getElementById("siparisAra").oninput = () => {
+      clearTimeout(siparisAraZaman);
+      siparisAraZaman = setTimeout(() => siparisYukle().catch((error) => { document.getElementById("siparisDurum").textContent = error.message; }), 280);
+    };
+    let siparisAraZaman = 0;
 
     document.getElementById("teklifBtn").onclick = () => teklifEkraniAc();
     document.getElementById("teklifGeri").onclick = () => {
@@ -11252,10 +12407,37 @@ ${"<" + "/script>"}</body></html>`);
     document.getElementById("teklifBelgeDizayn").onclick = () => frAc();
     document.getElementById("teklifYazdir").onclick = () => { teklifYazdir().catch((error) => { document.getElementById("teklifDurum").textContent = error.message; }); };
     document.getElementById("teklifBelgeYazdir").onclick = () => { teklifYazdir().catch((error) => { document.getElementById("teklifDurum").textContent = error.message; }); };
+    document.getElementById("teklifWhatsapp").onclick = () => { teklifWhatsappGonder(); };
+    document.getElementById("teklifWhatsappUst").onclick = () => { teklifWhatsappGonder(); };
+    document.getElementById("teklifPb").addEventListener("change", () => {
+      if (!teklifForm || !teklifDuzenlenebilir()) return;
+      const onceki = teklifPbKod(teklifForm.pb);
+      teklifFormOku();
+      const yeni = teklifPbKod(teklifForm.pb);
+      const uygula = () => {
+        for (const satir of teklifForm.satirlar) {
+          if (!satir.pb || teklifPbKod(satir.pb) === onceki) satir.pb = yeni;
+        }
+        teklifFormYaz();
+        teklifKagitCiz();
+      };
+      if (yeni === "TL") {
+        teklifKurYaz(1);
+        uygula();
+        return;
+      }
+      teklifKurSor(yeni, () => {
+        teklifForm.pb = onceki;
+        const secim = document.getElementById("teklifPb");
+        if (secim) secim.value = onceki;
+        teklifFormYaz();
+        teklifKagitCiz();
+      }).then((tamam) => { if (tamam) uygula(); });
+    });
     document.getElementById("teklifBas").onchange = () => { teklifYukle().catch((error) => { document.getElementById("teklifDurum").textContent = error.message; }); };
     document.getElementById("teklifBit").onchange = () => { teklifYukle().catch((error) => { document.getElementById("teklifDurum").textContent = error.message; }); };
-    document.getElementById("teklifAra").oninput = () => teklifListeCiz();
-    document.getElementById("teklifDurumSec").onchange = () => teklifListeCiz();
+    document.getElementById("teklifAra").oninput = () => { teklifEskiAcik = false; teklifListeCiz(); };
+    document.getElementById("teklifDurumSec").onchange = () => { teklifEskiAcik = false; teklifListeCiz(); };
     document.getElementById("teklifSatirEkle").onclick = () => {
       teklifFormOku();
       teklifForm.satirlar.push(teklifBosSatir());
@@ -11293,6 +12475,11 @@ ${"<" + "/script>"}</body></html>`);
       if (hedef.id === "teklifTarih" && hedef.value) teklifGecerlilikOtomatik(hedef.value);
       if (hedef.id === "teklifTarih" || hedef.id === "teklifGecerlilik") {
         teklifFormOku();
+        const pb = teklifPbKod(teklifForm.pb);
+        if (hedef.id === "teklifTarih" && pb !== "TL") {
+          teklifKurSor(pb).then(() => teklifKagitCiz());
+          return;
+        }
         teklifKagitCiz();
       }
     });
@@ -11301,19 +12488,38 @@ ${"<" + "/script>"}</body></html>`);
       if (!teklifDuzenlenebilir()) return;
       const hedef = event.target;
       if (hedef.id === "teklifTarih" && hedef.value) teklifGecerlilikOtomatik(hedef.value);
+      if (hedef.dataset.alan === "dvzFiyat") {
+        const kur = Number(document.getElementById("teklifKur").value) || 0;
+        const dvz = Number(hedef.value);
+        const fiyat = hedef.closest("tr")?.querySelector('[data-alan="fiyat"]');
+        if (fiyat && kur > 0 && Number.isFinite(dvz)) fiyat.value = String(Math.round(dvz * kur * 10000) / 10000);
+      }
       clearTimeout(teklifYaziZaman);
       teklifYaziZaman = setTimeout(() => { teklifFormOku(); teklifKagitCiz(); }, 140);
       clearTimeout(teklifAraZaman);
-      if (hedef.id === "teklifFirmaKod") {
-        teklifAraZaman = setTimeout(() => teklifCariAra(hedef.value), 220);
+      if (hedef.id === "teklifFirmaKod" || hedef.id === "teklifFirmaAd") {
+        teklifAraZaman = setTimeout(() => teklifCariAra(hedef.value, hedef), 220);
       }
       if (hedef.dataset.alan === "kod") {
-        teklifAraZaman = setTimeout(() => teklifStokAra(hedef), 220);
+        teklifAraZaman = setTimeout(() => teklifStokAra(hedef, true), 220);
       }
     });
     document.getElementById("frKaydet").onclick = () => frKapat();
     document.getElementById("frKapat").onclick = () => frKapat();
     document.getElementById("frText").onclick = () => { frArac = "text"; };
+    document.getElementById("frArkaPlan").onclick = () => frArkaPlanSec();
+    document.getElementById("frArkaOpak").oninput = () => {
+      const opacity = Math.min(0.35, Math.max(0.04, Number(document.getElementById("frArkaOpak").value) / 100));
+      frArkaPlanKaydet({ opacity });
+      frCiz(false);
+      teklifKagitCiz();
+    };
+    document.getElementById("frArkaSil").onclick = () => {
+      frArkaPlanKaydet({ src: "" });
+      frCiz(false);
+      teklifKagitCiz();
+      document.getElementById("teklifDurum").textContent = "Arka plan logosu kaldırıldı.";
+    };
     document.getElementById("frPicture").onclick = () => {
       frArac = "picture";
       document.querySelectorAll(".fr-ust button").forEach((btn) => btn.classList.toggle("secili", btn.id === "frPicture"));
@@ -11584,11 +12790,24 @@ ${"<" + "/script>"}</body></html>`);
       if (!teklifForm?.yeni) teklifYeniAc();
     };
 
-    async function teklifCariAra(q) {
-      const kutu = document.getElementById("teklifCariOneri");
-      if (!teklifDuzenlenebilir() || String(q || "").trim().length < 1) { kutu.hidden = true; return; }
+    function teklifCariFiltreAc(input) {
+      if (!teklifDuzenlenebilir() || !input || input.readOnly) return;
+      if (Date.now() - teklifOneriSus < 500) return;
+      teklifCariAra(input.value, input);
+    }
+
+    async function teklifCariAra(q, hedef) {
+      const kutu = teklifAraKutu();
+      const kaynak = hedef || document.getElementById("teklifFirmaKod");
+      if (!teklifDuzenlenebilir()) { kutu.hidden = true; return; }
+      teklifOneriKonum(kutu, kaynak);
       try {
-        const body = await getir("/api/teklif-bul?tur=cari&firma=" + oturum.firma + "&q=" + encodeURIComponent(q.trim()));
+        const metin = String(q || "").trim();
+        if (teklifOneriAktif?.input === kaynak && teklifOneriAktif.q === metin && !kutu.hidden && kutu.querySelector("button")) {
+          teklifOneriKonum(kutu, kaynak);
+          return;
+        }
+        const body = await getir("/api/teklif-bul?tur=cari&firma=" + oturum.firma + "&q=" + encodeURIComponent(metin));
         teklifOneriDoldur(kutu, body.items || [], (item) => {
           teklifForm.firmaKod = item.kod;
           teklifForm.firmaAd = item.ad;
@@ -11601,42 +12820,282 @@ ${"<" + "/script>"}</body></html>`);
           document.getElementById("teklifFirmaKod").value = item.kod || "";
           document.getElementById("teklifFirmaAd").value = item.ad || "";
           teklifKagitCiz();
-        });
+        }, kaynak);
       } catch { kutu.hidden = true; }
     }
 
-    async function teklifStokAra(input) {
-      const kutu = input.parentElement?.querySelector(".teklif-oneri");
-      const q = input.value.trim();
-      if (!kutu || !teklifDuzenlenebilir() || q.length < 1) { if (kutu) kutu.hidden = true; return; }
+    function teklifFiyatPop() {
+      let pop = document.getElementById("teklifFiyatPop");
+      if (!pop) {
+        pop = document.createElement("div");
+        pop.id = "teklifFiyatPop";
+        pop.className = "teklif-fiyat-pop";
+        pop.hidden = true;
+        document.body.appendChild(pop);
+      }
+      return pop;
+    }
+
+    let teklifFiyatAcildi = 0;
+    function teklifFiyatPopKapat() {
+      if (Date.now() - teklifFiyatAcildi < 350) return;
+      const pop = document.getElementById("teklifFiyatPop");
+      if (pop) pop.hidden = true;
+    }
+
+    function teklifFiyatTablo(baslik, satirlar) {
+      const blok = document.createElement("div");
+      const h = document.createElement("h4");
+      h.textContent = baslik;
+      blok.appendChild(h);
+      if (!satirlar.length) {
+        const bos = document.createElement("p");
+        bos.className = "alt";
+        bos.textContent = "Kayıt yok";
+        blok.appendChild(bos);
+        return blok;
+      }
+      const tablo = document.createElement("table");
+      const thead = document.createElement("thead");
+      const hr = document.createElement("tr");
+      for (const ad of ["Tarih", "Kimden / Kime", "Miktar", "Fiyat", "Belge"]) {
+        const th = document.createElement("th");
+        th.textContent = ad;
+        if (ad === "Miktar" || ad === "Fiyat") th.className = "n";
+        hr.appendChild(th);
+      }
+      thead.appendChild(hr);
+      tablo.appendChild(thead);
+      const govde = document.createElement("tbody");
+      const sayi = new Intl.NumberFormat("tr-TR", { maximumFractionDigits: 2 });
+      for (const satir of satirlar) {
+        const tr = document.createElement("tr");
+        const hucre = (yazi, sayiMi) => {
+          const td = document.createElement("td");
+          td.textContent = yazi;
+          if (sayiMi) td.className = "n";
+          return td;
+        };
+        const kim = satir.firmaAd || "—";
+        const tur = IZAHAT[satir.izahat] ? " · " + IZAHAT[satir.izahat] : "";
+        tr.append(
+          hucre(satir.tarih || ""),
+          hucre(kim + tur),
+          hucre(sayi.format(Number(satir.miktar) || 0), true),
+          hucre(para.format(Number(satir.fiyat) || 0) + (satir.pb && satir.pb !== "TL" ? " " + satir.pb : ""), true),
+          hucre(satir.evrak || ""),
+        );
+        govde.appendChild(tr);
+      }
+      tablo.appendChild(govde);
+      blok.appendChild(tablo);
+      return blok;
+    }
+
+    async function teklifStokFiyatAc(event, input) {
+      event.preventDefault();
+      event.stopPropagation();
+      teklifFiyatAcildi = Date.now();
+      teklifOneriKapat();
+      const satir = input.closest("tr");
+      const kod = (satir?.querySelector('[data-alan="kod"]')?.value || "").trim();
+      const ad = (satir?.querySelector('[data-alan="ad"]')?.value || "").trim();
+      const pop = teklifFiyatPop();
+      const x = Math.min(event.clientX, window.innerWidth - 560);
+      const y = Math.min(event.clientY, window.innerHeight - 80);
+      pop.style.left = Math.max(8, x) + "px";
+      pop.style.top = Math.max(8, y) + "px";
+      pop.hidden = false;
+      pop.replaceChildren();
+      if (!kod) {
+        const p = document.createElement("p");
+        p.textContent = "Fiyat için önce stok kodu girin.";
+        pop.appendChild(p);
+        return;
+      }
+      const bek = document.createElement("p");
+      bek.textContent = "Fiyatlar yükleniyor…";
+      pop.appendChild(bek);
+      try {
+        const body = await getir("/api/stok-fiyat?kod=" + encodeURIComponent(kod));
+        pop.replaceChildren();
+        const baslik = document.createElement("h3");
+        baslik.textContent = body.kart?.kod || kod;
+        const alt = document.createElement("p");
+        alt.className = "alt";
+        alt.textContent = body.kart?.ad || ad || "";
+        pop.append(baslik, alt);
+        const adlar = {
+          ALISFIYATI: "Alış fiyatı",
+          SATISFIYATI: "Satış fiyatı",
+          SATISFIYATI1: "Satış 1",
+          SATISFIYATI2: "Satış 2",
+          SATISFIYATI3: "Satış 3",
+          MALIYET: "Maliyet",
+        };
+        const kartlar = document.createElement("div");
+        kartlar.className = "kartlar";
+        for (const [alan, etiket] of Object.entries(adlar)) {
+          if (body.kart?.[alan] == null) continue;
+          const kart = document.createElement("div");
+          kart.className = "kart";
+          const lab = document.createElement("span");
+          lab.textContent = etiket;
+          const deger = document.createElement("b");
+          deger.textContent = para.format(Number(body.kart[alan]) || 0);
+          kart.append(lab, deger);
+          kartlar.appendChild(kart);
+        }
+        pop.appendChild(kartlar);
+        pop.appendChild(teklifFiyatTablo("Geçmiş alışlar", body.alislar || []));
+        pop.appendChild(teklifFiyatTablo("Geçmiş satışlar", body.satislar || []));
+      } catch (error) {
+        pop.replaceChildren();
+        const p = document.createElement("p");
+        p.textContent = error.message || "Fiyat alınamadı.";
+        pop.appendChild(p);
+      }
+    }
+
+    const teklifStokOnbellek = new Map();
+    let teklifStokIstek = 0;
+    async function teklifStokAra(input, acik = false) {
+      const kutu = teklifAraKutu();
+      const q = (input?.value || "").trim();
+      if (!input || !teklifDuzenlenebilir()) { teklifOneriKapat(); return; }
+      if (!acik && q.length < 1) { teklifOneriKapat(); return; }
+      const ayni = teklifOneriAktif?.input === input && teklifOneriAktif.q === q && !kutu.hidden;
+      if (ayni && (kutu.querySelector("button") || teklifOneriAktif.bekliyor)) {
+        teklifOneriKonum(kutu, input);
+        return;
+      }
+      teklifOneriKonum(kutu, input);
       const index = Number(input.closest("tr")?.dataset.i);
+      const anahtar = q.toLocaleLowerCase("tr");
+      const hazir = teklifStokOnbellek.get(anahtar);
+      if (hazir) {
+        teklifOneriDoldur(kutu, hazir, (item) => teklifStokSec(index, item), input);
+        return;
+      }
+      const istek = ++teklifStokIstek;
+      teklifOneriAktif = { kutu, items: [], sec: null, input, q, bekliyor: true };
+      kutu.replaceChildren();
+      const bek = document.createElement("div");
+      bek.className = "bos";
+      bek.textContent = "Aranıyor…";
+      kutu.appendChild(bek);
+      kutu.hidden = false;
       try {
         const body = await getir("/api/teklif-bul?tur=stok&firma=" + oturum.firma + "&q=" + encodeURIComponent(q));
-        teklifOneriDoldur(kutu, body.items || [], async (item) => {
-          const satir = teklifForm.satirlar[index];
-          if (!satir) return;
-          satir.stok = item.stok;
-          satir.kod = item.kod;
-          satir.ad = item.ad;
-          satir.birim = item.birim || "ADET";
-          satir.resim = "";
-          satir.gorsel = "";
-          satir.resimYok = false;
-          teklifFormYaz();
-          teklifKagitCiz();
-          const url = await teklifStokResmiGetir(satir);
-          if (url) {
-            satir.gorsel = url;
-            teklifFormYaz();
-            teklifKagitCiz();
-            document.getElementById("teklifDurum").textContent = "Bu stok için kayıtlı resim yüklendi.";
-          }
-        });
-      } catch { kutu.hidden = true; }
+        if (istek !== teklifStokIstek) return;
+        const items = body.items || [];
+        teklifStokOnbellek.set(anahtar, items);
+        teklifOneriDoldur(kutu, items, (item) => teklifStokSec(index, item), input);
+      } catch { if (istek === teklifStokIstek) kutu.hidden = true; }
     }
 
+    const teklifInternetIstek = new Map();
+    async function teklifUrunInternet(index) {
+      const satir = teklifForm?.satirlar?.[index];
+      if (!satir) return;
+      const sorgu = String(satir.ad || "").trim() || String(satir.kod || "").trim();
+      if (sorgu.length < 3) return;
+      const aciklamaVar = !!String(satir.aciklama || "").trim();
+      const resimVar = !!(satir.resim || satir.gorsel || satir.resimYok);
+      if (aciklamaVar && resimVar) return;
+      const no = (teklifInternetIstek.get(index) || 0) + 1;
+      teklifInternetIstek.set(index, no);
+      try {
+        const body = await getir("/api/urun-internet?q=" + encodeURIComponent(sorgu));
+        if (teklifInternetIstek.get(index) !== no) return;
+        const guncel = teklifForm?.satirlar?.[index];
+        if (!guncel || String(guncel.ad || guncel.kod || "").trim() !== sorgu) return;
+        let aciklamaGeldi = false;
+        let resimGeldi = false;
+        if (!String(guncel.aciklama || "").trim() && body.aciklama) {
+          guncel.aciklama = body.aciklama;
+          aciklamaGeldi = true;
+        }
+        if (!guncel.resim && !guncel.gorsel && !guncel.resimYok && body.resim) {
+          guncel.resim = body.resim;
+          guncel.gorsel = body.resim;
+          guncel.resimYok = false;
+          resimGeldi = true;
+          if (guncel.stok || guncel.kod) {
+            try { await teklifStokResmiKaydet(guncel, body.resim); } catch { /* satırda görünsün */ }
+          }
+        }
+        if (!aciklamaGeldi && !resimGeldi) return;
+        teklifFormYaz();
+        teklifKagitCiz();
+        const durum = document.getElementById("teklifDurum");
+        if (durum) {
+          durum.textContent = aciklamaGeldi && resimGeldi
+            ? "İnternetten açıklama ve görsel eklendi."
+            : aciklamaGeldi
+              ? "İnternetten açıklama eklendi."
+              : "İnternetten görsel eklendi.";
+        }
+      } catch { /* internette yoksa satır aynı kalır */ }
+    }
+
+    async function teklifStokSec(index, item) {
+      const satir = teklifForm.satirlar[index];
+      if (!satir) return;
+      satir.stok = item.stok;
+      satir.kod = item.kod;
+      satir.ad = item.ad;
+      satir.aciklama = "";
+      satir.birim = item.birim || "ADET";
+      satir.resim = "";
+      satir.gorsel = "";
+      satir.resimYok = false;
+      teklifFormYaz();
+      teklifKagitCiz();
+      const url = await teklifStokResmiGetir(satir);
+      if (url) {
+        satir.gorsel = url;
+        teklifFormYaz();
+        teklifKagitCiz();
+        document.getElementById("teklifDurum").textContent = "Bu stok için kayıtlı resim yüklendi.";
+      }
+      teklifUrunInternet(index);
+    }
+
+    document.getElementById("teklifFirmaKod").addEventListener("focus", () => teklifCariFiltreAc(document.getElementById("teklifFirmaKod")));
+    document.getElementById("teklifFirmaKod").addEventListener("click", () => teklifCariFiltreAc(document.getElementById("teklifFirmaKod")));
+    document.getElementById("teklifFirmaAd").addEventListener("focus", () => teklifCariFiltreAc(document.getElementById("teklifFirmaAd")));
+    document.getElementById("teklifFirmaAd").addEventListener("click", () => teklifCariFiltreAc(document.getElementById("teklifFirmaAd")));
+    document.getElementById("teklifCariSec").addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const kod = document.getElementById("teklifFirmaKod");
+      kod.focus();
+      teklifCariFiltreAc(kod);
+    });
     document.addEventListener("click", (event) => {
-      if (!event.target.closest(".teklif-alan")) teklifOneriKapat();
+      if (!event.target.closest(".teklif-alan, .teklif-oneri, .teklif-cari-ara")) teklifOneriKapat();
+      if (!event.target.closest(".teklif-fiyat-pop")) teklifFiyatPopKapat();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        teklifFiyatPopKapat();
+        if (teklifOneriAktif) teklifOneriKapat();
+        return;
+      }
+      if (!teklifOneriAktif || teklifOneriAktif.kutu.hidden) return;
+      if (event.target !== teklifOneriAktif.input) return;
+      if (event.ctrlKey || event.altKey || event.metaKey) return;
+      const n = teklifOneriAktif.items.length;
+      if ((event.key === "ArrowDown" || event.key === "ArrowUp") && n) {
+        event.preventDefault();
+        if (event.key === "ArrowDown") teklifOneriSecim = teklifOneriSecim < 0 ? 0 : (teklifOneriSecim + 1) % n;
+        else teklifOneriSecim = teklifOneriSecim <= 0 ? n - 1 : teklifOneriSecim - 1;
+        teklifOneriVurgu();
+      } else if (event.key === "Enter" && teklifOneriSecim >= 0) {
+        event.preventDefault();
+        teklifOneriUygula(teklifOneriAktif.items[teklifOneriSecim]);
+      }
     });
     document.getElementById("odemeTakvimGeri").onclick = () => {
       odemeTakvimPopupKapat();
@@ -11835,7 +13294,7 @@ ${"<" + "/script>"}</body></html>`);
         }
         const genislik = Math.round(Number(olcu?.genislik));
         const yukseklik = Math.round(Number(olcu?.yukseklik));
-        if (genislik >= 900 && yukseklik >= 600) {
+        if (genislik >= 480 && yukseklik >= 320) {
           const left = Number.isFinite(Number(olcu.left)) ? Number(olcu.left) : Math.max(0, (screen.availWidth - genislik) / 2);
           const top = Number.isFinite(Number(olcu.top)) ? Number(olcu.top) : Math.max(0, (screen.availHeight - yukseklik) / 2);
           window.moveTo(left, top);
@@ -11854,20 +13313,7 @@ ${"<" + "/script>"}</body></html>`);
           visaOlcuKaydet();
           return;
         }
-        const tam = window.outerWidth >= screen.availWidth - 16 && window.outerHeight >= screen.availHeight - 16;
-        const govde = JSON.stringify({
-          genislik: window.innerWidth,
-          yukseklik: window.innerHeight,
-          left: window.screenX,
-          top: window.screenY,
-          tam,
-        });
-        fetch("/api/pencere", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: govde,
-          keepalive: true,
-        }).catch(() => {});
+        pencereOlcuYaz(window);
       };
       window.addEventListener("resize", () => {
         clearTimeout(anaPencereZaman);
@@ -11876,11 +13322,12 @@ ${"<" + "/script>"}</body></html>`);
       window.addEventListener("beforeunload", anaPencereOlcusu);
     }
 
-    if (belgeModu) {
+    if (belgeModu || urunModu || cariModu || bordroModu) {
       window.addEventListener("resize", () => {
         clearTimeout(olcuZaman);
         olcuZaman = setTimeout(belgeOlcusunuKaydet, 300);
       });
+      window.addEventListener("beforeunload", belgeOlcusunuKaydet);
     }
     const BORDRO_TIPLERI = ["", "Nakit", "Çek", "Senet", "Kredi Kartı", "Dekont/Kredi Kartı"];
 
@@ -12135,6 +13582,8 @@ ${"<" + "/script>"}</body></html>`);
     }
 
     function bordroPenceresiniBaslat() {
+      const olcu = pencereOlcuOku();
+      if (olcu) pencereOlcuUygula(window, olcu);
       const kayit = bordroDeposu();
       const cikis = bordroModu === "cikis";
       document.title = (cikis ? "Cari Çıkış Bordrosu" : "Cari Giriş Bordrosu") + " · Vega Raporlama";
