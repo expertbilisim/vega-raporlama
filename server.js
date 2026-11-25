@@ -11,7 +11,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.11";
+const UYGULAMA_SURUM = "1.2.12";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -3743,6 +3743,42 @@ function guncellemeLogYaz(mesaj) {
   } catch { /* ok */ }
 }
 
+function kuruluBaslatVbsIcerik() {
+  return [
+    'Set sh = CreateObject("Wscript.Shell")',
+    'Set fso = CreateObject("Scripting.FileSystemObject")',
+    'klasor = sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\\Vega Raporlama"',
+    'exe = klasor & "\\VegaRaporlama.exe"',
+    'guncelKlasor = klasor & "\\guncelleme"',
+    'enYeni = ""',
+    'If fso.FolderExists(guncelKlasor) Then',
+    '  For Each dosya In fso.GetFolder(guncelKlasor).Files',
+    '    ad = LCase(dosya.Name)',
+    '    If Right(ad, 4) = ".exe" And Left(ad, 14) = "vegaraporlama-" And dosya.Size > 1000000 Then',
+    '      If enYeni = "" Then',
+    '        enYeni = dosya.Path',
+    '      ElseIf dosya.DateLastModified > fso.GetFile(enYeni).DateLastModified Then',
+    '        enYeni = dosya.Path',
+    '      End If',
+    '    End If',
+    '  Next',
+    'End If',
+    'If enYeni <> "" Then',
+    '  On Error Resume Next',
+    '  fso.CopyFile enYeni, exe, True',
+    '  If Err.Number = 0 Then fso.DeleteFile enYeni, True',
+    '  On Error GoTo 0',
+    'End If',
+    'If fso.FileExists(exe) Then',
+    '  sh.CurrentDirectory = klasor',
+    '  sh.Run """" & exe & """", 0, False',
+    'Else',
+    '  MsgBox "VegaRaporlama.exe bulunamadı.", vbExclamation, "Vega Raporlama"',
+    'End If',
+    "",
+  ].join("\r\n");
+}
+
 function masaustuBaslatVbsIcerik() {
   const kok = kaynakKok();
   const kurulum = kurulumKok();
@@ -3751,21 +3787,7 @@ function masaustuBaslatVbsIcerik() {
     : "C:\\Program Files\\nodejs\\node.exe";
   // VBS'te \ kaçış değil; yalnızca " → ""
   const esc = (p) => String(p || "").replace(/"/g, '""');
-  if (paketMi()) {
-    return [
-      'Set sh = CreateObject("Wscript.Shell")',
-      'Set fso = CreateObject("Scripting.FileSystemObject")',
-      `klasor = "${esc(kurulum)}"`,
-      'exe = klasor & "\\VegaRaporlama.exe"',
-      'If fso.FileExists(exe) Then',
-      '  sh.CurrentDirectory = klasor',
-      '  sh.Run """" & exe & """", 0, False',
-      'Else',
-      '  MsgBox "VegaRaporlama.exe bulunamadı.", vbExclamation, "Vega Raporlama"',
-      'End If',
-      "",
-    ].join("\r\n");
-  }
+  if (paketMi()) return kuruluBaslatVbsIcerik();
   // Güncel kaynak: node server.js — port açıksa yalnızca pencereyi getir
   return [
     'Set sh = CreateObject("Wscript.Shell")',
@@ -3880,21 +3902,7 @@ function masaustuUygulamaIlkAcilisGuncelle() {
     const vbsKurulum = join(kurulum, "baslat.vbs");
     const vbsMasaustu = join(masaustuKok(), "Vega Raporlama.vbs");
     const exeYol = join(kurulum, "VegaRaporlama.exe");
-    const govde = existsSync(exeYol)
-      ? [
-        'Set sh = CreateObject("Wscript.Shell")',
-        'Set fso = CreateObject("Scripting.FileSystemObject")',
-        'klasor = sh.ExpandEnvironmentStrings("%LOCALAPPDATA%") & "\\Vega Raporlama"',
-        'exe = klasor & "\\VegaRaporlama.exe"',
-        'If fso.FileExists(exe) Then',
-        '  sh.CurrentDirectory = klasor',
-        '  sh.Run """" & exe & """", 0, False',
-        'Else',
-        '  MsgBox "VegaRaporlama.exe bulunamadı.", vbExclamation, "Vega Raporlama"',
-        'End If',
-        "",
-      ].join("\r\n")
-      : masaustuBaslatVbsIcerik();
+    const govde = existsSync(exeYol) ? kuruluBaslatVbsIcerik() : masaustuBaslatVbsIcerik();
     writeFileSync(vbsKurulum, govde, "utf8");
     try {
       if (existsSync(masaustuKok())) writeFileSync(vbsMasaustu, govde, "utf8");
@@ -4049,25 +4057,57 @@ function exeGuncellemesiniUygula(yeniExe) {
     "    Start-Sleep -Milliseconds 800",
     "  }",
     "}",
-    "$admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
-    "if (-not $oldu -and -not $admin) {",
-    "  Yaz 'yonetici izni isteniyor'",
-    "  Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', $PSCommandPath)",
-    "  exit 0",
+    "function Ac() {",
+    "  $klasor = [IO.Path]::GetDirectoryName($hedef)",
+    "  $vbs = Join-Path $klasor 'baslat.vbs'",
+    "  $wscript = Join-Path $env:SystemRoot 'System32\\wscript.exe'",
+    "  if (Test-Path -LiteralPath $vbs) {",
+    "    Start-Process -FilePath $wscript -ArgumentList @('//B', $vbs) -WorkingDirectory $klasor",
+    "  } elseif (Test-Path -LiteralPath $hedef) {",
+    "    Start-Process -FilePath $hedef -WorkingDirectory $klasor",
+    "  }",
     "}",
-    "if (-not $oldu) { Yaz 'uygulanamadi'; exit 1 }",
+    "Unblock-File -LiteralPath $yeni -ErrorAction SilentlyContinue",
+    "if (-not $oldu) {",
+    "  Yaz 'uygulanamadi'",
+    "  if ((Test-Path -LiteralPath $eski) -and -not (Test-Path -LiteralPath $hedef)) {",
+    "    Rename-Item -LiteralPath $eski -NewName ([IO.Path]::GetFileName($hedef)) -Force -ErrorAction SilentlyContinue",
+    "  }",
+    "  Ac",
+    "  exit 1",
+    "}",
     "Yaz 'kopyalandi'",
-    "Start-Process -FilePath $hedef -WorkingDirectory ([IO.Path]::GetDirectoryName($hedef))",
+    "Unblock-File -LiteralPath $hedef -ErrorAction SilentlyContinue",
+    "Ac",
     "Remove-Item -LiteralPath $yeni -Force -ErrorAction SilentlyContinue",
     "Remove-Item -LiteralPath $eski -Force -ErrorAction SilentlyContinue",
     "Yaz 'bitti'",
   ].join("\r\n");
+  const baslatVbs = join(kok, "guncelle-baslat.vbs");
   writeFileSync(ps1, "\uFEFF" + govde, "utf8");
+  writeFileSync(baslatVbs, [
+    'Set sh = CreateObject("Wscript.Shell")',
+    `sh.Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File ""${ps1.replace(/"/g, '""')}""", 0, False`,
+    "",
+  ].join("\r\n"), "utf8");
   guncellemeLogYaz("uygulama betigi yazildi: " + hedef);
-  spawn("powershell.exe", [
-    "-NoProfile", "-ExecutionPolicy", "Bypass", "-WindowStyle", "Hidden", "-File", ps1,
-  ], { detached: true, windowsHide: true, stdio: "ignore" }).unref();
-  setTimeout(() => process.exit(0), 1200);
+  const wscript = join(process.env.SystemRoot || "C:\\Windows", "System32", "wscript.exe");
+  const child = spawn(wscript, ["//B", "//Nologo", baslatVbs], { windowsHide: true, stdio: "ignore" });
+  let kapandi = false;
+  const kapat = () => {
+    if (kapandi) return;
+    kapandi = true;
+    setTimeout(() => process.exit(0), 400);
+  };
+  child.on("error", (error) => {
+    guncellemeLogYaz("baslatici acilamadi: " + (error.message || error));
+    kapat();
+  });
+  child.on("exit", (code) => {
+    guncellemeLogYaz("baslatici ayrildi " + code);
+    kapat();
+  });
+  setTimeout(kapat, 8000);
 }
 
 async function guncellemeKontrolEt(otomatikUygula = true) {
