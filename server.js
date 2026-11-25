@@ -84,6 +84,57 @@ async function tcmbKurOku(pb, tarih) {
   return { bulundu: true, kur };
 }
 
+function piyasaSayi(value) {
+  let yazi = String(value || "").trim().replace(/[^\d,.-]/g, "");
+  if (!yazi) return null;
+  if (yazi.includes(",") && yazi.includes(".")) yazi = yazi.replace(/\./g, "").replace(",", ".");
+  else if (yazi.includes(",")) yazi = yazi.replace(",", ".");
+  const sayi = Number(yazi);
+  return Number.isFinite(sayi) && sayi > 0 ? sayi : null;
+}
+
+let piyasaOnbellek = { zaman: 0, veri: null };
+
+async function piyasaGetir() {
+  if (piyasaOnbellek.veri && Date.now() - piyasaOnbellek.zaman < 15 * 60 * 1000) return piyasaOnbellek.veri;
+  let yanit;
+  try {
+    yanit = await fetch("https://finans.truncgil.com/today.json", {
+      headers: { Accept: "application/json", "User-Agent": "VegaRaporlama/" + UYGULAMA_SURUM },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    if (piyasaOnbellek.veri) return piyasaOnbellek.veri;
+    return { hata: "Kur alınamadı." };
+  }
+  if (!yanit.ok) {
+    if (piyasaOnbellek.veri) return piyasaOnbellek.veri;
+    return { hata: "Kur alınamadı." };
+  }
+  const data = await yanit.json();
+  const kalem = (ad, blok, birim) => ({
+    ad,
+    birim,
+    alis: piyasaSayi(blok?.["Alış"] ?? blok?.Alis),
+    satis: piyasaSayi(blok?.["Satış"] ?? blok?.Satis),
+  });
+  const veri = {
+    zaman: String(data.Update_Date || ""),
+    kalemler: [
+      kalem("Dolar", data.USD, "USD"),
+      kalem("Euro", data.EUR, "EUR"),
+      kalem("Sterlin", data.GBP, "GBP"),
+      kalem("Altın", data["gram-altin"], "gr"),
+    ],
+  };
+  if (!veri.kalemler.some((item) => item.satis)) {
+    if (piyasaOnbellek.veri) return piyasaOnbellek.veri;
+    return { hata: "Kur alınamadı." };
+  }
+  piyasaOnbellek = { zaman: Date.now(), veri };
+  return veri;
+}
+
 function dovizEslesme(pb) {
   const kod = teklifPbKod(pb);
   if (kod === "$") {
@@ -1722,6 +1773,35 @@ async function googleTasksApi(yol, secenek = {}) {
     throw err;
   }
   return data;
+}
+
+async function googleHatirlatmaUzaktaSil(item) {
+  if (!item || !googleDurum().bagli) return false;
+  let sildi = false;
+  const tip = String(item.googleEventType || "default").toLowerCase();
+  const takvimNotu = tip !== "birthday" && tip !== "workinglocation" && tip !== "fromgmail";
+  if (item.googleEventId && takvimNotu) {
+    const ayar = googleAyarOku();
+    const hedef = encodeURIComponent(item.googleCalendarId || ayar.calendarId || "primary");
+    try {
+      await googleApi("/calendars/" + hedef + "/events/" + encodeURIComponent(item.googleEventId), { method: "DELETE" });
+      sildi = true;
+    } catch (error) {
+      const msg = String(error.message || "");
+      if (error.status !== 404 && !/Not Found|notFound|deleted/i.test(msg)) throw error;
+    }
+  }
+  if (item.googleTaskId) {
+    const liste = encodeURIComponent(item.googleTaskListId || "@default");
+    try {
+      await googleTasksApi("/lists/" + liste + "/tasks/" + encodeURIComponent(item.googleTaskId), { method: "DELETE" });
+      sildi = true;
+    } catch (error) {
+      const msg = String(error.message || "");
+      if (error.status !== 404 && !/Not Found|notFound|deleted/i.test(msg)) throw error;
+    }
+  }
+  return sildi;
 }
 
 function googleGorevZamanParcala(gorev) {
@@ -3722,22 +3802,7 @@ function pencereArguman(adres, profil) {
     "--disable-gpu",
     "--disable-features=CalculateNativeWinOcclusion",
   ];
-  const olcu = pencereOlcuOku();
-  const genislik = Math.round(Number(olcu?.genislik));
-  const yukseklik = Math.round(Number(olcu?.yukseklik));
-  if (olcu?.tam) arguman.push("--start-maximized");
-  if (genislik >= 480 && yukseklik >= 320) {
-    arguman.push("--window-size=" + genislik + "," + yukseklik);
-  } else {
-    arguman.push("--window-size=" + GIRIS_PENCERE.genislik + "," + GIRIS_PENCERE.yukseklik);
-  }
-  if (olcu) {
-    const left = Math.round(Number(olcu.left));
-    const top = Math.round(Number(olcu.top));
-    if (left >= -4000 && left <= 8000 && top >= -4000 && top <= 8000) {
-      arguman.push("--window-position=" + left + "," + top);
-    }
-  }
+  arguman.push("--window-size=" + GIRIS_PENCERE.genislik + "," + GIRIS_PENCERE.yukseklik);
   return arguman;
 }
 
@@ -6837,6 +6902,12 @@ ORDER BY k.TARIH DESC;
       return gonder(res, 200, { bulundu: true, kur });
     }
 
+    if (req.method === "GET" && url.pathname === "/api/piyasa") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      gonder(res, 200, await piyasaGetir());
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/tcmb-kur") {
       if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
       const sonuc = await tcmbKurOku(url.searchParams.get("pb"), url.searchParams.get("tarih"));
@@ -7869,6 +7940,21 @@ WHERE ISNULL(Deleted, 0) = 0
       for (const row of ham) {
         if (row.onceAnaId === id) silinecek.add(row.id);
       }
+      let googleSilindi = false;
+      let uyari = "";
+      const uzakVar = ham.some((row) => silinecek.has(row.id) && (row.googleEventId || row.googleTaskId));
+      if (uzakVar && !googleDurum().bagli) {
+        uyari = "Google bağlı değil. Telefonda durabilir.";
+      } else {
+        try {
+          for (const row of ham) {
+            if (!silinecek.has(row.id)) continue;
+            if (await googleHatirlatmaUzaktaSil(row)) googleSilindi = true;
+          }
+        } catch (error) {
+          return gonder(res, 400, { error: "Google’dan silinemedi. Kayıt duruyor. " + (error.message || "") });
+        }
+      }
       for (const sid of silinecek) await hatirlatmaGorevSil(sid);
       const liste = ham.filter((row) => !silinecek.has(row.id)).map((row) => {
         if (row.onceBagliId && silinecek.has(row.onceBagliId)) {
@@ -7879,7 +7965,7 @@ WHERE ISNULL(Deleted, 0) = 0
         return row;
       });
       hatirlatmalariYaz(liste);
-      gonder(res, 200, { items: liste });
+      gonder(res, 200, { items: liste, googleSilindi, uyari });
       return;
     }
 

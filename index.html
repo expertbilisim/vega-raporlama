@@ -164,6 +164,19 @@
       border: 1px solid #b9ccd6;
       box-shadow: inset 0 1px 0 #fff, 0 3px 0 #c5d4dc, 0 12px 22px rgba(28, 52, 68, .12);
     }
+    .doviz-serit {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px;
+    }
+    .doviz-kutu {
+      min-width: 0; display: flex; flex-direction: column; gap: 1px;
+      padding: 6px 6px 5px; border-radius: 8px; border: 1px solid #c5d5de; background: #fff;
+    }
+    .doviz-kutu span { font-size: 10px; font-weight: 750; color: #5a6a76; }
+    .doviz-kutu b {
+      font-size: 12px; font-weight: 800; color: #0e5962; font-variant-numeric: tabular-nums;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .doviz-kutu.altin b { color: #8a5a00; }
     .bugun-islem .bugun-baslik {
       display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
       color: #0e5962;
@@ -743,20 +756,6 @@
     .takvim-legenda .tk-karisik { background: #a89858; }
     .takvim-legenda .tk-gecmis { background: #3e464c; }
     .takvim-legenda .tk-not { font-weight: 500; color: #6a7a86; }
-    .takvim-telefon {
-      display: flex; flex-direction: column; gap: 4px; flex: 0 0 auto;
-      padding: 6px 8px; border-radius: 10px;
-      background: #fff8ea; border: 1px solid #c4a36a;
-    }
-    .takvim-telefon[hidden] { display: none; }
-    .takvim-telefon-bas { font-size: 12px; font-weight: 800; color: #8a5a00; }
-    .takvim-telefon-liste { display: flex; flex-wrap: wrap; gap: 6px; max-height: 78px; overflow: auto; }
-    .takvim-telefon-satir {
-      border: 1px solid #e2c48a; background: #fff; border-radius: 8px;
-      padding: 4px 8px; font-size: 12px; font-weight: 650; color: #3a2a10;
-      cursor: pointer; text-align: left; max-width: 100%;
-    }
-    .takvim-telefon-satir:hover { border-color: #8a5a00; background: #fffdf8; }
     .takvim-uc {
       flex: 1; min-height: 0; display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; overflow: hidden; padding: 2px 0 6px;
@@ -895,12 +894,6 @@
     .takvim-ay-notlar .not-satir.teklif .gun,
     .takvim-ay-notlar .not-satir.teklif .saat,
     .takvim-ay-notlar .not-satir.teklif .metin { color: #455e78; }
-    .takvim-ay-notlar .not-satir.etkinlik {
-      background: #fff8ea; border-color: #e2c48a;
-    }
-    .takvim-ay-notlar .not-satir.etkinlik .gun,
-    .takvim-ay-notlar .not-satir.etkinlik .saat,
-    .takvim-ay-notlar .not-satir.etkinlik .metin { color: #6a4a10; }
     .takvim-ay-notlar .not-satir.gecmis,
     .takvim-ay-notlar .not-satir.odeme-ozet.gecmis {
       opacity: 1;
@@ -999,17 +992,6 @@
       text-shadow: none;
       font-weight: 800;
     }
-    .takvim-gun.dolu.not {
-      border-color: #c4a36a;
-      background: linear-gradient(180deg, #fff8ea 0%, #f3e2c0 100%);
-      box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(80, 60, 20, .1);
-    }
-    .takvim-gun.dolu.not .gun-no,
-    .takvim-gun.dolu.not .gun-adet {
-      color: #5a3e10;
-      text-shadow: none;
-      font-weight: 800;
-    }
     .takvim-gun.dolu.gecmis {
       border: 2px solid #2c3338;
       background: #3e464c;
@@ -1077,7 +1059,7 @@
     .takvim-popup .tur.senet { color: #b07a45; }
     .takvim-popup .tur.visa { color: #7a6896; }
     .takvim-popup .tur.teklif { color: #5d7ea0; }
-    .takvim-popup .tur.hatirlatma { color: #8a5a00; }
+    .takvim-popup .tur.not { color: #8a5a00; }
     .takvim-popup .kim {
       min-width: 0; white-space: normal; overflow-wrap: anywhere; word-break: break-word; line-height: 1.3;
     }
@@ -2419,6 +2401,12 @@
       <button class="rapor-btn" id="siparisIhtiyacBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15h3V9H7zM12 15h3V6h-3zM17 15h3v-4h-3z" fill="currentColor"/></svg>Sipariş İhtiyaç</button>
     </div>
     <aside class="bugun-islem" id="bugunIslem" aria-label="Bugünün işlemleri">
+      <div class="doviz-serit" id="dovizSerit" aria-label="Döviz ve altın">
+        <div class="doviz-kutu"><span>Dolar</span><b id="dovizUsd">—</b></div>
+        <div class="doviz-kutu"><span>Euro</span><b id="dovizEur">—</b></div>
+        <div class="doviz-kutu"><span>Sterlin</span><b id="dovizGbp">—</b></div>
+        <div class="doviz-kutu altin"><span>Altın gr</span><b id="dovizAltin">—</b></div>
+      </div>
       <div class="bugun-baslik">
         <strong>Bugünün işlemleri</strong>
         <span id="bugunIslemTarih"></span>
@@ -2895,7 +2883,6 @@
         <span><i class="tk-gecmis"></i>Günü geçen</span>
         <span class="tk-not">Ay görünümü · tıkla detay · çift tık hatırlatma</span>
       </div>
-      <div class="takvim-telefon" id="odemeTakvimTelefon" hidden></div>
       <div class="takvim-uc" id="odemeTakvimGrid" aria-label="Üç aylık takvim"></div>
       <div class="takvim-popup" id="odemeTakvimPopup" hidden></div>
     </div>
@@ -8943,7 +8930,9 @@ ${"<" + "/script>"}</body></html>`);
         hatirlatmaCache = body.items || [];
         hatirlatmaKapat();
         odemeTakvimCiz(odemeTakvimSonGunler);
-        document.getElementById("odemeTakvimDurum").textContent = "Hatırlatma silindi.";
+        document.getElementById("odemeTakvimDurum").textContent = body.uyari
+          ? body.uyari
+          : (body.googleSilindi ? "Hatırlatma silindi. Google ve telefonda da kalkar." : "Hatırlatma silindi.");
       } catch (error) {
         document.getElementById("odemeTakvimDurum").textContent = error.message;
       }
@@ -9423,17 +9412,17 @@ ${"<" + "/script>"}</body></html>`);
         const satir = document.createElement("div");
         satir.className = "satir";
         const tur = document.createElement("span");
-        const turSinif = kayit.hatirlatma ? "hatirlatma" : (kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit));
+        const turSinif = kayit.hatirlatma ? "not" : (kayit.teklif ? "teklif" : odemeTakvimKayitRenk(kayit));
         tur.className = "tur " + turSinif;
         tur.textContent = kayit.hatirlatma
-          ? ((kayit.kaynak === "google" ? "Etkinlik" : "Görev") + (kayit.saat ? " " + kayit.saat : ""))
+          ? ("Not" + (kayit.saat ? " " + kayit.saat : ""))
           : kayit.teklif
           ? "Teklif"
           : (kayit.takas ? "Takas" : (TAKVIM_TUR[kayit.tur] || kayit.tur)) + " " + (TAKVIM_YON[kayit.yon] || "");
         const kim = document.createElement("span");
         kim.className = "kim";
         kim.textContent = (kayit.teklif || kayit.hatirlatma) ? (kayit.metin || kayit.firma || "—") : (kayit.firma || "—");
-        kim.title = kayit.hatirlatma ? [kayit.metin, kayit.yer].filter(Boolean).join(" · ") : [kayit.firma, kayit.keside, kayit.belge].filter(Boolean).join(" · ");
+        kim.title = kayit.hatirlatma ? (kayit.metin || "") : [kayit.firma, kayit.keside, kayit.belge].filter(Boolean).join(" · ");
         const tutar = document.createElement("span");
         tutar.className = "tutar";
         tutar.textContent = (kayit.teklif || kayit.hatirlatma) ? "" : para.format(Number(kayit.tutar || 0)) + " ₺";
@@ -9513,15 +9502,15 @@ ${"<" + "/script>"}</body></html>`);
           .filter((item) => item.kaynak === "teklif" && !item.gonderildi)
           .map((item) => ({ teklif: true, metin: item.metin, firma: item.metin, tur: "teklif" }));
         const gunNotlari = hatirlatmaGunListe(kod)
-          .filter((item) => item && item.kaynak !== "teklif" && item.kaynak !== "odeme-takvim")
-          .map((item) => ({ hatirlatma: true, kaynak: item.kaynak, yer: item.yer || "", metin: item.metin, firma: item.metin, saat: item.saat || "", tur: "hatirlatma" }));
+          .filter((item) => item && !item.onceAnaId && item.kaynak !== "teklif" && item.kaynak !== "odeme-takvim")
+          .map((item) => ({ hatirlatma: true, metin: (item.gonderildi ? "✓ " : "") + (item.metin || ""), firma: item.metin, saat: item.saat || "" }));
         const acilacak = kayitlar.concat(teklifler, gunNotlari);
         adet += kayitlar.length;
         const kutu = document.createElement("div");
         const gunGecti = kod < bugunKod;
         const doluSinif = kayitlar.length
           ? " dolu " + odemeTakvimRenkSinif(kayitlar)
-          : (teklifler.length ? (gunGecti ? " dolu teklif-beyaz" : " dolu teklif") : (gunNotlari.length ? " dolu not" : ""));
+          : (teklifler.length ? (gunGecti ? " dolu teklif-beyaz" : " dolu teklif") : "");
         const hatirlatmalar = hatirlatmaGunListe(kod);
         kutu.className = "takvim-gun"
           + (kod === bugunKod ? " bugun" : "")
@@ -9542,17 +9531,13 @@ ${"<" + "/script>"}</body></html>`);
           hatirlatmaAc(kod);
         };
         if (acilacak.length) {
-          const sayac = document.createElement("span");
-          sayac.className = "gun-adet";
-          const parcalar = [];
-          if (kayitlar.length) parcalar.push(kayitlar.length + " işl.");
-          if (teklifler.length) parcalar.push(teklifler.length + " teklif");
-          const etkinlikSayi = gunNotlari.filter((item) => item.kaynak === "google").length;
-          const gorevSayi = gunNotlari.length - etkinlikSayi;
-          if (etkinlikSayi) parcalar.push(etkinlikSayi + " etkinlik");
-          if (gorevSayi) parcalar.push(gorevSayi + " görev");
-          sayac.textContent = parcalar.join(" · ");
-          kutu.appendChild(sayac);
+          if (kayitlar.length || teklifler.length) {
+            const sayac = document.createElement("span");
+            sayac.className = "gun-adet";
+            sayac.textContent = kayitlar.length ? (kayitlar.length + " işl.") : (teklifler.length + " teklif");
+            kutu.appendChild(sayac);
+          }
+          kutu.style.cursor = "pointer";
           kutu.onmouseenter = (event) => {
             if (!odemeTakvimPopupSabit) odemeTakvimPopupGoster(event, kod, acilacak, false);
           };
@@ -9588,7 +9573,16 @@ ${"<" + "/script>"}</body></html>`);
       const notlar = document.createElement("div");
       notlar.className = "takvim-ay-notlar";
       const ayOn = yil + "-" + String(ay + 1).padStart(2, "0");
-      const hatirlatmaZamaniGecti = (item) => String(item.gun || "") < bugunKod;
+      const simdi = new Date();
+      const hatirlatmaZamaniGecti = (item) => {
+        const gun = String(item.gun || "");
+        const saatHam = String(item.saat || "00:00").trim();
+        const saat = /^\d{2}:\d{2}$/.test(saatHam) ? saatHam : "00:00";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(gun)) return true;
+        const t = new Date(gun + "T" + saat + ":00");
+        if (!Number.isFinite(t.getTime())) return true;
+        return t.getTime() <= simdi.getTime();
+      };
       const ayTum = hatirlatmalarOku()
         .filter((item) => item && String(item.gun || "").startsWith(ayOn) && item.kaynak !== "odeme-takvim")
         .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
@@ -9633,11 +9627,9 @@ ${"<" + "/script>"}</body></html>`);
       const notSatirYap = (item, gecmisMi) => {
         const satir = document.createElement("div");
         const teklifMi = item.kaynak === "teklif";
-        const etkinlikMi = item.kaynak === "google";
         const odemeSinif = item.odemeMi ? (" odeme-ozet " + (item.renk || item.tur || "cek")) : "";
         const teklifSinif = teklifMi && !gecmisMi ? " teklif" : "";
-        const etkinlikSinif = etkinlikMi && !item.odemeMi ? " etkinlik" : "";
-        satir.className = "not-satir" + (gecmisMi && !teklifMi ? " gecmis" : "") + odemeSinif + teklifSinif + etkinlikSinif;
+        satir.className = "not-satir" + (gecmisMi && !teklifMi ? " gecmis" : "") + odemeSinif + teklifSinif;
         satir.title = item.odemeMi
           ? "Çift tık: gün detayı · " + String(item.gun || "").split("-").reverse().join(".")
           : "Düzenlemek için tıkla · Hatırlatma: " + String(item.gun || "").split("-").reverse().join(".");
@@ -9680,9 +9672,7 @@ ${"<" + "/script>"}</body></html>`);
       const aktifHepsi = [
         ...odemeGunuGelmeyen.map((x) => ({ ...x, odemeMi: true })),
         ...ayAktif,
-      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun))
-        || Number(Boolean(a.odemeMi)) - Number(Boolean(b.odemeMi))
-        || String(a.saat || "").localeCompare(String(b.saat || "")));
+      ].sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
       if (gecmisHepsi.length) {
         const gecmisBtn = document.createElement("button");
         gecmisBtn.type = "button";
@@ -9724,42 +9714,8 @@ ${"<" + "/script>"}</body></html>`);
       return adet;
     }
 
-    function odemeTakvimTelefonCiz() {
-      const kutu = document.getElementById("odemeTakvimTelefon");
-      if (!kutu) return;
-      const bugun = bugunTarihKodu(new Date());
-      const hepsi = hatirlatmalarOku()
-        .filter((item) => item && !item.onceAnaId && item.gun >= bugun && (item.kaynak === "google" || (item.kaynak === "google-task" && !item.gonderildi)))
-        .sort((a, b) => String(a.gun).localeCompare(String(b.gun)) || String(a.saat || "").localeCompare(String(b.saat || "")));
-      const notlar = hepsi.slice(0, 12);
-      kutu.replaceChildren();
-      if (!notlar.length) {
-        kutu.hidden = true;
-        return;
-      }
-      kutu.hidden = false;
-      const bas = document.createElement("div");
-      bas.className = "takvim-telefon-bas";
-      bas.textContent = "Telefon etkinlikleri · " + hepsi.length;
-      const liste = document.createElement("div");
-      liste.className = "takvim-telefon-liste";
-      for (const item of notlar) {
-        const satir = document.createElement("button");
-        satir.type = "button";
-        satir.className = "takvim-telefon-satir";
-        const gun = String(item.gun || "").split("-").reverse().join(".");
-        const turAd = item.kaynak === "google" ? "Etkinlik" : "Görev";
-        satir.textContent = [gun, turAd, item.saat, item.metin, item.yer].filter(Boolean).join("  ");
-        satir.title = satir.textContent;
-        satir.onclick = () => hatirlatmaAc(item.gun, item.id);
-        liste.appendChild(satir);
-      }
-      kutu.append(bas, liste);
-    }
-
     function odemeTakvimCiz(gunler) {
       odemeTakvimSonGunler = gunler || {};
-      odemeTakvimTelefonCiz();
       const grid = document.getElementById("odemeTakvimGrid");
       grid.replaceChildren();
       let adetToplam = 0;
@@ -9771,11 +9727,7 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("odemeTakvimAyAd").textContent =
         TAKVIM_AY[odemeTakvimAy.getMonth()] + " " + odemeTakvimAy.getFullYear() +
         " – " + TAKVIM_AY[son.getMonth()] + " " + son.getFullYear();
-      const tel = googleDurumCache.sonTelefon;
-      const telYazi = tel?.metin
-        ? (" · Son telefon: " + [String(tel.gun || "").split("-").reverse().join("."), tel.saat, tel.metin].filter(Boolean).join(" "))
-        : "";
-      document.getElementById("odemeTakvimDurum").textContent = adetToplam + " kayıt" + telYazi;
+      document.getElementById("odemeTakvimDurum").textContent = adetToplam + " kayıt";
     }
 
     function bugunTarihKodu(tarih) {
@@ -9812,11 +9764,46 @@ ${"<" + "/script>"}</body></html>`);
       }
     }
 
+    function dovizYazi(sayi, ondalik) {
+      const n = Number(sayi);
+      if (!Number.isFinite(n) || n <= 0) return "—";
+      return n.toLocaleString("tr-TR", { minimumFractionDigits: ondalik, maximumFractionDigits: ondalik });
+    }
+
+    async function dovizSeritYukle() {
+      const kutular = [
+        ["dovizUsd", "USD", 4],
+        ["dovizEur", "EUR", 4],
+        ["dovizGbp", "GBP", 4],
+        ["dovizAltin", "gr", 2],
+      ];
+      try {
+        const body = await getir("/api/piyasa");
+        const kalemler = body.kalemler || [];
+        kutular.forEach(([id, birim, ondalik], index) => {
+          const el = document.getElementById(id);
+          const kalem = kalemler[index];
+          if (!el) return;
+          el.textContent = dovizYazi(kalem?.satis, ondalik);
+          const alis = dovizYazi(kalem?.alis, ondalik);
+          el.title = kalem?.satis
+            ? (kalem.ad + " satış " + el.textContent + " ₺ · alış " + alis + " ₺")
+            : (body.hata || "Kur alınamadı");
+        });
+      } catch {
+        kutular.forEach(([id]) => {
+          const el = document.getElementById(id);
+          if (el && el.textContent === "—") el.title = "Kur alınamadı";
+        });
+      }
+    }
+
     async function bugunIslemYukle() {
       const liste = document.getElementById("bugunIslemListe");
       const tarihEl = document.getElementById("bugunIslemTarih");
       const toplamEl = document.getElementById("bugunIslemToplam");
       if (!liste || !oturum) return;
+      dovizSeritYukle().catch(() => {});
       const kod = bugunTarihKodu(new Date());
       tarihEl.textContent = kod.split("-").reverse().join(".");
       toplamEl.textContent = "";
@@ -13637,6 +13624,20 @@ ${"<" + "/script>"}</body></html>`);
     } else if (bordroModu) {
       bordroPenceresiniBaslat();
     } else {
+      function girisPenceresiKucult() {
+        const giris = document.getElementById("giris");
+        if (!giris || giris.hidden) return;
+        const genislik = 460;
+        const yukseklik = 640;
+        const left = Math.max(0, Math.round((screen.availWidth - genislik) / 2));
+        const top = Math.max(0, Math.round((screen.availHeight - yukseklik) / 2));
+        window.resizeTo(genislik, yukseklik);
+        window.moveTo(left, top);
+      }
+      girisPenceresiKucult();
+      setTimeout(girisPenceresiKucult, 80);
+      setTimeout(girisPenceresiKucult, 250);
+      setTimeout(girisPenceresiKucult, 600);
       girisOzetOnizle();
       const kullaniciSelect = document.getElementById("kullanici");
       kullaniciSelect.innerHTML = "<option value=\"\">Yükleniyor…</option>";
