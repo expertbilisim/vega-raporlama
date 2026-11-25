@@ -11,7 +11,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.12";
+const UYGULAMA_SURUM = "1.2.13";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -3764,10 +3764,14 @@ function kuruluBaslatVbsIcerik() {
     '  Next',
     'End If',
     'If enYeni <> "" Then',
-    '  On Error Resume Next',
-    '  fso.CopyFile enYeni, exe, True',
-    '  If Err.Number = 0 Then fso.DeleteFile enYeni, True',
-    '  On Error GoTo 0',
+    '  kur = Not fso.FileExists(exe)',
+    '  If fso.FileExists(exe) Then kur = fso.GetFile(enYeni).DateLastModified > fso.GetFile(exe).DateLastModified',
+    '  If kur Then',
+    '    On Error Resume Next',
+    '    fso.CopyFile enYeni, exe, True',
+    '    If Err.Number = 0 Then fso.DeleteFile enYeni, True',
+    '    On Error GoTo 0',
+    '  End If',
     'End If',
     'If fso.FileExists(exe) Then',
     '  sh.CurrentDirectory = klasor',
