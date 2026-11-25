@@ -11,7 +11,7 @@ const { promisify } = require("node:util");
 
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.10";
+const UYGULAMA_SURUM = "1.2.11";
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -297,7 +297,7 @@ function sqlCalistir(sql, args) {
   writeFileSync(dosya, Buffer.from(`\uFEFF${sql}`, "utf16le"));
   const calistir = (kimlik) => execFileAsync(
     SQLCMD,
-    ["-S", link.server, "-d", link.database, ...kimlik, "-b", ...args, "-i", dosya],
+    ["-S", link.server, "-d", link.database || "VEGADB", "-C", ...kimlik, "-b", ...args, "-i", dosya],
     { windowsHide: true, encoding: "buffer", maxBuffer: 32 * 1024 * 1024 }
   );
   const denemeler = sqlKimlikleri();
@@ -678,6 +678,89 @@ function donemTablo(firma, donem, ad) {
   return `F${pad(firma)}D${pad(donem)}${ad}`;
 }
 
+const MODEL_AD = { arctos: "ArcTos", vegawina5: "VegaWin A5" };
+
+function modelDosya() {
+  return join(kurulumKok(), "veritabani-model.json");
+}
+
+function modelKimlik() {
+  return String(link.server || "") + "|" + String(link.database || "VEGADB");
+}
+
+function modelSecimOku() {
+  try {
+    const veri = JSON.parse(readFileSync(modelDosya(), "utf8"));
+    const secim = String(veri.secim || "");
+    const ayniVeritabani = String(veri.veritabani || "") === modelKimlik();
+    if (ayniVeritabani && (secim === "arctos" || secim === "vegawina5")) return secim;
+  } catch { /* kayıt yok */ }
+  return "";
+}
+
+function modelSecimYaz(secim) {
+  const yol = modelDosya();
+  mkdirSync(dirname(yol), { recursive: true });
+  writeFileSync(yol, JSON.stringify({ secim, veritabani: modelKimlik() }, null, 2), "utf8");
+  semaOnbellek.delete("vega-model-alg");
+}
+
+async function modelAlgila() {
+  const anahtar = "vega-model-alg";
+  if (semaOnbellek.has(anahtar)) return semaOnbellek.get(anahtar);
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'm',
+  CAST(SUM(CASE WHEN TABLE_NAME LIKE N'%TBLSATFATBASLIK' THEN 1 ELSE 0 END) AS varchar(12)),
+  CAST(SUM(CASE WHEN TABLE_NAME LIKE N'%TBLSATFAT' AND TABLE_NAME NOT LIKE N'%BASLIK' AND TABLE_NAME NOT LIKE N'%HAREKET' AND TABLE_NAME NOT LIKE N'%LINKS%' THEN 1 ELSE 0 END) AS varchar(12))
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = N'BASE TABLE';
+`);
+  const parca = (lines[0] || "").split("|");
+  const baslik = Number((parca[1] || "").trim()) || 0;
+  const duz = Number((parca[2] || "").trim()) || 0;
+  let kod = "arctos";
+  if (baslik > 0 && duz === 0) kod = "vegawina5";
+  else if (duz > 0 && baslik === 0) kod = "arctos";
+  else if (baslik > duz) kod = "vegawina5";
+  const sonuc = { kod, baslik, duz };
+  semaOnbellek.set(anahtar, sonuc);
+  return sonuc;
+}
+
+async function vegaModel() {
+  const alg = await modelAlgila();
+  let secim = modelSecimOku();
+  if (!secim) {
+    secim = alg.kod;
+    modelSecimYaz(secim);
+  }
+  const kod = secim === "otomatik" ? alg.kod : secim;
+  return {
+    secim: kod,
+    algilanan: alg.kod,
+    kod,
+    ad: MODEL_AD[kod] || kod,
+    algilananAd: MODEL_AD[alg.kod] || alg.kod,
+    veritabani: link.database || "",
+  };
+}
+
+async function belgeBaslikHareket(firma, donem, kok) {
+  const model = await vegaModel();
+  const ciftler = model.kod === "arctos"
+    ? [[kok, kok + "HAREKET"], [kok + "BASLIK", kok + "HAREKET"]]
+    : [[kok + "BASLIK", kok + "HAREKET"], [kok, kok + "HAREKET"]];
+  for (const [baslikAd, hareketAd] of ciftler) {
+    const baslik = await nesneVar(donemTablo(firma, donem, baslikAd));
+    if (!baslik) continue;
+    const hareket = await nesneVar(donemTablo(firma, donem, hareketAd));
+    if (hareket) return { baslik, hareket };
+    if (baslikAd === kok) return { baslik, hareket: baslik };
+  }
+  return null;
+}
+
 function sqlKolon(kolonlar, adaylar, yedek = "N''") {
   const ad = adaylar.find((item) => kolonlar.has(String(item).toUpperCase()));
   if (!ad) return yedek;
@@ -815,10 +898,42 @@ ORDER BY ${yilKolon}, ${noKolon};
       }
     }
   } catch { /* dönem tablosu okunamadı */ }
-  if (liste.length) return liste;
+  if (liste.length) return donemleriIsaretle(firmaNo, liste);
   const harita = await vegaTabloHaritasi();
   const donemler = harita.get(Number(firmaNo))?.donemler || new Set();
-  return [...donemler].filter(Boolean).sort((a, b) => a - b).map((no) => ({ no, yil: no }));
+  const yedek = [...donemler].filter(Boolean).sort((a, b) => a - b).map((no) => ({ no, yil: no }));
+  return donemleriIsaretle(firmaNo, yedek);
+}
+
+async function donemleriIsaretle(firmaNo, liste) {
+  if (!liste.length) return liste;
+  const varOlan = [];
+  for (const item of liste) {
+    const tablo = donemTablo(firmaNo, item.no, "TBLSTOKHAREKETLERI");
+    if (await nesneVar(tablo)) varOlan.push({ no: item.no, tablo });
+  }
+  if (!varOlan.length) return liste.map((item) => ({ ...item, hareket: false }));
+  const parcalar = varOlan.map((item) => `
+SELECT ${item.no} AS n,
+  CASE WHEN EXISTS (SELECT 1 FROM ${item.tablo} WHERE IZAHAT IN (21, 23, 33)) THEN 1 ELSE 0 END AS h`);
+  try {
+    const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'h', CAST(n AS varchar(12)), CAST(h AS varchar(2))
+FROM (
+${parcalar.join("\nUNION ALL\n")}
+) x;
+`);
+    const dolu = new Set();
+    for (const line of lines) {
+      const p = line.split("|");
+      if ((p[0] || "").trim() !== "h") continue;
+      if ((p[2] || "").trim() === "1") dolu.add(Number((p[1] || "").trim()));
+    }
+    return liste.map((item) => ({ ...item, hareket: dolu.has(item.no) }));
+  } catch {
+    return liste.map((item) => ({ ...item, hareket: false }));
+  }
 }
 
 async function subeleriGetir(firmaNo) {
@@ -854,15 +969,56 @@ ORDER BY IND;
 
 const oturumlar = new Map();
 const girisOnbilgiOnbellek = new Map();
+const girisOnbilgiUcus = new Map();
+const kullaniciOnbellek = { zaman: 0, veri: null, ucus: null };
 
-async function girisOnbilgiGetir(tercihFirma) {
-  const anahtar = String(tercihFirma || 0);
-  const onceki = girisOnbilgiOnbellek.get(anahtar);
-  if (onceki && Date.now() - onceki.zaman < 120000) return onceki.veri;
-  const tercih = tercihFirma || 101;
-  const kullaniciKolon = await kolonKumesi("TBLUSERS").catch(() => new Set());
-  const kullaniciAlan = (adaylar, yedek) => (kullaniciKolon.size ? sqlKolon(kullaniciKolon, adaylar, yedek) : yedek);
-  const lines = await queryLines(`
+function kullaniciDosya() {
+  return join(kurulumKok(), "giris-kullanicilar.json");
+}
+
+function kullaniciDosyaOku() {
+  try {
+    const veri = JSON.parse(readFileSync(kullaniciDosya(), "utf8"));
+    if (Array.isArray(veri) && veri.length) return veri;
+  } catch { /* ilk açılış */ }
+  return null;
+}
+
+function kullaniciDosyaYaz(liste) {
+  try {
+    const yol = kullaniciDosya();
+    mkdirSync(dirname(yol), { recursive: true });
+    writeFileSync(yol, JSON.stringify(liste), "utf8");
+  } catch { /* liste yine bellekte durur */ }
+}
+
+function kullanicilariHazir() {
+  if (kullaniciOnbellek.veri) return kullaniciOnbellek.veri;
+  const dosya = kullaniciDosyaOku();
+  if (dosya) kullaniciOnbellek.veri = dosya;
+  return kullaniciOnbellek.veri;
+}
+
+async function kullanicilariSorgula() {
+  let lines;
+  try {
+    lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT N'u',
+  RTRIM(ISNULL(USERNAME, N'')),
+  RTRIM(ISNULL(AD, N'')),
+  RTRIM(ISNULL(SOYAD, N'')),
+  CAST(ISNULL(FIRMA, 0) AS varchar(12)),
+  CAST(ISNULL(DONEM, 0) AS varchar(12)),
+  CASE WHEN NULLIF(LTRIM(RTRIM(ISNULL(SIFRE, N''))), N'') IS NULL THEN N'0' ELSE N'1' END
+FROM TBLUSERS
+WHERE ISNULL(USERNAME, N'') <> N''
+ORDER BY USERNAME;
+`);
+  } catch {
+    const kullaniciKolon = await kolonKumesi("TBLUSERS").catch(() => new Set());
+    const kullaniciAlan = (adaylar, yedek) => (kullaniciKolon.size ? sqlKolon(kullaniciKolon, adaylar, yedek) : yedek);
+    lines = await queryLines(`
 SET NOCOUNT ON;
 SELECT N'u',
   ${kullaniciAlan(["USERNAME"], "N''")},
@@ -875,12 +1031,15 @@ FROM TBLUSERS
 ${kullaniciKolon.has("USERNAME") ? "WHERE ISNULL(USERNAME, N'') <> N''" : ""}
 ORDER BY ${kullaniciKolon.has("USERNAME") ? "USERNAME" : "IND"};
 `);
+  }
   const kullanicilar = [];
   for (const line of lines) {
     const p = line.split("|");
     if ((p[0] || "").trim() !== "u") continue;
+    const kullanici = (p[1] || "").trim();
+    if (!kullanici) continue;
     kullanicilar.push({
-      kullanici: (p[1] || "").trim(),
+      kullanici,
       ad: (p[2] || "").trim(),
       soyad: (p[3] || "").trim(),
       firma: Number(p[4]) || 0,
@@ -888,19 +1047,58 @@ ORDER BY ${kullaniciKolon.has("USERNAME") ? "USERNAME" : "IND"};
       sifreVar: (p[6] || "").trim() === "1" ? 1 : 0,
     });
   }
-  const firmalar = await firmalariGetir();
+  if (kullanicilar.length) {
+    kullaniciOnbellek.veri = kullanicilar;
+    kullaniciOnbellek.zaman = Date.now();
+    kullaniciDosyaYaz(kullanicilar);
+  }
+  return kullanicilar;
+}
+
+function kullanicilariGetir() {
+  const hazir = kullanicilariHazir();
+  const guncel = hazir && Date.now() - kullaniciOnbellek.zaman < 120000;
+  if (!guncel && !kullaniciOnbellek.ucus) {
+    kullaniciOnbellek.ucus = kullanicilariSorgula()
+      .catch(() => hazir || [])
+      .finally(() => { kullaniciOnbellek.ucus = null; });
+  }
+  if (hazir) return Promise.resolve(hazir);
+  return kullaniciOnbellek.ucus || Promise.resolve([]);
+}
+
+async function girisOnbilgiGetir(tercihFirma) {
+  const anahtar = String(tercihFirma || 0);
+  const onceki = girisOnbilgiOnbellek.get(anahtar);
+  if (onceki && Date.now() - onceki.zaman < 120000) return onceki.veri;
+  if (girisOnbilgiUcus.has(anahtar)) return girisOnbilgiUcus.get(anahtar);
+  const ucus = girisOnbilgiHazirla(tercihFirma, anahtar);
+  girisOnbilgiUcus.set(anahtar, ucus);
+  try {
+    return await ucus;
+  } finally {
+    girisOnbilgiUcus.delete(anahtar);
+  }
+}
+
+async function girisOnbilgiHazirla(tercihFirma, anahtar) {
+  const tercih = tercihFirma || 101;
+  const kullanicilar = await kullanicilariGetir();
+  const firmalar = await firmalariGetir().catch(() => []);
   let firmaNo = tercihFirma || tercih;
   if (!firmalar.some((item) => item.no === firmaNo)) {
     firmaNo = firmalar.find((item) => item.no === 101)?.no || firmalar[0]?.no || firmaNo;
   }
-  const [donemler, subeler] = await Promise.all([
-    donemleriGetir(firmaNo),
-    subeleriGetir(firmaNo),
+  const [donemler, subeler, model] = await Promise.all([
+    donemleriGetir(firmaNo).catch(() => []),
+    subeleriGetir(firmaNo).catch(() => [{ no: 1, ad: "MERKEZ" }]),
+    vegaModel().catch(() => ({ secim: "otomatik", algilanan: "arctos", kod: "arctos", ad: "ArcTos", algilananAd: "ArcTos" })),
   ]);
   const veri = {
     surum: UYGULAMA_SURUM,
     server: link.server,
     database: link.database,
+    model,
     kullanicilar,
     firmalar,
     firma: firmaNo,
@@ -2389,6 +2587,133 @@ function odemeTakvimAnahtar(kayit) {
     .slice(0, 20);
 }
 
+async function vegawinPortfoyGetir(firmaNo, donemNo, tur, basIfade, bitIfade) {
+  const izahat = { cek: 2, senet: 6, visa: 4 }[tur];
+  if (!izahat || !basIfade || !bitIfade) return [];
+  const hareketAd = await nesneVar(donemTablo(firmaNo, donemNo, "TBLCARGIRHAREKET"));
+  if (!hareketAd) return [];
+  const kolon = await kolonKumesi(hareketAd);
+  if (!kolon.has("VADE") || !kolon.has("TUTAR") || !kolon.has("IZAHAT")) return [];
+  const cariAd = await nesneVar(firmaTablo(firmaNo, "TBLCARI"));
+  const bankaAd = kolon.has("BANKANO") ? await nesneVar(firmaTablo(firmaNo, "TBLBANKALAR")) : "";
+  const girisTablo = tur === "cek" ? "TBLCEKGIRIS" : tur === "senet" ? "TBLSENETGIRIS" : "";
+  const portTablo = tur === "cek" ? "TBLCEKPORTFOY" : tur === "senet" ? "TBLSENETPORTFOY" : "";
+  const girisAd = girisTablo ? await nesneVar(donemTablo(firmaNo, donemNo, girisTablo)) : "";
+  const portAd = portTablo ? await nesneVar(donemTablo(firmaNo, donemNo, portTablo)) : "";
+  const cikisAd = tur === "cek" || tur === "senet"
+    ? await nesneVar(donemTablo(firmaNo, donemNo, "TBLCARCIKHAREKET"))
+    : "";
+  const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+  const senetCikis = tur === "senet" ? cikisAd : "";
+  const parca = (ad, kaynakNo, ekstra) => `
+    SELECT
+      ${kaynakNo} AS KAYNAK,
+      h.VADE AS VADE,
+      ${kolon.has("BELGENO") ? temiz("h.BELGENO") : "N''"} AS BELGE,
+      ${cariAd ? temiz("c.FIRMAADI") : "N''"} AS FIRMA,
+      ${girisAd && portAd && kolon.has("PORTNO") ? temiz("g.KESIDEEDEN") : "N''"} AS KESIDE,
+      ${bankaAd ? temiz("b.ADI") : "N''"} AS BANKA,
+      ${kolon.has("ACIKLAMA") ? temiz("h.ACIKLAMA") : "N''"} AS ACIK,
+      ${tur === "senet" && kaynakNo === 1 && senetCikis && cariAd ? temiz("cf.FIRMAADI") : "N''"} AS CIRO,
+      CAST(ISNULL(h.TUTAR, 0) AS decimal(18, 2)) AS TUTAR,
+      ${kolon.has("EVRAKNO") ? "CAST(ISNULL(h.EVRAKNO, 0) AS int)" : "CAST(0 AS int)"} AS EVRAKNO,
+      ${kolon.has("PORTNO") ? "CAST(ISNULL(h.PORTNO, 0) AS int)" : "CAST(0 AS int)"} AS PORTNO,
+      ${kolon.has("STATUS") ? "CAST(ISNULL(h.STATUS, 0) AS int)" : "CAST(0 AS int)"} AS STATUS
+    FROM ${ad} h
+    ${cariAd && kolon.has("FIRMANO") ? `LEFT JOIN ${cariAd} c ON c.IND = h.FIRMANO` : ""}
+    ${bankaAd ? `LEFT JOIN ${bankaAd} b ON b.IND = h.BANKANO` : ""}
+    ${girisAd && portAd && kolon.has("PORTNO") ? `LEFT JOIN ${portAd} p ON p.PORTFOYNO = h.PORTNO LEFT JOIN ${girisAd} g ON g.IND = p.EVRAKNO` : ""}
+    ${tur === "senet" && kaynakNo === 1 && senetCikis && cariAd ? `
+    OUTER APPLY (
+      SELECT TOP 1 cx.FIRMANO AS FIRMANO
+      FROM ${senetCikis} cx
+      WHERE cx.IZAHAT = 6 AND cx.VADE = h.VADE AND cx.TUTAR = h.TUTAR
+      ORDER BY cx.IND
+    ) ciro
+    LEFT JOIN ${cariAd} cf ON cf.IND = ciro.FIRMANO` : ""}
+    WHERE h.IZAHAT = ${izahat}
+      AND h.VADE >= ${basIfade}
+      AND h.VADE < ${bitIfade}
+      ${ekstra || ""}
+  `;
+  const parcalar = [parca(hareketAd, 1, "")];
+  if (cikisAd && (tur === "cek" || tur === "senet")) {
+    const cikisKolon = await kolonKumesi(cikisAd);
+    if (["VADE", "TUTAR", "IZAHAT", "STATUS", "FIRMANO", "BELGENO"].every((ad) => cikisKolon.has(ad))) {
+      const ekstra = tur === "cek"
+        ? "AND ISNULL(h.STATUS, 0) = 1"
+        : `AND NOT EXISTS (
+            SELECT 1 FROM ${hareketAd} g
+            WHERE g.IZAHAT = 6 AND g.VADE = h.VADE AND g.TUTAR = h.TUTAR
+          )`;
+      parcalar.push(parca(cikisAd, 2, ekstra));
+    }
+  }
+  const belgeIfade = "CASE WHEN q.BELGE <> N'' THEN q.BELGE WHEN q.PORTNO > 0 THEN CAST(q.PORTNO AS nvarchar(12)) ELSE N'' END";
+  const kesideIfade = tur === "senet"
+    ? `CASE
+        WHEN q.KESIDE <> N'' THEN q.KESIDE
+        WHEN q.CIRO <> N'' THEN N''
+        WHEN CHARINDEX(N'/', q.ACIK) > 1 THEN LEFT(q.ACIK, CHARINDEX(N'/', q.ACIK) - 1)
+        ELSE q.ACIK
+      END`
+    : "q.KESIDE";
+  const visaKart = "LTRIM(SUBSTRING(q.ACIK, LEN(q.ACIK) - CHARINDEX(N'\\', REVERSE(q.ACIK)) + 2, 200))";
+  const bankaIfade = tur === "visa"
+    ? `CASE
+        WHEN CHARINDEX(N'\\', q.ACIK) > 0 AND ${visaKart} <> N'' THEN ${visaKart}
+        WHEN q.BANKA <> N'' AND q.BANKA <> N'BANKA' THEN q.BANKA
+        ELSE LTRIM(RTRIM(REPLACE(REPLACE(q.ACIK, N'\\', N' '), N'  ', N' ')))
+      END`
+    : "CASE WHEN q.BANKA = N'BANKA' THEN N'' ELSE q.BANKA END";
+  const lines = await queryLines(`
+SET NOCOUNT ON;
+SELECT
+  CONVERT(varchar(10), q.VADE, 104),
+  CONVERT(varchar(10), q.VADE, 23),
+  ${belgeIfade},
+  q.FIRMA,
+  ${kesideIfade},
+  CASE
+    WHEN q.KAYNAK = 2 THEN N'Ödenecek'
+    WHEN ${izahat} = 2 AND q.STATUS = 1 THEN N'Portföyde'
+    WHEN ${izahat} = 2 AND q.STATUS = 2 THEN N'Çıkmış'
+    WHEN ${izahat} = 6 AND q.CIRO <> N'' THEN N'Cirolu'
+    WHEN ${izahat} = 4 THEN N'Bekliyor'
+    ELSE N'Portföyde'
+  END,
+  ${bankaIfade},
+  q.CIRO,
+  CAST(q.TUTAR AS varchar(40)),
+  CAST(q.EVRAKNO AS varchar(12)),
+  CAST(q.PORTNO AS varchar(12)),
+  CAST(q.KAYNAK AS varchar(2))
+FROM (
+${parcalar.join("\nUNION ALL\n")}
+) q
+ORDER BY q.VADE, q.BELGE;
+`);
+  return lines.map((line) => {
+    const [vade, gun, belge, firmaAdi, keside, durum, banka, ciro, tutar, evrak, port, kaynak] = line.split("|").map((part) => part.trim());
+    return {
+      vade,
+      gun,
+      belge,
+      firma: firmaAdi,
+      keside,
+      durum,
+      banka,
+      ciro,
+      tutar: Number(tutar) || 0,
+      basInd: Number(evrak) || 0,
+      portNo: Number(port) || 0,
+      belgeTipi: 13,
+      gorseller: [],
+      yon: kaynak === "2" ? "odeme" : "tahsilat",
+    };
+  }).filter((kayit) => kayit.gun && kayit.gun.toUpperCase() !== "NULL");
+}
+
 async function odemeTakvimKayitlariGetir(firma, donem, basGun, bitGun, ciroDahil = false) {
   const firmaNo = tamSayi(firma);
   const donemNo = tamSayi(donem);
@@ -2463,6 +2788,27 @@ ORDER BY k.${tarihAlan};
       });
     }
   }));
+  for (const tur of ["cek", "senet", "visa"]) {
+    const viewAd = kaynaklar.find((kaynak) => kaynak.tur === tur)?.view;
+    if (viewAd && await nesneVar(donemTablo(firmaNo, donemNo, viewAd))) continue;
+    const satirlar = await vegawinPortfoyGetir(firmaNo, donemNo, tur, bas, bit);
+    for (const satir of satirlar) {
+      if (satir.durum === "Çıkmış" && !(ciroDahil && tur === "cek")) continue;
+      if (odemeTakvimKapaliMi(satir.durum)) continue;
+      const kim = satir.firma || satir.keside || "—";
+      kayitlar.push({
+        gun: satir.gun,
+        tur,
+        yon: satir.yon,
+        firma: kim,
+        keside: satir.keside && satir.keside !== kim ? satir.keside : "",
+        belge: satir.belge,
+        tutar: satir.tutar,
+        durum: satir.durum,
+        takas: false,
+      });
+    }
+  }
   return kayitlar;
 }
 
@@ -2563,7 +2909,7 @@ async function teklifKayitlariGetir(firma, donem) {
   const cariVar = await nesneVar(cari);
   const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(CAST(${ifade} AS nvarchar(200)), N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
   const cariAd = cariVar
-    ? `COALESCE(NULLIF(${temiz("b.FIRMAADI")}, N''), ${temiz("c.FIRMAADI")})`
+    ? `COALESCE(NULLIF(${temiz("b.FIRMAADI")}, N''), NULLIF(${temiz("c.FIRMAADI")}, N''), ${temiz("c.FIRMAKODU")})`
     : temiz("b.FIRMAADI");
   const lines = await queryLines(`
 SET NOCOUNT ON;
@@ -3317,6 +3663,55 @@ function kurulumKok() {
   return join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama");
 }
 
+const FIRMA_LOGO_UZANTILAR = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
+
+function firmaLogoDosyasi() {
+  const kok = kurulumKok();
+  for (const uzanti of FIRMA_LOGO_UZANTILAR) {
+    const yol = join(kok, "firma-logo" + uzanti);
+    if (existsSync(yol)) return yol;
+  }
+  return "";
+}
+
+function firmaLogoTemizle() {
+  const kok = kurulumKok();
+  for (const uzanti of FIRMA_LOGO_UZANTILAR) {
+    const yol = join(kok, "firma-logo" + uzanti);
+    if (existsSync(yol)) unlinkSync(yol);
+  }
+}
+
+function logoUzanti(buf) {
+  if (!buf || buf.length < 12) return "";
+  if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return ".png";
+  if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return ".jpg";
+  if (buf.slice(0, 4).toString("ascii") === "GIF8") return ".gif";
+  if (buf.slice(0, 4).toString("ascii") === "RIFF" && buf.slice(8, 12).toString("ascii") === "WEBP") return ".webp";
+  return "";
+}
+
+function okuHam(req, limit) {
+  return new Promise((resolve, reject) => {
+    const parca = [];
+    let boyut = 0;
+    let bitti = false;
+    req.on("data", (buf) => {
+      if (bitti) return;
+      boyut += buf.length;
+      if (boyut > limit) {
+        bitti = true;
+        reject(Object.assign(new Error("Logo 4 MB'dan büyük olamaz."), { status: 413 }));
+        req.destroy();
+        return;
+      }
+      parca.push(buf);
+    });
+    req.on("end", () => { if (!bitti) resolve(Buffer.concat(parca)); });
+    req.on("error", (error) => { if (!bitti) { bitti = true; reject(error); } });
+  });
+}
+
 function masaustuKok() {
   return join(process.env.USERPROFILE || "", "Desktop");
 }
@@ -3645,14 +4040,20 @@ function exeGuncellemesiniUygula(yeniExe) {
     "for ($i = 1; $i -le 30; $i++) {",
     "  try {",
     "    if (Test-Path -LiteralPath $eski) { Remove-Item -LiteralPath $eski -Force -ErrorAction SilentlyContinue }",
-    "    if (Test-Path -LiteralPath $hedef) { Rename-Item -LiteralPath $hedef -NewName ([IO.Path]::GetFileName($eski)) -Force }",
-    "    Copy-Item -LiteralPath $yeni -Destination $hedef -Force",
+    "    if (Test-Path -LiteralPath $hedef) { Rename-Item -LiteralPath $hedef -NewName ([IO.Path]::GetFileName($eski)) -Force -ErrorAction Stop }",
+    "    Copy-Item -LiteralPath $yeni -Destination $hedef -Force -ErrorAction Stop",
     "    $oldu = $true",
     "    break",
     "  } catch {",
     "    Yaz ('deneme ' + $i + ' ' + $_.Exception.Message)",
     "    Start-Sleep -Milliseconds 800",
     "  }",
+    "}",
+    "$admin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)",
+    "if (-not $oldu -and -not $admin) {",
+    "  Yaz 'yonetici izni isteniyor'",
+    "  Start-Process -FilePath 'powershell.exe' -Verb RunAs -WindowStyle Hidden -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-WindowStyle','Hidden','-File', $PSCommandPath)",
+    "  exit 0",
     "}",
     "if (-not $oldu) { Yaz 'uygulanamadi'; exit 1 }",
     "Yaz 'kopyalandi'",
@@ -4136,8 +4537,10 @@ async function faturaUbl(firma, donem, no) {
   let baslik = null;
   let satirlar = [];
   for (const ad of ["TBLSATFAT", "TBLPSATFAT"]) {
-    const baslikTablo = donemTablo(firma, donem, ad + "BASLIK");
-    const hareketTablo = donemTablo(firma, donem, ad + "HAREKET");
+    const cift = await belgeBaslikHareket(firma, donem, ad);
+    if (!cift) continue;
+    const baslikTablo = cift.baslik;
+    const hareketTablo = cift.hareket;
     try {
       const baslikSatir = await queryLines(`
 SET NOCOUNT ON;
@@ -4145,7 +4548,7 @@ SELECT
   CONVERT(varchar(10), b.TARIH, 23),
   REPLACE(REPLACE(RTRIM(ISNULL(CAST(b.EFATURAUUID AS nvarchar(40)), N'')), N'{', N''), N'}', N''),
   CAST(ISNULL(b.TUTAR, 0) AS decimal(18, 2)),
-  ${yazi("c.FIRMAADI")},
+  ${yazi("CASE WHEN RTRIM(ISNULL(c.FIRMAADI, N'')) = N'' THEN c.FIRMAKODU ELSE c.FIRMAADI END")},
   ${yazi("CAST(c.ADRESFATURA AS nvarchar(300))")},
   ${yazi("c.IL")},
   ${yazi("c.SEHIR")},
@@ -4675,6 +5078,11 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/api/giris-kullanicilar") {
+      gonder(res, 200, { kullanicilar: await kullanicilariGetir() });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/giris-onbilgi") {
       const tercihFirma = tamSayi(url.searchParams.get("firma"));
       const onbilgi = await girisOnbilgiGetir(tercihFirma);
@@ -4715,8 +5123,63 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/firma-logo") {
+      const yol = firmaLogoDosyasi();
+      if (!yol) { res.writeHead(404); res.end(); return; }
+      const tur = yol.endsWith(".png") ? "image/png"
+        : (yol.endsWith(".webp") ? "image/webp"
+          : (yol.endsWith(".gif") ? "image/gif" : "image/jpeg"));
+      res.writeHead(200, { "Content-Type": tur, "Cache-Control": "no-store" });
+      res.end(readFileSync(yol));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/firma-logo") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      const buf = await okuHam(req, 4 * 1024 * 1024);
+      const uzanti = logoUzanti(buf);
+      if (!uzanti) return gonder(res, 400, { error: "PNG, JPG, WEBP veya GIF seçin." });
+      const kok = kurulumKok();
+      mkdirSync(kok, { recursive: true });
+      firmaLogoTemizle();
+      writeFileSync(join(kok, "firma-logo" + uzanti), buf);
+      gonder(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "DELETE" && url.pathname === "/api/firma-logo") {
+      if (!oturum(req)) return gonder(res, 401, { error: "Giriş gerekli." });
+      firmaLogoTemizle();
+      gonder(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/veritabani-model") {
+      gonder(res, 200, await vegaModel());
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/veritabani-model") {
+      const body = await okuGovde(req);
+      const secim = String(body.secim || "");
+      if (!["otomatik", "arctos", "vegawina5"].includes(secim)) {
+        gonder(res, 400, { error: "Model seçin." });
+        return;
+      }
+      if (secim === "otomatik") {
+        semaOnbellek.delete("vega-model-alg");
+        const alg = await modelAlgila();
+        modelSecimYaz(alg.kod);
+      } else {
+        modelSecimYaz(secim);
+      }
+      girisOnbilgiOnbellek.clear();
+      gonder(res, 200, await vegaModel());
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/baglanti") {
-      gonder(res, 200, { surum: UYGULAMA_SURUM, server: link.server, database: link.database, guncelleme: guncellemeDurumAl() });
+      gonder(res, 200, { surum: UYGULAMA_SURUM, server: link.server, database: link.database, model: await vegaModel(), guncelleme: guncellemeDurumAl() });
       return;
     }
 
@@ -5358,6 +5821,14 @@ ORDER BY ISNULL(STOKTIPI, 0);
         const deger = metin(url.searchParams.get("ok" + no), 80).trim();
         if (deger) ozelFiltre.push(`AND s.KOD${no} = N'${deger}'`);
       }
+      const stokFiltre = String(url.searchParams.get("stok") || "mevcut").trim().toLowerCase();
+      const miktarFiltre = stokFiltre === "tumu"
+        ? ""
+        : stokFiltre === "arti"
+          ? "AND ISNULL(e.miktar, 0) > 0.004"
+          : stokFiltre === "eksi"
+            ? "AND ISNULL(e.miktar, 0) < -0.004"
+            : "AND ABS(ISNULL(e.miktar, 0)) > 0.004";
       const hareket = donemTablo(firma, donem, "TBLSTOKHAREKETLERI");
       const stok = firmaTablo(firma, "TBLSTOKLAR");
       const arama = like
@@ -5380,9 +5851,9 @@ SELECT
   CAST(ISNULL(e.miktar, 0) * ISNULL(s.MALIYET, 0) AS decimal(18, 2)),
   CAST(ISNULL(s.ALISFIYATI, 0) AS decimal(18, 4))
 FROM ${stok} s
-JOIN env e ON e.STOKNO = s.IND
+LEFT JOIN env e ON e.STOKNO = s.IND
 WHERE ISNULL(s.DELETED, 0) = 0
-  AND ABS(ISNULL(e.miktar, 0)) > 0.004
+  ${miktarFiltre}
   ${arama}
   ${ozelFiltre.join("\n  ")}
 ORDER BY ABS(ISNULL(e.miktar, 0) * ISNULL(s.MALIYET, 0)) DESC, s.STOKKODU;
@@ -6479,6 +6950,7 @@ WHERE ISNULL(d.Deleted, 0) = 0 AND b.IND = ${belgeNo};
       const sube = firmaTablo(firma, "TBLSUBELER");
       const kasa = firmaTablo(firma, "TBLKASA");
       const temiz = (ifade) => `REPLACE(REPLACE(REPLACE(RTRIM(ISNULL(${ifade}, N'')), N'|', N'/'), CHAR(13), N' '), CHAR(10), N' ')`;
+      const firmaAdAlani = `CASE WHEN ${temiz("c.FIRMAADI")} <> N'' THEN ${temiz("c.FIRMAADI")} ELSE ${temiz("c.FIRMAKODU")} END`;
       const cikisBelge = izahat === 11 || izahat === 12 || izahat === 19;
       const girisBelge = izahat === 13 || izahat === 14 || izahat === 18;
       if ((cikisBelge || girisBelge) && belgeNo) {
@@ -6501,7 +6973,7 @@ SELECT
   ${temiz("b.OZELKOD6")},
   ${temiz("CAST(b.ACIKLAMA AS nvarchar(400))")},
   ${temiz("c.FIRMAKODU")},
-  ${temiz("c.FIRMAADI")}
+  ${firmaAdAlani}
 FROM ${baslikTablo} b
 LEFT JOIN ${cari} c ON c.IND = b.FIRMANO
 WHERE b.IND = ${belgeNo};
@@ -6552,7 +7024,7 @@ ORDER BY h.IND;
             ok1, ok2, ok3, ok4,
             aciklama,
             firmaKod,
-            firmaAd,
+            firmaAd: firmaAd || firmaKod,
             items,
             gorseller: await bordroGorselleri(baslikTablo, belgeNo),
           });
@@ -6575,7 +7047,7 @@ SELECT
   ${temiz("h.EVRAKNO")},
   CONVERT(varchar(10), h.TARIH, 104),
   ${temiz("c.FIRMAKODU")},
-  ${temiz("c.FIRMAADI")},
+  ${firmaAdAlani},
   ${temiz("d.DEPOADI")},
   ${temiz("ISNULL(sb.SUBEAD, (SELECT TOP 1 sb2.SUBEAD FROM " + sube + " sb2 ORDER BY sb2.IND))")},
   ${temiz("(SELECT TOP 1 ks.KASAADI FROM " + kasa + " ks ORDER BY ks.IND)")}
@@ -6619,7 +7091,7 @@ SELECT
   ${temiz("bas.BELGENO")},
   CONVERT(varchar(10), ISNULL(h.TARIH, bas.TARIH), 104),
   ${temiz("c.FIRMAKODU")},
-  ${temiz("c.FIRMAADI")},
+  ${firmaAdAlani},
   ${temiz("d.DEPOADI")},
   ${temiz("ISNULL(sb.SUBEAD, (SELECT TOP 1 sb2.SUBEAD FROM " + sube + " sb2 ORDER BY sb2.IND))")},
   ${temiz("(SELECT TOP 1 ks.KASAADI FROM " + kasa + " ks ORDER BY ks.IND)")}
@@ -6654,7 +7126,7 @@ ORDER BY h.IND;
 SET NOCOUNT ON;
 SELECT
   ${temiz("c.FIRMAKODU")},
-  ${temiz("c.FIRMAADI")},
+  ${firmaAdAlani},
   CAST(CASE WHEN ISNULL(h.BORC, 0) <> 0 THEN h.BORC ELSE h.ALACAK END AS decimal(18, 2)),
   ${temiz("h.PARABIRIMI")},
   CAST(ISNULL(h.KUR, 0) AS decimal(18, 4)),
@@ -6670,7 +7142,7 @@ ORDER BY h.IND;
           return {
             kod: "",
             ad: "",
-            aciklama: firmaAd,
+            aciklama: firmaAd || firmaKod,
             birimAd: "",
             pb,
             evrakNo,
@@ -6721,7 +7193,7 @@ ORDER BY b.sira;
         evrakNo: ilk.evrakNo || "",
         tarih: ilk.tarih || "",
         firmaKod: bankaKod || ilk.firmaKod || "",
-        firmaAd: bankaAd || ilk.firmaAd || "",
+        firmaAd: bankaAd || bankaKod || ilk.firmaAd || ilk.firmaKod || "",
         depo: hesapNo || ilk.depoAd || "",
         sube: ilk.subeAd || "",
         kasa: ilk.kasaAd || "",
@@ -7626,7 +8098,19 @@ WHERE ${where} AND ${sinir};
       }[tur];
       if (!firma || !donem || !bas || !bit || !tanim) return gonder(res, 400, { error: "Firma, dönem ve tarih seçin." });
       const view = await nesneVar(donemTablo(firma, donem, tanim.view));
-      if (!view) return gonder(res, 200, { items: [], toplam: 0, durumlar: [] });
+      if (!view) {
+        const secilen = [...new Set(String(url.searchParams.get("durum") || "").split(",").map((parca) => metin(parca, 80).trim()).filter(Boolean))].slice(0, 30);
+        const satirlar = await vegawinPortfoyGetir(firma, donem, tur, bas, `DATEADD(day, 1, ${bit})`);
+        const durumlar = [...new Set(satirlar.map((satir) => satir.durum).filter(Boolean))].sort((a, b) => a.localeCompare(b, "tr"));
+        const items = (secilen.length ? satirlar.filter((satir) => secilen.includes(satir.durum)) : satirlar);
+        const toplam = items.reduce((sum, item) => sum + item.tutar, 0);
+        gonder(res, 200, {
+          items: items.map(({ portNo, gun, yon, ...item }) => item),
+          toplam,
+          durumlar,
+        });
+        return;
+      }
       const [kolon, girisBaslikAd] = await Promise.all([
         kolonKumesi(view),
         nesneVar(donemTablo(firma, donem, "TBLCARGIRBASLIK")),
@@ -8255,6 +8739,8 @@ server.listen(PORT, "0.0.0.0", () => {
     if (!existsSync(UDL)) console.warn(`Bağlantı dosyası bulunamadı: ${UDL}`);
     console.log(SQLCMD ? "Sorgu aracı: sqlcmd" : "Sorgu aracı: Windows SQL istemcisi");
   }
+  kullanicilariHazir();
+  kullanicilariGetir().catch(() => {});
   girisOnbilgiGetir(0).catch(() => {});
   hatirlatmaGorevleriniSenkronize().catch(() => {});
   masaustuUygulamaIlkAcilisGuncelle();

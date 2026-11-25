@@ -68,10 +68,16 @@
     }
     .ust-baslik { display: flex; align-items: center; gap: 12px; }
     .expert-logo {
-      height: 46px;
+      height: 52px;
       width: auto;
+      max-width: 220px;
+      object-fit: contain;
       flex: none;
       display: block;
+    }
+    .expert-logo.ucboyut {
+      width: 52px;
+      filter: drop-shadow(0 6px 8px rgba(14, 70, 80, .28));
     }
     .ust .logo { text-align: left; font-size: 15px; letter-spacing: 0.08em; }
     .surum { text-align: center; color: #666; font-size: 13px; margin-top: 8px; }
@@ -150,6 +156,33 @@
       box-shadow: inset 0 1px 0 #fff, 0 1px 0 #b7ebc9, 0 3px 0 #8fd4a8;
     }
     .google-rozet:active { transform: translateY(2px); }
+    #waKutu {
+      position: fixed; inset: 0; z-index: 122; display: flex; align-items: center; justify-content: center;
+      background: rgba(18, 36, 48, .42); padding: 16px;
+    }
+    #waKutu[hidden] { display: none; }
+    .wa-panel {
+      width: min(420px, 100%);
+      background: linear-gradient(180deg, #ffffff 0%, #f2f7f9 100%);
+      border: 1px solid #a9c0cb; border-radius: 16px;
+      box-shadow: inset 0 1px 0 #fff, 0 4px 0 #c5d4dc, 0 18px 40px rgba(20, 40, 55, .28);
+      padding: 16px 18px; display: grid; gap: 10px; justify-items: start;
+    }
+    .wa-panel h3 { margin: 0; color: #0e5962; font-size: 17px; font-weight: 800; }
+    .wa-panel #waQr {
+      width: 220px; height: 220px; background: #fff; border: 1px solid #c5d5de; border-radius: 12px;
+    }
+    .wa-panel p { margin: 0; color: #5c6b7a; font-size: 13px; line-height: 1.4; }
+    .wa-panel .wa-izin {
+      display: flex; align-items: flex-start; gap: 8px; color: #1d2430; font-size: 13px; font-weight: 650;
+    }
+    .wa-panel .wa-izin input { margin-top: 2px; accent-color: #1f7f8c; }
+    .wa-panel .butonlar { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; width: 100%; }
+    .wa-panel button {
+      border: 1px solid #1f7f8c; background: #1f7f8c; color: #fff; border-radius: 8px; padding: 7px 12px; font-weight: 650;
+    }
+    .wa-panel button.soluk { background: #fff; color: #1a4e58; }
+    .wa-panel button.kopar { background: #fff; color: #b42318; border-color: #d9a3a0; }
     .ana-icerik {
       display: grid;
       grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
@@ -250,6 +283,17 @@
     .firma-menu input { accent-color: #1f8f9c; }
     .ayar-panel[hidden] { display: none; }
     .ayar-panel img { width: 220px; height: 220px; background: #fff; }
+    .ayar-panel img.ayar-logo-onizleme {
+      width: auto; height: 52px; max-width: 100%; object-fit: contain;
+      background: #f7fbfc; border: 1px dashed #c5d5de; border-radius: 8px; padding: 4px;
+    }
+    .ayar-logo-satir { display: flex; gap: 8px; width: 100%; }
+    .ayar-logo-yukle {
+      flex: 1; text-align: center; cursor: pointer;
+      border: 1px solid #1f7f8c; background: #1f7f8c; color: #fff;
+      border-radius: 4px; padding: 7px 12px; font-size: 13px; font-weight: 650;
+    }
+    .ayar-logo-satir button { flex: 1; }
     .ayar-panel button { border: 1px solid #1f7f8c; background: #1f7f8c; color: #fff; border-radius: 4px; padding: 7px 12px; }
     .ayar-panel button.soluk { background: #fff; color: #1f7f8c; }
     .ayar-panel p { margin: 0; color: #5c6b7a; }
@@ -510,6 +554,32 @@
       background: linear-gradient(90deg, #5ed0dc, #1f8f9c 60%, #c05612);
     }
     .ciro-yatay-satir .tutar { text-align: right; font-size: 12px; font-weight: 750; color: #16323a; }
+    #ciroRapor .ciro-govde { min-height: 280px; }
+    #ciroRapor .ciro-grafik.sutun {
+      align-items: stretch; gap: 4px; padding: 2px 2px 0; min-height: 220px; overflow: hidden;
+    }
+    #ciroRapor .ciro-sutun {
+      flex: 1; min-width: 0; height: 100%;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    #ciroRapor .ciro-sutun .alan {
+      flex: 1; width: 100%; min-height: 0;
+      display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    }
+    #ciroRapor .ciro-sutun .bosluk { width: 100%; min-height: 0; }
+    #ciroRapor .ciro-sutun .deger {
+      flex: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      margin-bottom: 3px; font-size: 10px; font-weight: 700; color: #16323a; line-height: 1.15;
+    }
+    #ciroRapor .ciro-sutun i {
+      display: block; width: 70%; max-width: 28px; min-height: 0; border-radius: 8px 8px 3px 3px;
+      background: linear-gradient(180deg, #67d8e4 0%, #1b8795 55%, #0f5d69 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 6px 12px rgba(20, 90, 100, .18);
+    }
+    #ciroRapor .ciro-sutun span {
+      flex: none; margin-top: 4px; font-size: 10px; color: #5c6b7a;
+      max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
     #ciroRapor .tablo-wrap { flex: 1; min-height: 0; max-height: none; }
     .ciro-alt {
       flex: none; display: flex; justify-content: flex-end; align-items: center; gap: 28px;
@@ -2307,7 +2377,7 @@
         <img class="giris-ikon" src="/expert-bilisim.png?v=3" alt="">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.10</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.11</div>
         <p class="guncelleme-yazi" id="guncellemeYazi"></p>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
@@ -2345,7 +2415,7 @@
   <div class="ev" id="ev" hidden>
     <div class="ust">
       <div class="ust-baslik">
-        <img class="expert-logo" src="/expert-logo.png?v=3" alt="Expert Bilişim">
+        <img class="expert-logo ucboyut" id="ustLogo" src="/expert-bilisim.png?v=4" alt="Expert Bilişim">
         <div>
           <b>Vega Raporlama</b>
           <small id="oturumSatir"></small>
@@ -2363,6 +2433,27 @@
       </div>
       <div id="ayarPanel" class="ayar-panel" hidden>
         <div class="ayar-bolum">
+          <strong>Ana ekran logosu</strong>
+          <img class="ayar-logo-onizleme" id="ayarLogoOnizleme" alt="Yüklenen logo" hidden>
+          <p id="ayarLogoNot">Yüklenen logo sol üstte, Vega Raporlama yazısının yanında görünür.</p>
+          <div class="ayar-logo-satir">
+            <label class="ayar-logo-yukle" for="ayarLogoDosya">Logo yükle</label>
+            <input id="ayarLogoDosya" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+            <button type="button" id="ayarLogoSil" class="soluk" hidden>Kaldır</button>
+          </div>
+        </div>
+        <div class="ayar-bolum">
+          <strong>Veritabanı modeli</strong>
+          <label class="ayar-alan">Yapı
+            <select id="ayarModel" aria-label="Veritabanı modeli">
+              <option value="otomatik">Otomatik algıla</option>
+              <option value="arctos">ArcTos</option>
+              <option value="vegawina5">VegaWin A5</option>
+            </select>
+          </label>
+          <p id="ayarModelNot">Tablo yapısı okunuyor…</p>
+        </div>
+        <div class="ayar-bolum">
           <strong>Firma</strong>
           <label class="ayar-alan">Firmalar
             <div class="firma-sec" id="ayarFirmaKutu">
@@ -2373,18 +2464,16 @@
           <label class="ayar-alan">Dönem
             <select id="ayarDonem" aria-label="Dönem"></select>
           </label>
+          <p id="ayarFirmaNot"></p>
         </div>
-        <strong>WhatsApp bağlantısı</strong>
-        <img id="waQr" alt="WhatsApp QR kodu" hidden>
-        <p id="waAyarNot">Telefonda WhatsApp → Bağlı cihazlar → Cihaz bağla ile QR kodu okutun.</p>
-        <button type="button" id="waBaslat">QR oluştur</button>
-        <button type="button" id="waCikis" class="soluk">Bağlantıyı kes</button>
-        <label class="ayar-tik"><input id="waSmsIzni" type="checkbox" checked> WhatsApp mesaj gönderilsin</label>
-        <p class="ayar-aciklama">İşaretliyse yalnızca cari kartında <b>SMS Gönderilsin</b> açık olanlara WhatsApp gider. Alıcı listesinde rehberdeki ad, yoksa WhatsApp’taki ad görünür; mesaj seçtiğiniz kişiye gider.</p>
       </div>
     </div>
     <div class="ana-icerik" id="anaIcerik">
     <div id="menu">
+      <button class="rapor-btn" id="odemeTakvimBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" stroke-width="1.5"/></svg>Ödeme Takvimi</button>
+      <button class="rapor-btn" id="cekBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 10h8M5 14h5" stroke="currentColor" stroke-width="1.4"/><path d="M13 15.5c1.2-2 4.2-2 5.4 0" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Çek</button>
+      <button class="rapor-btn" id="senetBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 3v4h4M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>Senet</button>
+      <button class="rapor-btn" id="visaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20M5 15h4" stroke="currentColor" stroke-width="1.6"/></svg>Visa</button>
       <button class="rapor-btn" id="karlilikBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15l3-4 3 2 5-7" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="18" cy="6" r="1.6" fill="currentColor"/></svg>Satış Karlılığı</button>
       <button class="rapor-btn" id="ciroBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v2.2M12 14.8V17M9.2 9.2c.7-1 1.9-1.5 3.1-1.2 1.5.4 2.2 1.5 2.2 2.6 0 1.4-1 2.1-2.8 2.6-1.7.5-2.7 1.2-2.7 2.5 0 1.1.9 2.1 2.6 2.3 1.2.1 2.3-.3 3-.1.1" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>Ciro Raporu</button>
       <button class="rapor-btn" id="satisAnalizBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 16v-3M12 16V8M17 16v-5" stroke="currentColor" stroke-width="1.8"/><path d="M7 10l5-3 5 2" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Satış Analizi</button>
@@ -2393,10 +2482,6 @@
       <button class="rapor-btn" id="acikBorcBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 9h6M7 12h10M7 15h8" stroke="currentColor" stroke-width="1.5"/><circle cx="18" cy="9" r="2.2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>Açık Borç Alacak</button>
       <button class="rapor-btn" id="hareketsizBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7v5l3.5 2" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M5 19l14-14" stroke="currentColor" stroke-width="1.5"/></svg>Hareket Görmemiş Cariler</button>
       <button class="rapor-btn" id="kasaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>İşlem Kasası</button>
-      <button class="rapor-btn" id="cekBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M5 10h8M5 14h5" stroke="currentColor" stroke-width="1.4"/><path d="M13 15.5c1.2-2 4.2-2 5.4 0" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Çek</button>
-      <button class="rapor-btn" id="senetBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M15 3v4h4M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.4" fill="none"/></svg>Senet</button>
-      <button class="rapor-btn" id="visaBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 9h20M5 15h4" stroke="currentColor" stroke-width="1.6"/></svg>Visa</button>
-      <button class="rapor-btn" id="odemeTakvimBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" stroke-width="1.5"/></svg>Ödeme Takvimi</button>
       <button class="rapor-btn" id="teklifBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M14 3v5h5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="12" width="6" height="4.5" rx="1" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M9 18.5h6" stroke="currentColor" stroke-width="1.4"/></svg>Fiyat Teklifleri</button>
       <button class="rapor-btn" id="siparisIhtiyacBtn" type="button"><svg class="btn-ikon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7 15h3V9H7zM12 15h3V6h-3zM17 15h3v-4h-3z" fill="currentColor"/></svg>Sipariş İhtiyaç</button>
     </div>
@@ -2645,6 +2730,14 @@
         <input id="maliyetBit" type="date" aria-label="Bitiş tarihi">
         <label class="bakiye-tik">Ekstre tarihi</label>
         <input id="maliyetEkstre" type="date" aria-label="Ekstre tarihi">
+        <label class="bakiye-tik">Stok
+          <select id="maliyetStok" aria-label="Stok filtresi">
+            <option value="mevcut" selected>Mevcut</option>
+            <option value="arti">Artılar</option>
+            <option value="eksi">Eksiler</option>
+            <option value="tumu">Tümü</option>
+          </select>
+        </label>
         <span class="durum" id="maliyetDurum"></span>
       </div>
       <div class="araclar ara-satir">
@@ -2675,7 +2768,7 @@
           </tfoot>
         </table>
       </div>
-      <p class="ipucu">Sağ tık: stok ekstresi ve aylık satış hızı. Ekstre tarihi boşsa bitiş tarihi kullanılır.</p>
+      <p class="ipucu">Çift tık: ürün içeriği. Sağ tık: stok ekstresi ve aylık satış hızı. Ekstre tarihi boşsa bitiş tarihi kullanılır.</p>
       <div id="maliyetDetay" class="maliyet-detay" hidden>
         <div class="maliyet-detay-ust">
           <b id="maliyetDetayBaslik">Stok detayı</b>
@@ -3232,6 +3325,20 @@
         <button class="sil" id="hatirlatmaSil" type="button" hidden>Sil</button>
         <button class="soluk" id="hatirlatmaIptal" type="button">Vazgeç</button>
         <button id="hatirlatmaKaydet" type="button">Kaydet</button>
+      </div>
+    </div>
+  </div>
+  <div id="waKutu" hidden>
+    <div class="wa-panel" role="dialog" aria-labelledby="waBaslik">
+      <h3 id="waBaslik">WhatsApp</h3>
+      <img id="waQr" alt="WhatsApp QR kodu" hidden>
+      <p id="waAyarNot">Telefonda WhatsApp → Bağlı cihazlar → Cihaz bağla ile QR kodu okutun.</p>
+      <label class="wa-izin"><input id="waSmsIzni" type="checkbox" checked> WhatsApp mesaj gönderilsin</label>
+      <p>İşaretliyse yalnızca cari kartında <b>SMS Gönderilsin</b> açık olanlara WhatsApp gider. Alıcı listesinde rehberdeki ad, yoksa WhatsApp’taki ad görünür; mesaj seçtiğiniz kişiye gider.</p>
+      <div class="butonlar">
+        <button type="button" class="kopar" id="waCikis">Bağlantıyı kes</button>
+        <button type="button" class="soluk" id="waKapat">Kapat</button>
+        <button type="button" id="waBaslat">QR oluştur</button>
       </div>
     </div>
   </div>
@@ -3916,6 +4023,17 @@
       }
     }
 
+    function donemHedef(liste, tercih, firma) {
+      const kayitlar = liste || [];
+      const tercihKayit = kayitlar.find((item) => item.no === Number(tercih));
+      const yilKayit = kayitlar.find((item) => Number(item.yil) === Number(firma?.aktifDonem));
+      const sonHareket = [...kayitlar].reverse().find((item) => item.hareket);
+      if (tercihKayit && tercihKayit.hareket !== false) return tercihKayit;
+      if (yilKayit?.hareket) return yilKayit;
+      if (sonHareket) return sonHareket;
+      return tercihKayit || yilKayit || kayitlar[kayitlar.length - 1];
+    }
+
     function doldurDonem(liste, tercih, firma) {
       donemler = liste || [];
       const select = document.getElementById("donem");
@@ -3926,9 +4044,7 @@
         option.textContent = donem.yil;
         select.appendChild(option);
       }
-      const hedef = donemler.find((item) => item.no === Number(tercih))
-        || donemler.find((item) => Number(item.yil) === Number(firma?.aktifDonem))
-        || donemler[donemler.length - 1];
+      const hedef = donemHedef(donemler, tercih, firma);
       if (hedef) select.value = String(hedef.no);
     }
 
@@ -4467,7 +4583,7 @@
     function girisBelgesiniCiz(body) {
       const yaz = (id, deger) => { document.getElementById(id).value = deger || ""; };
       yaz("girisFirmaKod", body.firmaKod);
-      yaz("girisFirmaAd", body.firmaAd);
+      yaz("girisFirmaAd", body.firmaAd || body.firmaKod);
       yaz("girisSube", body.sube);
       yaz("girisKasa", body.kasa);
       yaz("girisTarih", body.tarih);
@@ -4598,7 +4714,7 @@
         depoEtiket.textContent = banka ? "Hesap No" : "H.Deposu";
         depoEtiket.title = banka ? "Hesap No" : "Hareket Deposu";
         yaz("belgeFirmaKod", body.firmaKod);
-        yaz("belgeFirmaAd", body.firmaAd);
+        yaz("belgeFirmaAd", body.firmaAd || body.firmaKod);
         yaz("belgeTarih", body.tarih);
         yaz("belgeEvrak", body.evrakNo);
         yaz("belgeDepo", body.depo);
@@ -4783,6 +4899,7 @@
         };
         document.getElementById("giris").hidden = true;
         document.getElementById("ev").hidden = false;
+        ustLogoUygula();
         document.getElementById("menu").hidden = false;
         document.getElementById("rapor").hidden = true;
         document.getElementById("oturumSatir").textContent =
@@ -5536,7 +5653,7 @@
         <p>Expert Bilişim ${kacis(belge.kullanici || "")}</p>
         <p>Dönem : ${kacis(belge.donem || "")}</p>
         <p>Firma Kodu : ${kacis(belge.cari.kod || "")}</p>
-        <p>Firma Adı : ${kacis(belge.cari.ad || "")}</p>
+        <p>Firma Adı : ${kacis(belge.cari.ad || belge.cari.kod || "")}</p>
         <p>FIRMANO = ${kacis(belge.firmaNo || "")}</p>
       </div><div>
         <div class="marka"><i></i><i></i><i></i><div><b>EXPERT</b><span>BİLİŞİM</span></div></div>
@@ -5777,14 +5894,12 @@ ${"<" + "/script>"}</body></html>`);
       if (!kod) throw new Error("Cari seçin.");
       const ayar = await getir("/api/whatsapp");
       if (!ayar.hazir) {
-        const ana = window.opener && !window.opener.closed && window.opener.document.getElementById("ayarBtn")
+        const ana = window.opener && !window.opener.closed && window.opener.waPanelAc
           ? window.opener
           : window;
         ana.focus();
-        const dugme = ana.document.getElementById("ayarBtn");
-        const panel = ana.document.getElementById("ayarPanel");
-        if (dugme && panel?.hidden) dugme.click();
-        throw new Error("Sağ üstteki Ayarlar'dan telefonu bağlayın.");
+        if (ana.waPanelAc) ana.waPanelAc();
+        throw new Error("Sağ üstteki WhatsApp simgesinden telefonu bağlayın.");
       }
       const body = await getir("/api/cari-numaralar?firma=" + encodeURIComponent(oturum.firma) + "&kod=" + encodeURIComponent(kod));
       if (localStorage.getItem("vegaSmsIzni") !== "0" && !body.smsGonder) {
@@ -5906,11 +6021,95 @@ ${"<" + "/script>"}</body></html>`);
         select.appendChild(option);
       }
       const ayniFirma = oturum && Number(oturum.firma) === no;
-      const hedef = (ayniFirma && ayarDonemler.find((item) => item.no === Number(oturum.donem)))
-        || ayarDonemler.find((item) => Number(item.yil) === Number(firma?.aktifDonem))
-        || ayarDonemler[ayarDonemler.length - 1];
+      const hedef = (ayniFirma && ayarDonemler.find((item) => item.no === Number(oturum.donem) && item.hareket !== false))
+        || donemHedef(ayarDonemler, null, firma);
       if (hedef) select.value = String(hedef.no);
     }
+
+    function modelNotYaz(model) {
+      const not = document.getElementById("ayarModelNot");
+      const select = document.getElementById("ayarModel");
+      if (!model || !not || !select) return;
+      select.value = model.kod || model.algilanan || "vegawina5";
+      const tablodan = !model.secim || model.secim === "otomatik" || model.secim === model.algilanan;
+      not.textContent = tablodan
+        ? "Tablolara göre " + (model.ad || model.algilananAd) + " seçildi."
+        : "Elle " + model.ad + " kullanılıyor. Tablolar " + (model.algilananAd || "") + ".";
+    }
+
+    async function modelAyarYukle() {
+      const model = await getir("/api/veritabani-model");
+      modelNotYaz(model);
+    }
+
+    function ustLogoUygula() {
+      const img = document.getElementById("ustLogo");
+      const onizleme = document.getElementById("ayarLogoOnizleme");
+      const not = document.getElementById("ayarLogoNot");
+      const sil = document.getElementById("ayarLogoSil");
+      const adres = "/firma-logo?v=" + Date.now();
+      const dene = new Image();
+      dene.onload = () => {
+        if (img) {
+          img.src = adres;
+          img.alt = "Firma logosu";
+          img.classList.remove("ucboyut");
+        }
+        if (onizleme) {
+          onizleme.hidden = false;
+          onizleme.src = adres;
+        }
+        if (not) not.textContent = "Logo sol üstte, Vega Raporlama yazısının yanında.";
+        if (sil) sil.hidden = false;
+      };
+      dene.onerror = () => {
+        if (img) {
+          img.src = "/expert-bilisim.png?v=4";
+          img.alt = "Expert Bilişim";
+          img.classList.add("ucboyut");
+        }
+        if (onizleme) {
+          onizleme.hidden = true;
+          onizleme.removeAttribute("src");
+        }
+        if (not) not.textContent = "Yüklenen logo sol üstte, Vega Raporlama yazısının yanında görünür.";
+        if (sil) sil.hidden = true;
+      };
+      dene.src = adres;
+    }
+
+    document.getElementById("ayarLogoDosya").onchange = async (event) => {
+      const dosya = event.target.files && event.target.files[0];
+      event.target.value = "";
+      const not = document.getElementById("ayarLogoNot");
+      if (!dosya) return;
+      if (dosya.size > 4 * 1024 * 1024) {
+        not.textContent = "Logo 4 MB'dan büyük olamaz.";
+        return;
+      }
+      not.textContent = "Logo kaydediliyor…";
+      try {
+        const buf = await dosya.arrayBuffer();
+        await getir("/api/firma-logo", {
+          method: "POST",
+          headers: { "Content-Type": dosya.type || "application/octet-stream" },
+          body: buf,
+        });
+        ustLogoUygula();
+      } catch (error) {
+        not.textContent = error.message;
+      }
+    };
+    document.getElementById("ayarLogoSil").onclick = async () => {
+      const not = document.getElementById("ayarLogoNot");
+      not.textContent = "Logo kaldırılıyor…";
+      try {
+        await getir("/api/firma-logo", { method: "DELETE" });
+        ustLogoUygula();
+      } catch (error) {
+        not.textContent = error.message;
+      }
+    };
 
     async function ayarFirmalariDoldur() {
       ayarFirmaDolduruyor = true;
@@ -5940,7 +6139,8 @@ ${"<" + "/script>"}</body></html>`);
               ? ayarDonemleriDoldur().then(() => ayarFirmayiUygula())
               : Promise.resolve(ayarFirmayiUygula());
             sonra.catch((error) => {
-              document.getElementById("waAyarNot").textContent = error.message;
+              const not = document.getElementById("ayarFirmaNot");
+              if (not) not.textContent = error.message;
             });
           });
           const ad = ayarFirmaAd(firma);
@@ -5973,27 +6173,67 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("ayarFirmaBtn").setAttribute("aria-expanded", "false");
     });
     document.getElementById("ayarDonem").onchange = () => ayarFirmayiUygula();
-    document.getElementById("waRozet").onclick = () => document.getElementById("ayarBtn").click();
-    document.getElementById("ayarBtn").onclick = async () => {
-      const kutu = document.getElementById("ayarPanel");
-      kutu.hidden = !kutu.hidden;
-      if (kutu.hidden) return;
-      ayarFirmalariDoldur().catch((error) => {
-        document.getElementById("waAyarNot").textContent = error.message;
-      });
+    document.getElementById("ayarModel").onchange = async (event) => {
+      const not = document.getElementById("ayarModelNot");
+      not.textContent = "Kaydediliyor…";
       try {
-        const ayar = await waDurumCek();
-        if (ayar.durum === "kapali" || ayar.durum === "hata") {
+        const model = await getir("/api/veritabani-model", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secim: event.target.value }),
+        });
+        modelNotYaz(model);
+      } catch (error) {
+        not.textContent = error.message;
+      }
+    };
+    async function waPanelAc() {
+      const kutu = document.getElementById("waKutu");
+      if (!kutu) return;
+      kutu.hidden = false;
+      const ayar = document.getElementById("ayarPanel");
+      if (ayar) ayar.hidden = true;
+      try {
+        const durum = await waDurumCek();
+        if (durum.durum === "kapali" || durum.durum === "hata") {
           document.getElementById("waAyarNot").textContent = "QR hazırlanıyor…";
           await getir("/api/whatsapp/baslat", { method: "POST" });
           waIzle();
           await waDurumCek();
-        } else if (ayar.durum !== "bagli") {
+        } else if (durum.durum !== "bagli") {
           waIzle();
         }
       } catch (error) {
         document.getElementById("waAyarNot").textContent = error.message;
       }
+    }
+    window.waPanelAc = waPanelAc;
+    function waPanelKapat() {
+      const kutu = document.getElementById("waKutu");
+      if (kutu) kutu.hidden = true;
+    }
+    document.getElementById("waRozet").onclick = () => {
+      waPanelAc().catch((error) => {
+        document.getElementById("waAyarNot").textContent = error.message;
+      });
+    };
+    document.getElementById("waKapat").onclick = () => waPanelKapat();
+    document.getElementById("waKutu").onclick = (event) => {
+      if (event.target.id === "waKutu") waPanelKapat();
+    };
+    document.getElementById("ayarBtn").onclick = async () => {
+      const kutu = document.getElementById("ayarPanel");
+      kutu.hidden = !kutu.hidden;
+      if (kutu.hidden) return;
+      waPanelKapat();
+      ustLogoUygula();
+      modelAyarYukle().catch((error) => {
+        document.getElementById("ayarModelNot").textContent = error.message;
+      });
+      ayarFirmalariDoldur().catch((error) => {
+        const not = document.getElementById("ayarFirmaNot");
+        if (not) not.textContent = error.message;
+      });
     };
     document.getElementById("waBaslat").onclick = async () => {
       const not = document.getElementById("waAyarNot");
@@ -6502,8 +6742,12 @@ ${"<" + "/script>"}</body></html>`);
     function portfoyUstOku() {
       const bas = localStorage.getItem(portfoyUstAnahtar("Bas"));
       const bit = localStorage.getItem(portfoyUstAnahtar("Bit"));
+      const bugun = kasaIso(kasaTarihYazi(new Date()));
+      const ileri = new Date();
+      ileri.setFullYear(ileri.getFullYear() + 1);
+      const bitVarsayilan = kasaIso(kasaTarihYazi(ileri));
       document.getElementById("portfoyBas").value = /^\d{4}-\d{2}-\d{2}$/.test(bas || "") ? bas : "2025-12-31";
-      document.getElementById("portfoyBit").value = /^\d{4}-\d{2}-\d{2}$/.test(bit || "") ? bit : kasaIso(kasaTarihYazi(new Date()));
+      document.getElementById("portfoyBit").value = /^\d{4}-\d{2}-\d{2}$/.test(bit || "") && bit !== bugun ? bit : bitVarsayilan;
       portfoySecili = new Set(String(localStorage.getItem(portfoyUstAnahtar("Durum")) || "").split("|").filter(Boolean));
       document.getElementById("portfoyAra").value = localStorage.getItem(portfoyUstAnahtar("Ara")) || "";
     }
@@ -6772,7 +7016,9 @@ ${"<" + "/script>"}</body></html>`);
         tr.appendChild(hucre(para.format(Number(row.maliyet || 0)), true));
         tr.appendChild(hucre(para.format(Number(row.deger || 0)), true, Number(row.deger) < 0));
         tr.appendChild(hucre(para.format(Number(row.alis || 0)), true));
-        tr.title = "Sağ tık: stok ekstresi ve satış hızı";
+        tr.style.cursor = "pointer";
+        tr.title = "Çift tık: ürün içeriği · sağ tık: stok ekstresi";
+        tr.ondblclick = () => urunPaneli(row, tr);
         tr.oncontextmenu = (event) => {
           event.preventDefault();
           maliyetDetayAc(row);
@@ -6800,6 +7046,7 @@ ${"<" + "/script>"}</body></html>`);
         bit,
       });
       if (ekstre) params.set("ekstre", ekstre);
+      params.set("stok", document.getElementById("maliyetStok").value || "mevcut");
       const q = document.getElementById("maliyetAra").value.trim();
       if (q) params.set("q", q);
       document.querySelectorAll("#maliyetOzelKodlar select").forEach((select) => {
@@ -6909,6 +7156,7 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("maliyetBas").value = "2025-12-31";
       document.getElementById("maliyetBit").value = kasaIso(kasaTarihYazi(new Date()));
       document.getElementById("maliyetEkstre").value = "";
+      document.getElementById("maliyetStok").value = "mevcut";
       document.getElementById("maliyetAra").value = "";
       try {
         await maliyetOzelKodlariYukle();
@@ -6978,6 +7226,34 @@ ${"<" + "/script>"}</body></html>`);
       if (gun > 45) return "ay";
       if (gun > 14) return "hafta";
       return "gun";
+    }
+
+    function ciroKisaTutar(sayi) {
+      const n = Number(sayi) || 0;
+      const abs = Math.abs(n);
+      const imza = n < 0 ? "-" : "";
+      if (abs >= 1000000) return imza + (abs / 1000000).toLocaleString("tr-TR", { maximumFractionDigits: 1 }) + " Mn";
+      if (abs >= 1000) return imza + Math.round(abs / 1000).toLocaleString("tr-TR") + " B";
+      return imza + Math.round(abs).toLocaleString("tr-TR");
+    }
+
+    function ciroAylariTamamla(zaman) {
+      const basIso = document.getElementById("ciroBas").value;
+      const bitIso = document.getElementById("ciroBit").value;
+      if (!basIso || !bitIso) return zaman || [];
+      const bas = new Date(basIso + "T00:00:00");
+      const bit = new Date(bitIso + "T00:00:00");
+      if (Number.isNaN(bas.getTime()) || Number.isNaN(bit.getTime())) return zaman || [];
+      const harita = new Map((zaman || []).map((satir) => [String(satir.etiket || ""), satir]));
+      const liste = [];
+      const imlec = new Date(bas.getFullYear(), bas.getMonth(), 1);
+      const son = new Date(bit.getFullYear(), bit.getMonth(), 1);
+      while (imlec <= son && liste.length < 18) {
+        const etiket = imlec.getFullYear() + "-" + String(imlec.getMonth() + 1).padStart(2, "0");
+        liste.push(harita.get(etiket) || { etiket, ciro: 0, iade: 0, satis: 0, miktar: 0 });
+        imlec.setMonth(imlec.getMonth() + 1);
+      }
+      return liste.length ? liste : (zaman || []);
     }
 
     function ciroKisaEtiket(etiket) {
@@ -7205,7 +7481,7 @@ ${"<" + "/script>"}</body></html>`);
       const dagilim = document.getElementById("ciroDagilimGrafik");
       grafik.replaceChildren();
       dagilim.replaceChildren();
-      grafik.classList.remove("pasta");
+      grafik.classList.remove("pasta", "sutun");
       const seri = ciroSeriSec();
       const grup = document.getElementById("ciroGrup").value;
       document.getElementById("ciroDagilimBaslik").textContent =
@@ -7215,6 +7491,7 @@ ${"<" + "/script>"}</body></html>`);
       const kaynak = (dagilimKaynak || []).slice(0, 8);
       if (ciroMod === "detay") {
         document.getElementById("ciroZamanBaslik").textContent = "Ciro pasta grafiği";
+        grafik.classList.add("pasta");
         const pastaKalem = kaynak.map((satir) => ({
           ad: grup === "stok" ? (satir.ad || satir.kod || satir.etiket) : (satir.kod || satir.ad || satir.etiket || "(boş)"),
           ciro: satir.ciro,
@@ -7224,22 +7501,39 @@ ${"<" + "/script>"}</body></html>`);
       } else {
         document.getElementById("ciroZamanBaslik").textContent =
           seri === "ay" ? "Aylık net ciro" : seri === "hafta" ? "Haftalık net ciro" : seri === "yil" ? "Yıllık net ciro" : "Günlük net ciro";
-        const tavan = Math.max(1, ...zaman.map((satir) => Math.abs(Number(satir.ciro || 0))));
-        const goster = zaman.length > 24 ? zaman.slice(-24) : zaman;
+        grafik.classList.add("sutun");
+        const goster = seri === "ay" ? ciroAylariTamamla(zaman) : (zaman.length > 24 ? zaman.slice(-24) : zaman);
+        const tavan = Math.max(1, ...goster.map((satir) => Math.abs(Number(satir.ciro || 0))));
+        grafik.setAttribute("role", "img");
+        grafik.setAttribute("aria-label", document.getElementById("ciroZamanBaslik").textContent);
         for (const satir of goster) {
+          const tutar = Number(satir.ciro) || 0;
           const kolon = document.createElement("div");
-          kolon.className = "ciro-cubuk";
-          const deger = document.createElement("b");
-          deger.textContent = Number(satir.ciro) ? para.format(Number(satir.ciro)) : "";
+          kolon.className = "ciro-sutun";
+          const alan = document.createElement("div");
+          alan.className = "alan";
+          const oran = Math.abs(tutar) / tavan;
+          const bosluk = document.createElement("div");
+          bosluk.className = "bosluk";
+          bosluk.style.flex = String(Math.max(0, 1 - (tutar ? Math.max(oran, 0.04) : 0)));
+          const deger = document.createElement("div");
+          deger.className = "deger";
+          deger.textContent = tutar ? ciroKisaTutar(tutar) : "";
           const cubuk = document.createElement("i");
-          const oran = Math.abs(Number(satir.ciro || 0)) / tavan;
-          cubuk.style.height = Math.max(oran * 100, Number(satir.ciro) ? 4 : 0) + "%";
-          if (Number(satir.ciro) < 0) cubuk.style.background = "linear-gradient(180deg, #f0a06a 0%, #c05612 55%, #8f3a0a 100%)";
-          cubuk.title = satir.etiket + " · Net " + para.format(Number(satir.ciro || 0)) + " ₺ · İade " + para.format(Number(satir.iade || 0)) + " ₺";
+          cubuk.style.flex = tutar ? String(Math.max(oran, 0.04)) : "0";
+          const ayNo = /^\d{4}-\d{2}$/.test(String(satir.etiket || "")) ? Number(String(satir.etiket).slice(5, 7)) - 1 : -1;
+          if (tutar < 0) cubuk.style.background = "linear-gradient(180deg, #f0a06a 0%, #c05612 55%, #8f3a0a 100%)";
+          else if (ayNo >= 0) {
+            cubuk.style.background = "linear-gradient(180deg, " + AY_TUTAR[ayNo] + " 0%, " + AY_RENK[ayNo] + " 70%)";
+            deger.style.color = AY_RENK[ayNo];
+          }
+          cubuk.title = satir.etiket + " · Net " + para.format(tutar) + " ₺ · İade " + para.format(Number(satir.iade || 0)) + " ₺";
           const etiket = document.createElement("span");
           etiket.textContent = ciroKisaEtiket(satir.etiket);
-          kolon.appendChild(deger);
-          kolon.appendChild(cubuk);
+          alan.appendChild(bosluk);
+          alan.appendChild(deger);
+          alan.appendChild(cubuk);
+          kolon.appendChild(alan);
           kolon.appendChild(etiket);
           grafik.appendChild(kolon);
         }
@@ -8578,6 +8872,9 @@ ${"<" + "/script>"}</body></html>`);
       document.getElementById("maliyetDurum").textContent = error.message;
     });
     document.getElementById("maliyetBit").onchange = () => maliyetYukle().catch((error) => {
+      document.getElementById("maliyetDurum").textContent = error.message;
+    });
+    document.getElementById("maliyetStok").onchange = () => maliyetYukle().catch((error) => {
       document.getElementById("maliyetDurum").textContent = error.message;
     });
     document.getElementById("maliyetEkstre").onchange = () => maliyetYukle().catch((error) => {
@@ -12193,10 +12490,8 @@ ${"<" + "/script>"}</body></html>`);
       try {
         const ayar = await getir("/api/whatsapp");
         if (!ayar.hazir) {
-          const dugme = document.getElementById("ayarBtn");
-          const panel = document.getElementById("ayarPanel");
-          if (dugme && panel?.hidden) dugme.click();
-          throw new Error("Sağ üstteki Ayarlar'dan telefonu bağlayın.");
+          if (window.waPanelAc) window.waPanelAc();
+          throw new Error("Sağ üstteki WhatsApp simgesinden telefonu bağlayın.");
         }
         const body = await getir("/api/cari-numaralar?firma=" + encodeURIComponent(oturum.firma) + "&kod=" + encodeURIComponent(kod));
         if (localStorage.getItem("vegaSmsIzni") !== "0" && !body.smsGonder) {
@@ -13577,7 +13872,7 @@ ${"<" + "/script>"}</body></html>`);
       const sorgu = new URLSearchParams(location.search);
       oturum = kayit?.oturum || null;
       document.getElementById("bordroFirmaKod").value = sorgu.get("kod") || kayit?.cari?.kod || "";
-      document.getElementById("bordroFirmaAd").value = sorgu.get("ad") || kayit?.cari?.ad || "";
+      document.getElementById("bordroFirmaAd").value = sorgu.get("ad") || kayit?.cari?.ad || sorgu.get("kod") || kayit?.cari?.kod || "";
       document.getElementById("bordroPb").value = bordroPbDegeri(sorgu.get("pb") || kayit?.cari?.pb);
       document.getElementById("bordroSube").value = sorgu.get("sube") || oturum?.sube || "MERKEZ";
       document.getElementById("bordroKasa").value = sorgu.get("kasa") || oturum?.kasa || "MERKEZ";
@@ -13643,28 +13938,42 @@ ${"<" + "/script>"}</body></html>`);
       kullaniciSelect.innerHTML = "<option value=\"\">Yükleniyor…</option>";
       kullaniciSelect.disabled = true;
       let tercihFirma = 0;
+      let kullaniciYazildi = false;
+      const kullanicilariBas = (liste) => {
+        if (!liste || !liste.length) return;
+        const secili = kullaniciSelect.value;
+        kullaniciSelect.innerHTML = "";
+        for (const item of liste) {
+          const option = document.createElement("option");
+          option.value = item.kullanici;
+          const ad = [item.ad, item.soyad].filter(Boolean).join(" ");
+          option.textContent = item.kullanici + (ad ? " · " + ad : "");
+          option.dataset.firma = item.firma || "";
+          option.dataset.donem = item.donem || "";
+          kullaniciSelect.appendChild(option);
+        }
+        if (secili && [...kullaniciSelect.options].some((option) => option.value === secili)) {
+          kullaniciSelect.value = secili;
+        }
+        kullaniciSelect.disabled = false;
+        kullaniciYazildi = true;
+      };
       try {
         tercihFirma = Number(JSON.parse(localStorage.getItem("vegaGirisOzet") || "null")?.firma) || 0;
       } catch { tercihFirma = 0; }
+      getir("/api/giris-kullanicilar")
+        .then((body) => kullanicilariBas(body.kullanicilar))
+        .catch(() => {});
       getir("/api/giris-onbilgi" + (tercihFirma ? ("?firma=" + tercihFirma) : ""))
         .then((body) => {
           document.getElementById("baglanti").textContent =
-            (body.database || "VEGADB") + " · " + (body.server || "");
+            (body.database || "VEGADB") + " · " + (body.server || "")
+            + (body.model?.ad ? " · " + body.model.ad : "");
           if (body.surum) {
             document.getElementById("uygulamaSurum").textContent = "Vega Raporlama v" + body.surum;
           }
           guncellemeIzlemeyiBaslat();
-          kullaniciSelect.innerHTML = "";
-          for (const item of body.kullanicilar || []) {
-            const option = document.createElement("option");
-            option.value = item.kullanici;
-            const ad = [item.ad, item.soyad].filter(Boolean).join(" ");
-            option.textContent = item.kullanici + (ad ? " · " + ad : "");
-            option.dataset.firma = item.firma || "";
-            option.dataset.donem = item.donem || "";
-            kullaniciSelect.appendChild(option);
-          }
-          kullaniciSelect.disabled = false;
+          if (!kullaniciYazildi) kullanicilariBas(body.kullanicilar);
           firmalar = body.firmalar || [];
           doldurFirma();
           const expert = firmalar.find((item) => item.no === Number(body.firma))
@@ -13679,8 +13988,10 @@ ${"<" + "/script>"}</body></html>`);
           yazOzet();
         })
         .catch((error) => {
-          kullaniciSelect.disabled = false;
-          kullaniciSelect.innerHTML = "<option value=\"\">Kullanıcı alınamadı</option>";
+          if (!kullaniciYazildi) {
+            kullaniciSelect.disabled = false;
+            kullaniciSelect.innerHTML = "<option value=\"\">Kullanıcı alınamadı</option>";
+          }
           hata(error.message);
         });
     }
