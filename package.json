@@ -1,10 +1,12 @@
 {
   "name": "vega-raporlama",
-  "version": "1.2.13",
+  "version": "1.2.14",
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "sea": "node scripts/build-sea.js"
+    "sea": "node scripts/build-sea.js",
+    "lisans": "node lisans-site/server.js",
+    "test:lisans": "node scripts/lisans-dene.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^7.0.0-rc14",

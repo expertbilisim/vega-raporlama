@@ -84,6 +84,13 @@
     .surum-no { text-align: center; color: #8a9099; font-size: 12px; margin-top: 4px; font-weight: 650; }
     .guncelleme-yazi { text-align: center; color: #0e5962; font-size: 12px; margin: 6px 0 0; font-weight: 650; min-height: 1.1em; }
     .guncelleme-yazi.hata { color: #b42318; }
+    .lisans-giris { margin-top: 12px; text-align: center; }
+    .lisans-giris p { margin: 0 0 8px; color: #8a4b12; font-size: 13px; font-weight: 650; }
+    .lisans-dosya {
+      display: inline-block; cursor: pointer;
+      border: 1px solid #1f7f8c; background: #1f7f8c; color: #fff;
+      border-radius: 8px; padding: 7px 14px; font-size: 14px; font-weight: 650;
+    }
     .guncelleme-yazi.guncel { color: #5c6b7a; font-weight: 550; }
     h1 { margin: 16px 0 12px; text-align: center; font-size: 26px; font-weight: 500; }
     .alan { display: flex; align-items: center; border: 1px solid #bdbdbd; margin-top: 10px; background: #fff; }
@@ -252,6 +259,7 @@
     }
     .ayar-panel {
       position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; width: 320px;
+      max-height: min(70vh, 560px); overflow: auto;
       background: #fff; border: 1px solid #d5dde5; box-shadow: 0 12px 28px rgba(22, 40, 54, .18);
       padding: 12px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start;
     }
@@ -295,6 +303,7 @@
     }
     .ayar-logo-satir button { flex: 1; }
     .ayar-panel button { border: 1px solid #1f7f8c; background: #1f7f8c; color: #fff; border-radius: 4px; padding: 7px 12px; }
+    .ayar-panel button#ayarTamam { position: sticky; bottom: 0; width: 100%; }
     .ayar-panel button.soluk { background: #fff; color: #1f7f8c; }
     .ayar-panel p { margin: 0; color: #5c6b7a; }
     .ayar-tik { display: flex; align-items: flex-start; gap: 8px; color: #1d2430; font-size: 13px; }
@@ -2377,8 +2386,13 @@
         <img class="giris-ikon" src="/expert-bilisim.png?v=3" alt="">
         <p class="logo">Expert Bilişim</p>
         <div class="surum" id="baglanti">VEGADB</div>
-        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.11</div>
+        <div class="surum-no" id="uygulamaSurum">Vega Raporlama v1.2.14</div>
         <p class="guncelleme-yazi" id="guncellemeYazi"></p>
+        <div id="lisansGiris" class="lisans-giris" hidden>
+          <p id="lisansGirisYazi">Lisans süresi doldu.</p>
+          <label class="lisans-dosya" for="lisansGirisDosya">Dosya seç</label>
+          <input id="lisansGirisDosya" type="file" accept=".vrl" hidden>
+        </div>
         <h1>Oturum Bilgileri</h1>
         <div class="alan">
           <span aria-hidden="true">👤</span>
@@ -2466,6 +2480,13 @@
           </label>
           <p id="ayarFirmaNot"></p>
         </div>
+        <div class="ayar-bolum">
+          <strong>Lisans</strong>
+          <p id="ayarLisansYazi">Lisans okunuyor…</p>
+          <label class="ayar-logo-yukle" for="ayarLisansDosya">Dosya seç</label>
+          <input id="ayarLisansDosya" type="file" accept=".vrl" hidden>
+        </div>
+        <button type="button" id="ayarTamam">Tamam</button>
       </div>
     </div>
     <div class="ana-icerik" id="anaIcerik">
@@ -3921,6 +3942,45 @@
 
     function hata(mesaj) {
       document.getElementById("hata").textContent = mesaj || "";
+    }
+
+    function lisansEkranaYaz(body) {
+      const yazi = body?.mesaj || (body?.gecerli ? "Lisans geçerli." : "Lisans süresi doldu.");
+      const ayar = document.getElementById("ayarLisansYazi");
+      if (ayar) ayar.textContent = yazi;
+      const girisYazi = document.getElementById("lisansGirisYazi");
+      if (girisYazi) girisYazi.textContent = yazi;
+      const kutu = document.getElementById("lisansGiris");
+      if (kutu) kutu.hidden = Boolean(body?.gecerli);
+    }
+
+    async function lisansDurumCek() {
+      try {
+        lisansEkranaYaz(await getir("/api/lisans"));
+      } catch (error) {
+        lisansEkranaYaz({ gecerli: false, mesaj: error.message || "Lisans süresi doldu." });
+      }
+    }
+
+    async function lisansDosyasiGonder(input) {
+      const dosya = input.files && input.files[0];
+      input.value = "";
+      if (!dosya) return;
+      const ad = String(dosya.name || "").toLowerCase();
+      if (ad && !ad.endsWith(".vrl")) {
+        lisansEkranaYaz({ gecerli: false, mesaj: "Lisans dosyası bozuk." });
+        return;
+      }
+      try {
+        const body = await getir("/api/lisans", {
+          method: "POST",
+          headers: { "Content-Type": "application/octet-stream" },
+          body: await dosya.arrayBuffer(),
+        });
+        lisansEkranaYaz(body);
+      } catch (error) {
+        lisansEkranaYaz({ gecerli: false, mesaj: error.message || "Lisans dosyası bozuk." });
+      }
     }
 
     async function getir(path, options) {
@@ -6172,6 +6232,17 @@ ${"<" + "/script>"}</body></html>`);
       menu.hidden = true;
       document.getElementById("ayarFirmaBtn").setAttribute("aria-expanded", "false");
     });
+    document.getElementById("ayarTamam").onclick = () => {
+      document.getElementById("ayarPanel").hidden = true;
+      const menu = document.getElementById("ayarFirmaMenu");
+      if (menu) menu.hidden = true;
+    };
+    document.getElementById("ayarLisansDosya").onchange = (event) => {
+      lisansDosyasiGonder(event.target);
+    };
+    document.getElementById("lisansGirisDosya").onchange = (event) => {
+      lisansDosyasiGonder(event.target);
+    };
     document.getElementById("ayarDonem").onchange = () => ayarFirmayiUygula();
     document.getElementById("ayarModel").onchange = async (event) => {
       const not = document.getElementById("ayarModelNot");
@@ -6227,6 +6298,7 @@ ${"<" + "/script>"}</body></html>`);
       if (kutu.hidden) return;
       waPanelKapat();
       ustLogoUygula();
+      lisansDurumCek();
       modelAyarYukle().catch((error) => {
         document.getElementById("ayarModelNot").textContent = error.message;
       });
@@ -13934,6 +14006,7 @@ ${"<" + "/script>"}</body></html>`);
       setTimeout(girisPenceresiKucult, 250);
       setTimeout(girisPenceresiKucult, 600);
       girisOzetOnizle();
+      lisansDurumCek();
       const kullaniciSelect = document.getElementById("kullanici");
       kullaniciSelect.innerHTML = "<option value=\"\">Yükleniyor…</option>";
       kullaniciSelect.disabled = true;

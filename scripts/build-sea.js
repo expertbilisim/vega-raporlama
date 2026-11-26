@@ -9,8 +9,25 @@ const blob = join(dist, "sea-prep.blob");
 const config = join(kok, "sea-config.json");
 
 mkdirSync(dist, { recursive: true });
+const lisansMetin = readFileSync(join(kok, "lisans.js"), "utf8").trim().replace(/module\.exports\s*=\s*/, "return ");
+const sunucu = readFileSync(join(kok, "server.js"), "utf8");
+const yer = 'const lisans = require("./lisans.js");';
+if (!sunucu.includes(yer)) throw new Error("server.js lisans modülünü çağırmıyor.");
+const paket = join(dist, "sea-server.js");
+const sarilmis = "const lisans = (function () {\n" + lisansMetin + "\n})();\n";
+writeFileSync(paket, sunucu.replace(yer, sarilmis));
+const paketAyar = {
+  ...JSON.parse(readFileSync(config, "utf8")),
+  main: "dist/sea-server.js",
+};
+const paketAyarYol = join(dist, "sea-build-config.json");
+writeFileSync(paketAyarYol, JSON.stringify(paketAyar, null, 2) + "\n");
+if (process.argv.includes("--yalniz-paket")) {
+  console.log("SEA paketi hazır: " + paket);
+  process.exit(0);
+}
 copyFileSync(process.execPath, exe);
-execFileSync(process.execPath, ["--experimental-sea-config", config], { cwd: kok, stdio: "inherit" });
+execFileSync(process.execPath, ["--experimental-sea-config", paketAyarYol], { cwd: kok, stdio: "inherit" });
 const postject = join(kok, "node_modules", "postject", "dist", "cli.js");
 if (!existsSync(postject)) {
   execFileSync("npm", ["install", "--no-save", "postject"], { cwd: kok, stdio: "inherit", shell: true });
