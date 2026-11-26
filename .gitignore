@@ -1,5 +1,8 @@
 node_modules/
 dist/sea-prep.blob
+dist/sea-server.js
+dist/sea-build-config.json
 dist/*.exe
 whatsapp.json
 whatsapp-oturum/
+lisans-site/data/

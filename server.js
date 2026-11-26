@@ -2,16 +2,18 @@ const { execFile, execFileSync, spawn } = require("node:child_process");
 const { createHash, randomBytes } = require("node:crypto");
 const { copyFileSync, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync, unlinkSync, rmSync } = require("node:fs");
 const { createServer } = require("node:http");
-const { networkInterfaces, tmpdir } = require("node:os");
+const { hostname, networkInterfaces, tmpdir } = require("node:os");
 const { basename, dirname, join } = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { Readable } = require("node:stream");
 const { pipeline } = require("node:stream/promises");
 const { promisify } = require("node:util");
 
+const lisans = require("./lisans.js");
 const execFileAsync = promisify(execFile);
 const PORT = Number(process.env.PORT || 3850);
-const UYGULAMA_SURUM = "1.2.13";
+const UYGULAMA_SURUM = "1.2.14";
+const LISANS_ADRES = String(process.env.LISANS_ADRES || lisans.VARSAYILAN_ADRES).replace(/\/$/, "");
 const GUNCELLEME_REPO = "expertbilisim/vega-raporlama";
 const guncellemeDurum = {
   durum: "bekliyor",
@@ -3663,6 +3665,144 @@ function kurulumKok() {
   return join(process.env.LOCALAPPDATA || tmpdir(), "Vega Raporlama");
 }
 
+const LISANS_SERBEST = new Set([
+  "/api/lisans",
+  "/api/baglanti",
+  "/api/giris-kullanicilar",
+  "/api/giris-onbilgi",
+  "/api/guncelleme",
+  "/api/pencere",
+  "/api/kapat",
+]);
+
+function makineGuidOku() {
+  if (process.platform !== "win32") return "";
+  try {
+    const cikti = execFileSync("reg", [
+      "query",
+      "HKLM\\SOFTWARE\\Microsoft\\Cryptography",
+      "/v",
+      "MachineGuid",
+    ], { encoding: "utf8", windowsHide: true });
+    const eslesen = cikti.match(/MachineGuid\s+REG_SZ\s+([0-9a-fA-F-]+)/);
+    return eslesen ? eslesen[1].replace(/[{}]/g, "").toLowerCase() : "";
+  } catch {
+    return "";
+  }
+}
+
+function kurulumKaydi() {
+  const yol = join(kurulumKok(), "kurulum.json");
+  let once = {};
+  try { once = JSON.parse(readFileSync(yol, "utf8")); } catch { /* ilk kurulum */ }
+  const guid = makineGuidOku();
+  const kurulumId = guid || String(once.kurulumId || "").trim().toLowerCase() || randomBytes(16).toString("hex");
+  const kayit = {
+    kurulumId,
+    makine: hostname() || "Bilgisayar",
+    urun: lisans.URUN,
+  };
+  if (once.kurulumId !== kayit.kurulumId || once.makine !== kayit.makine) {
+    mkdirSync(dirname(yol), { recursive: true });
+    writeFileSync(yol, JSON.stringify(kayit));
+  }
+  return kayit;
+}
+
+function lisansAnahtarDosya() {
+  return join(kurulumKok(), "lisans-anahtar.json");
+}
+
+function lisansDosyaYolu() {
+  return join(kurulumKok(), "lisans.vrl");
+}
+
+function lisansPinOku() {
+  try {
+    const pin = JSON.parse(readFileSync(lisansAnahtarDosya(), "utf8"));
+    if (pin && pin.adres === LISANS_ADRES && pin.anahtar) return String(pin.anahtar);
+  } catch { /* henüz sabitlenmedi */ }
+  return "";
+}
+
+async function lisansAnahtarAl() {
+  const pin = lisansPinOku();
+  if (pin) return pin;
+  let yanit;
+  try {
+    yanit = await fetch(LISANS_ADRES + "/api/acik-anahtar", {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch {
+    throw new Error("Lisans sunucusuna ulaşılamadı.");
+  }
+  if (!yanit.ok) throw new Error("Lisans sunucusuna ulaşılamadı.");
+  const data = await yanit.json();
+  const anahtar = String(data.anahtar || "").trim();
+  if (!anahtar || data.urun !== lisans.URUN) throw new Error("Lisans sunucusuna ulaşılamadı.");
+  const yol = lisansAnahtarDosya();
+  mkdirSync(dirname(yol), { recursive: true });
+  writeFileSync(yol, JSON.stringify({ adres: LISANS_ADRES, anahtar, zaman: new Date().toISOString() }));
+  return anahtar;
+}
+
+function lisansDurumYerel(anahtar) {
+  const kurulum = kurulumKaydi();
+  const temel = {
+    gecerli: false,
+    bitis: "",
+    kurulumId: kurulum.kurulumId,
+    makine: kurulum.makine,
+    adres: LISANS_ADRES,
+    mesaj: "Lisans süresi doldu.",
+  };
+  if (!existsSync(lisansDosyaYolu())) return temel;
+  if (!anahtar) return { ...temel, mesaj: "Lisans sunucusuna ulaşılamadı." };
+  let metin = "";
+  try { metin = readFileSync(lisansDosyaYolu(), "utf8"); } catch {
+    return { ...temel, mesaj: "Lisans dosyası bozuk." };
+  }
+  const sonuc = lisans.vrlCoz(metin, anahtar, kurulum.kurulumId);
+  if (!sonuc.ok) return { ...temel, mesaj: sonuc.mesaj, bitis: sonuc.bitis || "" };
+  return {
+    gecerli: true,
+    bitis: sonuc.bitis,
+    kurulumId: kurulum.kurulumId,
+    makine: kurulum.makine,
+    adres: LISANS_ADRES,
+    mesaj: sonuc.mesaj,
+  };
+}
+
+function lisansIstegiKapali(pathname) {
+  if (!pathname.startsWith("/api/") || LISANS_SERBEST.has(pathname)) return false;
+  return !lisansDurumYerel(lisansPinOku()).gecerli;
+}
+
+let lisansBildirimZamani = 0;
+function kurulumBildir() {
+  const simdi = Date.now();
+  if (simdi - lisansBildirimZamani < 60 * 1000) return Promise.resolve();
+  lisansBildirimZamani = simdi;
+  const kurulum = kurulumKaydi();
+  return fetch(LISANS_ADRES + "/api/kurulum", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify({
+      urun: lisans.URUN,
+      kurulumId: kurulum.kurulumId,
+      makine: kurulum.makine,
+      surum: UYGULAMA_SURUM,
+    }),
+    signal: AbortSignal.timeout(8000),
+  }).then((yanit) => {
+    if (!yanit.ok) lisansBildirimZamani = 0;
+  }, () => {
+    lisansBildirimZamani = 0;
+  });
+}
+
 const FIRMA_LOGO_UZANTILAR = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
 
 function firmaLogoDosyasi() {
@@ -3691,7 +3831,7 @@ function logoUzanti(buf) {
   return "";
 }
 
-function okuHam(req, limit) {
+function okuHam(req, limit, mesaj) {
   return new Promise((resolve, reject) => {
     const parca = [];
     let boyut = 0;
@@ -3701,7 +3841,7 @@ function okuHam(req, limit) {
       boyut += buf.length;
       if (boyut > limit) {
         bitti = true;
-        reject(Object.assign(new Error("Logo 4 MB'dan büyük olamaz."), { status: 413 }));
+        reject(Object.assign(new Error(mesaj || "Logo 4 MB'dan büyük olamaz."), { status: 413 }));
         req.destroy();
         return;
       }
@@ -5091,6 +5231,12 @@ function teklifResimGonder(res, yol, buf) {
 const server = createServer(async (req, res) => {
   const url = new URL(req.url, "http://127.0.0.1");
   try {
+    if (lisansIstegiKapali(url.pathname)) {
+      const durum = lisansDurumYerel(lisansPinOku());
+      gonder(res, 403, { error: durum.mesaj || "Lisans süresi doldu.", kod: "lisans" });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/") {
       res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
       res.end(sayfaOku());
@@ -5219,6 +5365,42 @@ const server = createServer(async (req, res) => {
       }
       girisOnbilgiOnbellek.clear();
       gonder(res, 200, await vegaModel());
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/lisans") {
+      kurulumBildir();
+      let anahtar = "";
+      try { anahtar = await lisansAnahtarAl(); } catch { anahtar = lisansPinOku(); }
+      gonder(res, 200, lisansDurumYerel(anahtar));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/lisans") {
+      let anahtar;
+      try {
+        anahtar = await lisansAnahtarAl();
+      } catch (error) {
+        gonder(res, 400, { error: error.message || "Lisans sunucusuna ulaşılamadı." });
+        return;
+      }
+      let buf;
+      try {
+        buf = await okuHam(req, 64 * 1024, "Lisans dosyası bozuk.");
+      } catch {
+        gonder(res, 400, { error: "Lisans dosyası bozuk." });
+        return;
+      }
+      const kurulum = kurulumKaydi();
+      const sonuc = lisans.vrlCoz(buf.toString("utf8"), anahtar, kurulum.kurulumId);
+      if (!sonuc.ok) {
+        gonder(res, 400, { error: sonuc.mesaj, gecerli: false, mesaj: sonuc.mesaj });
+        return;
+      }
+      const yol = lisansDosyaYolu();
+      mkdirSync(dirname(yol), { recursive: true });
+      writeFileSync(yol, buf);
+      gonder(res, 200, lisansDurumYerel(anahtar));
       return;
     }
 
@@ -8785,6 +8967,7 @@ server.listen(PORT, "0.0.0.0", () => {
   }
   kullanicilariHazir();
   kullanicilariGetir().catch(() => {});
+  kurulumBildir();
   girisOnbilgiGetir(0).catch(() => {});
   hatirlatmaGorevleriniSenkronize().catch(() => {});
   masaustuUygulamaIlkAcilisGuncelle();

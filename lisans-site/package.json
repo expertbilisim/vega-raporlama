@@ -1,0 +1,9 @@
+{
+  "name": "expert-lisans",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Expert Bilişim lisans sayfası. Vega Raporlama kurulumlarına imzalı .vrl dosyası verir.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
